@@ -8,10 +8,9 @@ use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::process::{Command, exit};
-use std::io::{Write};
+use std::io::{Write, Read, stdout};
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::fs::File;
-use std::io::Read;
 
 const UBUNTU24_ROOTFS: &str = "/tmp/Qube_ubuntu24";
 const UBUNTU24_TAR: &str     = "ubuntu24rootfs.tar";
