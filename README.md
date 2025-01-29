@@ -16,6 +16,7 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
 ```bash
 cargo build --release
 sudo ./target/release/Qube run /bin/bash
+```
 
 ### Manage Containers
 ```bash
