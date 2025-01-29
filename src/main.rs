@@ -8,8 +8,10 @@ use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::process::{Command, exit};
-use std::collections::HashMap;
-use std::io::{self, Write};
+use std::io::{Write};
+use std::time::{SystemTime, UNIX_EPOCH};
+use std::fs::File;
+use std::io::Read;
 
 const UBUNTU24_ROOTFS: &str = "/tmp/Qube_ubuntu24";
 const UBUNTU24_TAR: &str     = "ubuntu24rootfs.tar";
@@ -98,7 +100,7 @@ fn run_container(container_cmd: &[String]) {
     execvp(&cmd, &cmd_args).expect("Failed to exec command");
 
     umount(proc_path.as_str()).ok();
-    println!("{}", "Container process exited (execvp failed).".bright_red());
+    println!("{}", "Container process exited (execvp failed).".bright_red());    
 }
 
 fn prepare_rootfs() {
@@ -160,47 +162,89 @@ fn track_container(pid: i32) {
 
 fn list_containers() {
     if let Ok(contents) = fs::read_to_string(CONTAINER_LIST_FILE) {
-        let pids: Vec<&str> = contents.lines().collect();
-        if pids.is_empty() {
-            println!("{}", "No running containers.".bright_red().bold());
-        } else {
-            println!("{}", "╔═════════════════╦════════════╗".truecolor(247, 76, 0));
-            println!(
-                "{}",
-                format!(
-                    "║ {:<15} ║ {:<10} ║",
-                    "CONTAINER ID".bold().truecolor(255, 165, 0),
-                    "STATUS".bold().truecolor(200, 150, 100)
-                )
-            );
-            println!("{}", "╠═════════════════╬════════════╣".truecolor(247, 76, 0));
+        let mut valid_pids = Vec::new();
 
-            for pid in pids {
-                println!(
-                    "║ {:<15} ║ {:<10} ║",
-                    pid.truecolor(255, 165, 0),
-                    "RUNNING".truecolor(200, 150, 100)
-                );
+        println!("{}", "╔═════════════════╦════════════╦══════════════╗".truecolor(247, 76, 0));
+        println!(
+            "{}",
+            format!(
+                "║ {:<15} ║ {:<10} ║ {:<12} ║",
+                "CONTAINER ID".bold().truecolor(255, 165, 0),
+                "STATUS".bold().truecolor(200, 150, 100),
+                "UPTIME".bold().truecolor(150, 200, 150)
+            )
+        );
+        println!("{}", "╠═════════════════╬════════════╬══════════════╣".truecolor(247, 76, 0));
+
+        for pid in contents.lines() {
+            let pid_num: i32 = pid.parse().unwrap_or(0);
+            let proc_path = format!("/proc/{}", pid);
+
+            if Path::new(&proc_path).exists() {
+                let uptime = get_process_uptime(pid_num).map_or_else(|_| "N/A".to_string(), |t| format!("{}s", t));
+                println!("║ {:<15} ║ {:<10} ║ {:<12} ║", pid, "RUNNING", uptime);
+                valid_pids.push(pid.to_string());
             }
-            println!("{}", "╚═════════════════╩════════════╝".truecolor(247, 76, 0));
         }
+
+        println!("{}", "╚═════════════════╩════════════╩══════════════╝".truecolor(247, 76, 0));
+        fs::write(CONTAINER_LIST_FILE, valid_pids.join("\n")).expect("Failed to update container list");
     } else {
         println!("{}", "No running containers.".bright_red().bold());
     }
 }
 
 fn stop_container(pid: i32) {
+    let proc_path = format!("/proc/{}", pid);
+    if !Path::new(&proc_path).exists() {
+        println!("{}", format!("Container {} is already stopped or does not exist.", pid).bright_red());
+        return;
+    }
+
     if kill(Pid::from_raw(pid), Signal::SIGTERM).is_ok() {
         println!("Stopped container with PID: {}", pid);
+        remove_container_from_tracking(pid);
     } else {
         println!("Failed to stop container with PID: {}", pid);
     }
 }
 
 fn kill_container(pid: i32) {
+    let proc_path = format!("/proc/{}", pid);
+    if !Path::new(&proc_path).exists() {
+        println!("{}", format!("Container {} is already stopped or does not exist.", pid).bright_red());
+        return;
+    }
+
     if kill(Pid::from_raw(pid), Signal::SIGKILL).is_ok() {
         println!("Killed container with PID: {}", pid);
+        remove_container_from_tracking(pid);
     } else {
         println!("Failed to kill container with PID: {}", pid);
+    }
+}
+
+fn remove_container_from_tracking(pid: i32) {
+    if let Ok(contents) = fs::read_to_string(CONTAINER_LIST_FILE) {
+        let new_contents: Vec<String> = contents.lines().filter(|&p| p != pid.to_string()).map(|s| s.to_string()).collect();
+        fs::write(CONTAINER_LIST_FILE, new_contents.join("\n")).expect("Failed to update container list");
+    }
+}
+
+fn get_process_uptime(pid: i32) -> Result<u64, std::io::Error> {
+    let stat_path = format!("/proc/{}/stat", pid);
+    let mut file = File::open(&stat_path)?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    let fields: Vec<&str> = contents.split_whitespace().collect();
+    if fields.len() > 21 {
+        let start_time: u64 = fields[21].parse().unwrap_or(0);
+        let clock_ticks_per_sec = 100;
+        let uptime_since_boot = start_time / clock_ticks_per_sec;
+        let system_uptime = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+        let boot_time = system_uptime - uptime_since_boot;
+        Ok(system_uptime - boot_time)
+    } else {
+        Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to parse process uptime"))
     }
 }
