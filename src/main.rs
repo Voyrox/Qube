@@ -1,6 +1,6 @@
 use nix::sched::{unshare, CloneFlags};
 use nix::unistd::{chdir, chroot, execvp, sethostname, getpid, Pid};
-use nix::mount::{mount, umount, MsFlags};
+use nix::mount::{mount, MsFlags};
 use nix::sys::signal::{kill, Signal};
 use colored::*;
 use std::ffi::CString;
@@ -8,9 +8,10 @@ use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::process::{Command, exit};
-use std::io::{Write, Read, stdout};
+use std::io::{Write, Read};
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::fs::File;
+use indicatif::{ProgressBar, ProgressStyle};
 
 const UBUNTU24_ROOTFS: &str = "/tmp/Qube_ubuntu24";
 const UBUNTU24_TAR: &str     = "ubuntu24rootfs.tar";
@@ -65,61 +66,73 @@ fn main() {
 }
 
 fn run_container(container_cmd: &[String]) {
-    println!("{}", "[+] Qube: Starting container with REAL Ubuntu 24.04 rootfs".truecolor(247, 76, 0));
+    let total_steps = 5;
+    let pb = ProgressBar::new(total_steps);
+    pb.set_style(
+        ProgressStyle::default_bar()
+        .template("{spinner:.green} {msg} [{bar:40.white/blue}] {pos}/{len} ({eta})")
+        .progress_chars(": "),
+    );
 
+    pb.set_message("Unsharing namespaces...");
     unshare(CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWNS)
         .expect("Failed to unshare namespaces");
-
     sethostname("Qube").expect("Failed to set hostname");
+    pb.inc(1);
 
-    prepare_rootfs();
+    pb.set_message("Preparing container rootfs directory...");
+    prepare_rootfs_dir();
+    pb.inc(1);
 
+    pb.set_message("Setting up the container");
+    extract_rootfs_tar();
+    pb.inc(1);
+
+    pb.set_message("Configuring cgroup2...");
     let pid = setup_cgroup2();
     track_container(pid);
+    pb.inc(1);
 
-    let proc_path = format!("{}/proc", UBUNTU24_ROOTFS);
-    fs::create_dir_all(&proc_path).ok();
-    mount(
-        Some("proc"),
-        proc_path.as_str(),
-        Some("proc"),
-        MsFlags::MS_NOEXEC | MsFlags::MS_NOSUID | MsFlags::MS_NODEV,
-        None::<&str>,
-    ).expect("Failed to mount /proc");
-
+    pb.set_message("Mounting /proc and chrooting...");
+    mount_proc().expect("Failed to mount /proc");
     chdir(UBUNTU24_ROOTFS).expect("Failed to chdir to rootfs");
     chroot(".").expect("Failed to chroot to container rootfs");
+    pb.inc(1);
+
+    pb.finish_with_message("[+] Qube: Container ready!".truecolor(0, 200, 60).to_string());
 
     let cmd = CString::new(container_cmd[0].as_str()).unwrap();
     let mut cmd_args = vec![cmd.clone()];
     for arg in &container_cmd[1..] {
         cmd_args.push(CString::new(arg.as_str()).unwrap());
     }
-
     execvp(&cmd, &cmd_args).expect("Failed to exec command");
 
-    umount(proc_path.as_str()).ok();
-    println!("{}", "Container process exited (execvp failed).".bright_red());    
+    println!("{}", "Container process exited (execvp failed).".bright_red());
 }
 
-fn prepare_rootfs() {
+fn prepare_rootfs_dir() {
     if Path::new(UBUNTU24_ROOTFS).exists() {
         fs::remove_dir_all(UBUNTU24_ROOTFS).ok();
     }
-    fs::create_dir_all(UBUNTU24_ROOTFS).unwrap();
+    fs::create_dir_all(UBUNTU24_ROOTFS).expect("Failed to create the UBUNTU24_ROOTFS directory");
+}
 
+fn extract_rootfs_tar() {
     if !Path::new(UBUNTU24_TAR).exists() {
-        panic!("{}", "ERROR: ubuntu24rootfs.tar not found! Please create or copy a real rootfs tar first.".bright_red());
+        panic!(
+            "{}",
+            "ERROR: ubuntu24rootfs.tar not found! Please create or copy a real rootfs tar first."
+                .bright_red()
+        );
     }
-
-    println!("{}", "[+] Extracting ubuntu24rootfs.tar to /tmp/Qube_ubuntu24".truecolor(247, 76, 0));
     let status = Command::new("tar")
         .args(["-xf", UBUNTU24_TAR, "-C", UBUNTU24_ROOTFS])
         .status()
-        .expect("Failed to spawn `tar` process");
+        .expect("Failed to spawn tar process");
 
     if !status.success() {
-        panic!("{}", "Failed to extract the real Ubuntu 24 rootfs! (tar error)".bright_red());
+        panic!("{}", "Failed to extract the Ubuntu 24 rootfs! (tar error)".bright_red());
     }
 }
 
@@ -135,16 +148,30 @@ fn setup_cgroup2() -> i32 {
     let mem_swap_path = format!("{}/memory.swap.max", cgroup_path);
 
     if let Err(e) = fs::write(&mem_max_path, MEMORY_MAX) {
-        eprintln!("Warning: Failed to set memory.max: {}", e);
-    }    
+        //eprintln!("Warning: Failed to set memory.max: {}", e);
+    }
     if let Err(e) = fs::write(&mem_swap_path, MEMORY_SWAP_MAX) {
-        eprintln!("Warning: Failed to set memory.swap.max: {}", e);
-    }    
+        //eprintln!("Warning: Failed to set memory.swap.max: {}", e);
+    }
 
     let cgroup_procs = format!("{}/cgroup.procs", cgroup_path);
     fs::write(&cgroup_procs, pid.to_string()).expect("Failed to write PID to cgroup.procs");
 
     pid
+}
+
+fn mount_proc() -> Result<(), std::io::Error> {
+    let proc_path = format!("{}/proc", UBUNTU24_ROOTFS);
+    fs::create_dir_all(&proc_path)?;
+    mount(
+        Some("proc"),
+        proc_path.as_str(),
+        Some("proc"),
+        MsFlags::MS_NOEXEC | MsFlags::MS_NOSUID | MsFlags::MS_NODEV,
+        None::<&str>,
+    )
+    .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+    Ok(())
 }
 
 fn track_container(pid: i32) {
