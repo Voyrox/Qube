@@ -7,13 +7,11 @@ use std::env;
 use std::process::exit;
 
 fn main() {
-    // Ensure we're running as root
     if nix::unistd::geteuid().as_raw() != 0 {
         eprintln!("{}", "Error: This program must be run as root (use sudo).".bright_red().bold());
         exit(1);
     }
 
-    // Parse CLI args
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         eprintln!("{}", "Usage: qube <run|list|stop|kill> [args...]".bright_red());

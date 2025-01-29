@@ -49,10 +49,10 @@ pub fn get_process_uptime(pid: i32) -> Result<u64, std::io::Error> {
         .parse()
         .unwrap_or(0.0);
 
-    let hertz: f64 = 100.0; // or dynamically: get_clock_ticks_per_sec()
+    // dynamically: get_clock_ticks_per_sec()
+    let hertz: f64 = 100.0;
     let process_start_sec: f64 = start_time_in_jiffies / hertz;
 
     let process_uptime = system_uptime - process_start_sec;
-    
     Ok(process_uptime.max(0.0) as u64)
 }

@@ -1,70 +1,71 @@
 # Qube
- A container runtime written in Rust
+A container runtime written in Rust.
 
-Add `CloneFlags::CLONE_NEWPID` later to run multiple containers
-```
-    unshare(CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWPID | CloneFlags::CLONE_NEWNS)
-```
+## Features
+- Lightweight and fast container runtime.
+- Written in Rust for memory safety and performance.
+- Supports basic container isolation using Linux namespaces.
 
-```
-You may also need a valid /etc/resolv.conf for DNS. For example:
-sudo cp /etc/resolv.conf /tmp/Qube_ubuntu24/etc/resolv.conf
-```
+## Motivation
+Qube aims to provide a lightweight, secure, and efficient container runtime. Rust's memory safety and performance make it an ideal choice for implementing container runtimes. Qube is designed to be simple yet powerful, with a focus on extensibility and security.
 
-```
-If you need a fully functional environment to apt-get install packages, you might need:
-bash
-Copy
-Edit
-sudo mount -o bind /dev /tmp/Qube_ubuntu24/dev
-sudo mount -o bind /sys /tmp/Qube_ubuntu24/sys
-sudo mount -o bind /proc /tmp/Qube_ubuntu24/proc
-```
+## Quick Start
 
-```
-sudo apt-get install -y build-essential libseccomp-dev libssl-dev
-```
+### Build and Run
 
-Run a Container Shell
-```
+```bash
 cargo build --release
-
 sudo ./target/release/Qube run /bin/bash
-```
 
-```
+### Manage Containers
+```bash
+# List running containers
 sudo ./target/release/Qube list
+
+# Stop a container
 sudo ./target/release/Qube stop <pid>
+
+# Kill a container
 sudo ./target/release/Qube kill <pid>
 ```
 
-(Optional) Copy a Real Shell
-```
-sudo apt-get install -y busybox
+### Dependencies
+Install the required dependencies:
 
-sudo cp /bin/busybox /tmp/Qube_ubuntu24/bin/ash
+```bash
+sudo apt-get install -y build-essential libseccomp-dev libssl-dev
 ```
+### Rootfs Setup
+To create a root filesystem for your container:
 
-Rootfs:
-```
+```bash
 sudo apt-get install -y debootstrap
 
 sudo debootstrap \
-     --variant=minbase \
-     jammy \
-     /tmp/ubuntu24rootfs \
-     http://archive.ubuntu.com/ubuntu/
+    --variant=minbase \
+    jammy \
+    /tmp/ubuntu24rootfs \
+    http://archive.ubuntu.com/ubuntu/
 
 sudo tar -C /tmp/ubuntu24rootfs -cf ubuntu24rootfs.tar .
 ```
 
-Note:
-Runs on a Linux system with namespace support
+### DNS Configuration
+You may need a valid `/etc/resolv.conf` for DNS:
+```
+sudo cp /etc/resolv.conf /tmp/Qube_ubuntu24/etc/resolv.conf
+```
 
-todo:
+### Dev Notes
+```bash
+# To run multiple containers, add CloneFlags::CLONE_NEWPID:
+unshare(CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWPID | CloneFlags::CLONE_NEWNS)
 ```
-Networking: If you want an actual network interface inside the container, add CLONE_NEWNET. Then set up veth pairs or a bridge.
-Resource Limits: Use cgroups to limit CPU/memory.
-Rootless: Add CLONE_NEWUSER and map UID/GIDs so it doesn’t require sudo.
-Security: Use seccomp, capabilities, and AppArmor/SELinux to reduce the container’s privileges.
-```
+
+### Roadmap
+- [ ] Networking: Add CLONE_NEWNET for network interfaces inside the container.
+- [ ] Rootless Containers: Add CLONE_NEWUSER and map UID/GIDs to avoid requiring sudo.
+- [ ] Security: Integrate seccomp, capabilities, and AppArmor/SELinux for enhanced security.
+
+### Contributing
+Your ideas and contributions are welcome! Feel free to open issues or submit pull requests.

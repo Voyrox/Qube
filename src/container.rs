@@ -2,9 +2,10 @@ use crate::cgroup;
 use crate::tracking;
 use colored::*;
 use indicatif::{ProgressBar, ProgressStyle};
+use libc::fork;
 use nix::mount::{mount, MsFlags};
 use nix::sched::{unshare, CloneFlags};
-use nix::unistd::{chdir, chroot, execvp, sethostname};
+use nix::unistd::{chdir, chroot, execvp, getpid, sethostname};
 use std::ffi::CString;
 use std::fs;
 use std::path::Path;
@@ -13,74 +14,97 @@ use std::process::Command;
 pub const UBUNTU24_ROOTFS: &str = "/tmp/Qube_ubuntu24";
 pub const UBUNTU24_TAR: &str = "ubuntu24rootfs.tar";
 
-pub fn run_container(container_cmd: &[String]) {
-    let total_steps = 5;
-    let pb = ProgressBar::new(total_steps);
-    pb.set_style(
+pub fn run_container(user_cmd: &[String]) {
+    let total_steps_parent = 2;
+    let pb_parent = ProgressBar::new(total_steps_parent);
+    pb_parent.set_style(
         ProgressStyle::default_bar()
             .template("{spinner:.green} {msg} [{bar:40.white/blue}] {pos}/{len} ({eta})")
-            .progress_chars(": "),
+            .progress_chars("=>-"),
     );
 
-    pb.set_message("Unsharing namespaces...");
+    pb_parent.set_message("Preparing container rootfs directory...");
+    prepare_rootfs_dir();
+    pb_parent.inc(1);
+
+    pb_parent.set_message("Extracting rootfs...");
+    extract_rootfs_tar();
+    pb_parent.inc(1);
+
+    pb_parent.finish_with_message("Container prepared".truecolor(0, 200, 60).to_string());
+
+    let fork_result = unsafe { fork() };
+    match fork_result {
+        -1 => {
+            eprintln!("Failed to fork()");
+        }
+        0 => {
+            child_container_process(user_cmd);
+        }
+        child_pid => {
+            println!(
+                "\nContainer launched with PID: {}",
+                child_pid
+            );
+            println!("Use 'qube stop {pid}' or 'qube kill {pid}' to stop/kill it.\n", pid = child_pid);
+        }
+    }
+}
+
+fn child_container_process(user_cmd: &[String]) -> ! {
+    let total_steps_child = 3;
+    let pb_child = ProgressBar::new(total_steps_child);
+    pb_child.set_style(
+        ProgressStyle::default_bar()
+            .template("{spinner:.green} {msg} [{bar:40.white/blue}] {pos}/{len} ({eta})")
+            .progress_chars("=>-"),
+    );
+
     unshare(CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWNS)
         .expect("Failed to unshare namespaces");
     sethostname("Qube").expect("Failed to set hostname");
-    pb.inc(1);
 
-    pb.set_message("Preparing container rootfs directory...");
-    prepare_rootfs_dir();
-    pb.inc(1);
-
-    pb.set_message("Setting up the container");
-    extract_rootfs_tar();
-    pb.inc(1);
-
-    pb.set_message("Configuring cgroup2...");
-    let pid = cgroup::setup_cgroup2();
+    let pid = getpid().as_raw();
+    cgroup::setup_cgroup2();
     tracking::track_container(pid);
-    pb.inc(1);
 
-    pb.set_message("Mounting /proc and chrooting...");
     mount_proc().expect("Failed to mount /proc");
     chdir(UBUNTU24_ROOTFS).expect("Failed to chdir to rootfs");
     chroot(".").expect("Failed to chroot to container rootfs");
-    pb.inc(1);
 
-    pb.finish_with_message("[+] Qube: Container ready!".truecolor(0, 200, 60).to_string());
+    let user_str = user_cmd.join(" ");
+    let script = format!("{}; exec sleep infinity", user_str);
+    let final_cmd = vec!["/bin/sh", "-c", &script];
 
-    let cmd = CString::new(container_cmd[0].as_str()).unwrap();
-    let mut cmd_args = vec![cmd.clone()];
-    for arg in &container_cmd[1..] {
-        cmd_args.push(CString::new(arg.as_str()).unwrap());
-    }
+    let cmd = CString::new(final_cmd[0]).unwrap();
+    let cmd_args: Vec<CString> = final_cmd
+        .iter()
+        .map(|s| CString::new(*s).unwrap())
+        .collect();
+
     execvp(&cmd, &cmd_args).expect("Failed to exec command");
 
-    println!("{}", "Container process exited (execvp failed).".bright_red());
+    eprintln!("Container child process: execvp failed.");
+    std::process::exit(1);
 }
 
 fn prepare_rootfs_dir() {
     if Path::new(UBUNTU24_ROOTFS).exists() {
         fs::remove_dir_all(UBUNTU24_ROOTFS).ok();
     }
-    fs::create_dir_all(UBUNTU24_ROOTFS).expect("Failed to create the UBUNTU24_ROOTFS directory");
+    fs::create_dir_all(UBUNTU24_ROOTFS).expect("Failed to create UBUNTU24_ROOTFS directory");
 }
 
 fn extract_rootfs_tar() {
     if !Path::new(UBUNTU24_TAR).exists() {
-        panic!(
-            "{}",
-            "ERROR: ubuntu24rootfs.tar not found! Please create or copy a real rootfs tar first."
-                .bright_red()
-        );
+        panic!("ERROR: ubuntu24rootfs.tar not found! Please provide a valid rootfs tar.");
     }
     let status = Command::new("tar")
         .args(["-xf", UBUNTU24_TAR, "-C", UBUNTU24_ROOTFS])
         .status()
         .expect("Failed to spawn tar process");
-
     if !status.success() {
-        panic!("{}", "Failed to extract the Ubuntu 24 rootfs! (tar error)".bright_red());
+        panic!("Failed to extract the Ubuntu 24 rootfs! (tar error)");
     }
 }
 
@@ -119,11 +143,10 @@ pub fn list_containers() {
             let proc_path = format!("/proc/{}", pid_num);
 
             if Path::new(&proc_path).exists() {
-                let uptime = match tracking::get_process_uptime(pid_num) {
+                let uptime = match crate::tracking::get_process_uptime(pid_num) {
                     Ok(t) => format!("{}s", t),
                     Err(_) => "N/A".to_string(),
                 };
-
                 println!("║ {:<15} ║ {:<10} ║ {:<12} ║", pid_str, "RUNNING", uptime);
                 valid_pids.push(pid_str.to_string());
             }
@@ -139,14 +162,14 @@ pub fn list_containers() {
 }
 
 pub fn stop_container(pid: i32) {
-    let proc_path = format!("/proc/{}", pid);
-    if !Path::new(&proc_path).exists() {
-        println!("{}", format!("Container {} is already stopped or does not exist.", pid).bright_red());
-        return;
-    }
-
     use nix::sys::signal::{kill, Signal};
     use nix::unistd::Pid;
+
+    let proc_path = format!("/proc/{}", pid);
+    if !Path::new(&proc_path).exists() {
+        println!("Container {} is already stopped or doesn't exist.", pid);
+        return;
+    }
 
     if kill(Pid::from_raw(pid), Signal::SIGTERM).is_ok() {
         println!("Stopped container with PID: {}", pid);
@@ -157,14 +180,14 @@ pub fn stop_container(pid: i32) {
 }
 
 pub fn kill_container(pid: i32) {
-    let proc_path = format!("/proc/{}", pid);
-    if !Path::new(&proc_path).exists() {
-        println!("{}", format!("Container {} is already stopped or does not exist.", pid).bright_red());
-        return;
-    }
-
     use nix::sys::signal::{kill, Signal};
     use nix::unistd::Pid;
+
+    let proc_path = format!("/proc/{}", pid);
+    if !Path::new(&proc_path).exists() {
+        println!("Container {} is already stopped or doesn't exist.", pid);
+        return;
+    }
 
     if kill(Pid::from_raw(pid), Signal::SIGKILL).is_ok() {
         println!("Killed container with PID: {}", pid);
