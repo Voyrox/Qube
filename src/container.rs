@@ -1,18 +1,28 @@
 use crate::cgroup;
 use crate::tracking;
-use colored::*;
+use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
 use libc::fork;
 use nix::mount::{mount, MsFlags};
 use nix::sched::{unshare, CloneFlags};
 use nix::unistd::{self, chdir, chroot, close, read, sethostname, write};
-use std::os::fd::RawFd;
+use rand::{distributions::Alphanumeric, Rng};
 use std::fs;
+use std::os::fd::RawFd;
 use std::path::Path;
 use std::process::Command;
 
 pub const UBUNTU24_ROOTFS: &str = "/tmp/Qube_ubuntu24";
 pub const UBUNTU24_TAR: &str = "ubuntu24rootfs.tar";
+
+fn generate_container_id() -> String {
+    let rand_str: String = rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(6)
+        .map(char::from)
+        .collect();
+    format!("Qube-{}", rand_str)
+}
 
 pub fn run_container(_user_cmd: &[String]) {
     let total_steps_parent = 2;
@@ -33,37 +43,36 @@ pub fn run_container(_user_cmd: &[String]) {
 
     pb_parent.finish_with_message("Container prepared".truecolor(0, 200, 60).to_string());
 
+    let container_id = generate_container_id();
     let (pipe_rd, pipe_wr) = unistd::pipe().expect("Failed to create pipe");
-
     let fork_result = unsafe { fork() };
+
     match fork_result {
-        -1 => {
-            eprintln!("Failed to fork()");
-        }
+        -1 => eprintln!("Failed to fork()"),
         0 => {
             close(pipe_rd).ok();
-            child_container_process(pipe_wr);
+            child_container_process(pipe_wr, &container_id);
         }
-        _child_pid => {
+        _ => {
             close(pipe_wr).ok();
             let mut buf = [0u8; 4];
             let n = read(pipe_rd, &mut buf).unwrap_or(0);
             close(pipe_rd).ok();
-
             if n < 4 {
-                eprintln!("Container process did not report a final PID (it may have exited early).");
+                eprintln!("Container process did not report a final PID (it may have exited).");
                 return;
             }
-
             let container_pid = i32::from_le_bytes(buf);
+            println!("\nContainer launched with ID: {} (PID: {})", container_id, container_pid);
+            println!("Use 'qube stop {}' or 'qube kill {}' to stop/kill it.\n", container_pid, container_pid);
 
-            println!("\nContainer launched with PID: {container_pid}");
-            println!("Use 'qube stop {container_pid}' or 'qube kill {container_pid}' to stop/kill it.\n");
+            // Track the container in the container list file
+            tracking::track_container_named(&container_id, container_pid); // Updated tracking call
         }
     }
 }
 
-fn child_container_process(pipefd: RawFd) -> ! {
+fn child_container_process(pipefd: RawFd, container_id: &str) -> ! {
     let total_steps_child = 3;
     let pb_child = ProgressBar::new(total_steps_child);
     pb_child.set_style(
@@ -73,8 +82,7 @@ fn child_container_process(pipefd: RawFd) -> ! {
     );
 
     pb_child.set_message("Unsharing namespaces...");
-    unshare(CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWNS)
-        .expect("Failed to unshare namespaces");
+    unshare(CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWNS).expect("Failed to unshare namespaces");
     sethostname("Qube").expect("Failed to set hostname");
     pb_child.inc(1);
 
@@ -92,15 +100,12 @@ fn child_container_process(pipefd: RawFd) -> ! {
 
     match unsafe { fork() } {
         -1 => {
-            eprintln!("Failed second fork()");
             let _ = write(pipefd, &(-1i32).to_le_bytes());
             std::process::exit(1);
         }
-        0 => {
-            container_init_loop();
-        }
+        0 => container_init_loop(),
         grandchild_pid => {
-            tracking::track_container(grandchild_pid);
+            tracking::track_container_named(container_id, grandchild_pid);
             let _ = write(pipefd, &grandchild_pid.to_le_bytes());
             let _ = close(pipefd);
             std::process::exit(0);
@@ -119,7 +124,7 @@ fn container_init_loop() -> ! {
             | Ok(WaitStatus::Continued(_)) => {
                 std::thread::sleep(std::time::Duration::from_secs(5));
             }
-            Err(nix::errno::Errno::ECHILD) => {
+            Err(_) => {
                 std::thread::sleep(std::time::Duration::from_secs(5));
             }
             _ => {
@@ -138,14 +143,14 @@ fn prepare_rootfs_dir() {
 
 fn extract_rootfs_tar() {
     if !Path::new(UBUNTU24_TAR).exists() {
-        panic!("ERROR: ubuntu24rootfs.tar not found! Please provide a valid rootfs tar.");
+        panic!("ERROR: ubuntu24rootfs.tar not found!");
     }
     let status = Command::new("tar")
         .args(["-xf", UBUNTU24_TAR, "-C", UBUNTU24_ROOTFS])
         .status()
         .expect("Failed to spawn tar process");
     if !status.success() {
-        panic!("Failed to extract the Ubuntu 24 rootfs! (tar error)");
+        panic!("Failed to extract the Ubuntu 24 rootfs!");
     }
 }
 
@@ -165,9 +170,8 @@ fn mount_proc() -> Result<(), std::io::Error> {
 
 pub fn list_containers() {
     if let Ok(contents) = fs::read_to_string(tracking::CONTAINER_LIST_FILE) {
-        let mut valid_pids = Vec::new();
-
-        println!("{}", "╔═════════════════╦════════════╦══════════════╗");
+        let mut valid_entries = Vec::new();
+        println!("╔═════════════════╦════════════╦══════════════╗");
         println!(
             "{}",
             format!(
@@ -177,41 +181,41 @@ pub fn list_containers() {
                 "UPTIME".bold().truecolor(150, 200, 150)
             )
         );
-        println!("{}", "╠═════════════════╬════════════╬══════════════╣");
+        println!("╠═════════════════╬════════════╬══════════════╣");
 
-        for pid_str in contents.lines() {
-            let pid_num = pid_str.parse::<i32>().unwrap_or(0);
+        for line in contents.lines() {
+            let parts: Vec<&str> = line.trim().split_whitespace().collect();
+            if parts.len() < 2 {
+                continue;
+            }
+            let name = parts[0];
+            let pid_num = parts[1].parse::<i32>().unwrap_or(0);
             let proc_path = format!("/proc/{}", pid_num);
-
             if Path::new(&proc_path).exists() {
                 let uptime = match crate::tracking::get_process_uptime(pid_num) {
                     Ok(t) => format!("{}s", t),
                     Err(_) => "N/A".to_string(),
                 };
-                println!("║ {:<15} ║ {:<10} ║ {:<12} ║", pid_str, "RUNNING", uptime);
-                valid_pids.push(pid_str.to_string());
+                println!("║ {:<15} ║ {:<10} ║ {:<12} ║", name, "RUNNING", uptime);
+                valid_entries.push(format!("{} {}", name, pid_num));
             }
         }
-
-        println!("{}", "╚═════════════════╩════════════╩══════════════╝");
-
-        fs::write(tracking::CONTAINER_LIST_FILE, valid_pids.join("\n"))
+        println!("╚═════════════════╩════════════╩══════════════╝");
+        fs::write(tracking::CONTAINER_LIST_FILE, valid_entries.join("\n"))
             .expect("Failed to update container list");
     } else {
-        println!("{}", "No running containers.".bright_red().bold());
+        println!("{}", "No running containers.".red().bold());
     }
 }
 
 pub fn stop_container(pid: i32) {
     use nix::sys::signal::{kill, Signal};
     use nix::unistd::Pid;
-
-    let proc_path = format!("/proc/{}", pid);
-    if !Path::new(&proc_path).exists() {
-        println!("Container {} is already stopped or doesn't exist.", pid);
+    let path = format!("/proc/{}", pid);
+    if !Path::new(&path).exists() {
+        println!("Container {} is not running.", pid);
         return;
     }
-
     if kill(Pid::from_raw(pid), Signal::SIGTERM).is_ok() {
         println!("Stopped container with PID: {}", pid);
         tracking::remove_container_from_tracking(pid);
@@ -223,13 +227,11 @@ pub fn stop_container(pid: i32) {
 pub fn kill_container(pid: i32) {
     use nix::sys::signal::{kill, Signal};
     use nix::unistd::Pid;
-
-    let proc_path = format!("/proc/{}", pid);
-    if !Path::new(&proc_path).exists() {
-        println!("Container {} is already stopped or doesn't exist.", pid);
+    let path = format!("/proc/{}", pid);
+    if !Path::new(&path).exists() {
+        println!("Container {} is not running.", pid);
         return;
     }
-
     if kill(Pid::from_raw(pid), Signal::SIGKILL).is_ok() {
         println!("Killed container with PID: {}", pid);
         tracking::remove_container_from_tracking(pid);
