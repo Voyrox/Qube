@@ -5,8 +5,8 @@ use indicatif::{ProgressBar, ProgressStyle};
 use libc::fork;
 use nix::mount::{mount, MsFlags};
 use nix::sched::{unshare, CloneFlags};
-use nix::unistd::{chdir, chroot, execvp, getpid, sethostname};
-use std::ffi::CString;
+use nix::unistd::{self, chdir, chroot, close, read, sethostname, write};
+use std::os::fd::RawFd;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
@@ -14,7 +14,7 @@ use std::process::Command;
 pub const UBUNTU24_ROOTFS: &str = "/tmp/Qube_ubuntu24";
 pub const UBUNTU24_TAR: &str = "ubuntu24rootfs.tar";
 
-pub fn run_container(user_cmd: &[String]) {
+pub fn run_container(_user_cmd: &[String]) {
     let total_steps_parent = 2;
     let pb_parent = ProgressBar::new(total_steps_parent);
     pb_parent.set_style(
@@ -33,25 +33,37 @@ pub fn run_container(user_cmd: &[String]) {
 
     pb_parent.finish_with_message("Container prepared".truecolor(0, 200, 60).to_string());
 
+    let (pipe_rd, pipe_wr) = unistd::pipe().expect("Failed to create pipe");
+
     let fork_result = unsafe { fork() };
     match fork_result {
         -1 => {
             eprintln!("Failed to fork()");
         }
         0 => {
-            child_container_process(user_cmd);
+            close(pipe_rd).ok();
+            child_container_process(pipe_wr);
         }
-        child_pid => {
-            println!(
-                "\nContainer launched with PID: {}",
-                child_pid
-            );
-            println!("Use 'qube stop {pid}' or 'qube kill {pid}' to stop/kill it.\n", pid = child_pid);
+        _child_pid => {
+            close(pipe_wr).ok();
+            let mut buf = [0u8; 4];
+            let n = read(pipe_rd, &mut buf).unwrap_or(0);
+            close(pipe_rd).ok();
+
+            if n < 4 {
+                eprintln!("Container process did not report a final PID (it may have exited early).");
+                return;
+            }
+
+            let container_pid = i32::from_le_bytes(buf);
+
+            println!("\nContainer launched with PID: {container_pid}");
+            println!("Use 'qube stop {container_pid}' or 'qube kill {container_pid}' to stop/kill it.\n");
         }
     }
 }
 
-fn child_container_process(user_cmd: &[String]) -> ! {
+fn child_container_process(pipefd: RawFd) -> ! {
     let total_steps_child = 3;
     let pb_child = ProgressBar::new(total_steps_child);
     pb_child.set_style(
@@ -60,32 +72,61 @@ fn child_container_process(user_cmd: &[String]) -> ! {
             .progress_chars("=>-"),
     );
 
+    pb_child.set_message("Unsharing namespaces...");
     unshare(CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWNS)
         .expect("Failed to unshare namespaces");
     sethostname("Qube").expect("Failed to set hostname");
+    pb_child.inc(1);
 
-    let pid = getpid().as_raw();
+    pb_child.set_message("Setting up cgroup...");
     cgroup::setup_cgroup2();
-    tracking::track_container(pid);
+    pb_child.inc(1);
 
+    pb_child.set_message("Mounting proc & chroot...");
     mount_proc().expect("Failed to mount /proc");
     chdir(UBUNTU24_ROOTFS).expect("Failed to chdir to rootfs");
     chroot(".").expect("Failed to chroot to container rootfs");
+    pb_child.inc(1);
 
-    let user_str = user_cmd.join(" ");
-    let script = format!("{}; exec sleep infinity", user_str);
-    let final_cmd = vec!["/bin/sh", "-c", &script];
+    pb_child.finish_with_message("Container environment set up.");
 
-    let cmd = CString::new(final_cmd[0]).unwrap();
-    let cmd_args: Vec<CString> = final_cmd
-        .iter()
-        .map(|s| CString::new(*s).unwrap())
-        .collect();
+    match unsafe { fork() } {
+        -1 => {
+            eprintln!("Failed second fork()");
+            let _ = write(pipefd, &(-1i32).to_le_bytes());
+            std::process::exit(1);
+        }
+        0 => {
+            container_init_loop();
+        }
+        grandchild_pid => {
+            tracking::track_container(grandchild_pid);
+            let _ = write(pipefd, &grandchild_pid.to_le_bytes());
+            let _ = close(pipefd);
+            std::process::exit(0);
+        }
+    }
+}
 
-    execvp(&cmd, &cmd_args).expect("Failed to exec command");
-
-    eprintln!("Container child process: execvp failed.");
-    std::process::exit(1);
+fn container_init_loop() -> ! {
+    use nix::sys::wait::{waitpid, WaitPidFlag, WaitStatus};
+    loop {
+        match waitpid(None, Some(WaitPidFlag::WNOHANG)) {
+            Ok(WaitStatus::StillAlive)
+            | Ok(WaitStatus::Exited(_, _))
+            | Ok(WaitStatus::Signaled(_, _, _))
+            | Ok(WaitStatus::Stopped(_, _))
+            | Ok(WaitStatus::Continued(_)) => {
+                std::thread::sleep(std::time::Duration::from_secs(5));
+            }
+            Err(nix::errno::Errno::ECHILD) => {
+                std::thread::sleep(std::time::Duration::from_secs(5));
+            }
+            _ => {
+                std::thread::sleep(std::time::Duration::from_secs(5));
+            }
+        }
+    }
 }
 
 fn prepare_rootfs_dir() {
@@ -126,17 +167,17 @@ pub fn list_containers() {
     if let Ok(contents) = fs::read_to_string(tracking::CONTAINER_LIST_FILE) {
         let mut valid_pids = Vec::new();
 
-        println!("{}", "╔═════════════════╦════════════╦══════════════╗".truecolor(247, 76, 0));
+        println!("{}", "+——————————————+————————+——————————+");
         println!(
             "{}",
             format!(
-                "║ {:<15} ║ {:<10} ║ {:<12} ║",
+                "| {:<15} | {:<10} | {:<12} |",
                 "CONTAINER ID".bold().truecolor(255, 165, 0),
-                "STATUS".bold().truecolor(200, 150, 100),
+                "STATUS".bold().truecolor(0, 200, 60),
                 "UPTIME".bold().truecolor(150, 200, 150)
             )
         );
-        println!("{}", "╠═════════════════╬════════════╬══════════════╣".truecolor(247, 76, 0));
+        println!("{}", "+——————————————+————————+——————————+");
 
         for pid_str in contents.lines() {
             let pid_num = pid_str.parse::<i32>().unwrap_or(0);
@@ -152,7 +193,7 @@ pub fn list_containers() {
             }
         }
 
-        println!("{}", "╚═════════════════╩════════════╩══════════════╝".truecolor(247, 76, 0));
+        println!("{}", "+——————————————+————————+——————————+");
 
         fs::write(tracking::CONTAINER_LIST_FILE, valid_pids.join("\n"))
             .expect("Failed to update container list");

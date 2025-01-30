@@ -12,10 +12,13 @@ pub fn setup_cgroup2() -> i32 {
     let pid = getpid().as_raw();
 
     let cgroup_path = format!("{}/{}", CGROUP_ROOT, pid);
-    fs::create_dir_all(&cgroup_path).expect("Failed to create cgroup dir");
+    if let Err(e) = fs::create_dir_all(&cgroup_path) {
+        eprintln!("Failed to create cgroup dir: {}", e);
+    }
 
-    fs::set_permissions(&cgroup_path, fs::Permissions::from_mode(0o755))
-        .expect("Failed to set permissions on cgroup directory");
+    if let Err(e) = fs::set_permissions(&cgroup_path, fs::Permissions::from_mode(0o755)) {
+        eprintln!("Failed to set permissions on cgroup directory: {}", e);
+    }
 
     let mem_max_path = format!("{}/memory.max", cgroup_path);
     let mem_swap_path = format!("{}/memory.swap.max", cgroup_path);
@@ -24,7 +27,9 @@ pub fn setup_cgroup2() -> i32 {
     let _ = fs::write(&mem_swap_path, MEMORY_SWAP_MAX);
 
     let cgroup_procs = format!("{}/cgroup.procs", cgroup_path);
-    fs::write(&cgroup_procs, pid.to_string()).expect("Failed to write PID to cgroup.procs");
+    if let Err(e) = fs::write(&cgroup_procs, pid.to_string()) {
+        eprintln!("Warning: Failed to write PID to cgroup.procs. Skipping cgroup. Error: {}", e);
+    }
 
     pid
 }
