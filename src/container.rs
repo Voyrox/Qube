@@ -20,7 +20,7 @@ pub fn run_container(user_cmd: &[String]) {
     pb_parent.set_style(
         ProgressStyle::default_bar()
             .template("{spinner:.green} {msg} [{bar:40.white/blue}] {pos}/{len} ({eta})")
-            .progress_chars("=>-"),
+            .progress_chars("█-"),
     );
 
     pb_parent.set_message("Preparing container rootfs directory...");
