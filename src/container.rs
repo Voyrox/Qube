@@ -2,7 +2,7 @@ use crate::cgroup;
 use crate::tracking;
 use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
-use libc::fork;
+use libc::{fork, c_int};
 use nix::mount::{mount, MsFlags};
 use nix::sched::{unshare, CloneFlags};
 use nix::unistd::{self, chdir, chroot, close, read, sethostname, write};
@@ -11,6 +11,7 @@ use std::fs;
 use std::os::fd::RawFd;
 use std::path::Path;
 use std::process::Command;
+use nix::sys::signal::{Signal, self};
 
 pub const UBUNTU24_ROOTFS: &str = "/tmp/Qube_ubuntu24";
 pub const UBUNTU24_TAR: &str = "ubuntu24rootfs.tar";
@@ -22,6 +23,11 @@ fn generate_container_id() -> String {
         .map(char::from)
         .collect();
     format!("Qube-{}", rand_str)
+}
+
+extern "C" fn signal_handler(_sig: c_int) {
+    println!("Received SIGTERM, stopping container...");
+    std::process::exit(0);
 }
 
 pub fn run_container(_user_cmd: &[String]) {
@@ -66,8 +72,7 @@ pub fn run_container(_user_cmd: &[String]) {
             println!("\nContainer launched with ID: {} (PID: {})", container_id, container_pid);
             println!("Use 'qube stop {}' or 'qube kill {}' to stop/kill it.\n", container_pid, container_pid);
 
-            // Track the container in the container list file
-            tracking::track_container_named(&container_id, container_pid); // Updated tracking call
+            tracking::track_container_named(&container_id, container_pid);
         }
     }
 }
@@ -98,12 +103,20 @@ fn child_container_process(pipefd: RawFd, container_id: &str) -> ! {
 
     pb_child.finish_with_message("Container environment set up.");
 
+    // Register the signal handler for SIGTERM
+    unsafe {
+        signal::signal(Signal::SIGTERM, signal::SigHandler::Handler(signal_handler))
+            .expect("Failed to register signal handler");
+    }
+
     match unsafe { fork() } {
         -1 => {
             let _ = write(pipefd, &(-1i32).to_le_bytes());
             std::process::exit(1);
         }
-        0 => container_init_loop(),
+        0 => {
+            container_init_loop();
+        }
         grandchild_pid => {
             tracking::track_container_named(container_id, grandchild_pid);
             let _ = write(pipefd, &grandchild_pid.to_le_bytes());
@@ -169,43 +182,40 @@ fn mount_proc() -> Result<(), std::io::Error> {
 }
 
 pub fn list_containers() {
-    if let Ok(contents) = fs::read_to_string(tracking::CONTAINER_LIST_FILE) {
-        let mut valid_entries = Vec::new();
-        println!("╔═════════════════╦════════════╦══════════════╗");
-        println!(
-            "{}",
-            format!(
-                "| {:<15} | {:<10} | {:<12} |",
-                "CONTAINER ID".bold().truecolor(255, 165, 0),
-                "STATUS".bold().truecolor(0, 200, 60),
-                "UPTIME".bold().truecolor(150, 200, 150)
-            )
-        );
-        println!("╠═════════════════╬════════════╬══════════════╣");
+    let running_pids = tracking::get_running_containers();
 
-        for line in contents.lines() {
-            let parts: Vec<&str> = line.trim().split_whitespace().collect();
-            if parts.len() < 2 {
-                continue;
-            }
-            let name = parts[0];
-            let pid_num = parts[1].parse::<i32>().unwrap_or(0);
-            let proc_path = format!("/proc/{}", pid_num);
-            if Path::new(&proc_path).exists() {
-                let uptime = match crate::tracking::get_process_uptime(pid_num) {
-                    Ok(t) => format!("{}s", t),
-                    Err(_) => "N/A".to_string(),
-                };
-                println!("║ {:<15} ║ {:<10} ║ {:<12} ║", name, "RUNNING", uptime);
-                valid_entries.push(format!("{} {}", name, pid_num));
-            }
-        }
-        println!("╚═════════════════╩════════════╩══════════════╝");
-        fs::write(tracking::CONTAINER_LIST_FILE, valid_entries.join("\n"))
-            .expect("Failed to update container list");
-    } else {
+    if running_pids.is_empty() {
         println!("{}", "No running containers.".red().bold());
+        return;
     }
+
+    let mut valid_entries = Vec::new();
+    println!("╔═════════════════╦════════════╦══════════════╗");
+    println!(
+        "{}",
+        format!(
+            "| {:<15} | {:<10} | {:<12} |",
+            "CONTAINER ID".bold().truecolor(255, 165, 0),
+            "STATUS".bold().truecolor(0, 200, 60),
+            "UPTIME".bold().truecolor(150, 200, 150)
+        )
+    );
+    println!("╠═════════════════╬════════════╬══════════════╣");
+
+    for pid in running_pids {
+        let proc_path = format!("/proc/{}", pid);
+        if Path::new(&proc_path).exists() {
+            let uptime = match tracking::get_process_uptime(pid) {
+                Ok(t) => format!("{}s", t),
+                Err(_) => "N/A".to_string(),
+            };
+            println!("║ {:<15} ║ {:<10} ║ {:<12} ║", pid, "RUNNING", uptime);
+            valid_entries.push(format!("{} {}", "Qube", pid));
+        }
+    }
+    println!("╚═════════════════╩════════════╩══════════════╝");
+    fs::write(tracking::CONTAINER_LIST_FILE, valid_entries.join("\n"))
+        .expect("Failed to update container list");
 }
 
 pub fn stop_container(pid: i32) {

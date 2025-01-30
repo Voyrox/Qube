@@ -1,6 +1,8 @@
 use std::fs;
 use std::io::{Read, Write, ErrorKind};
 use std::fs::File;
+use std::path::Path;
+use std::process::Command;
 
 pub const TRACKING_DIR: &str = "/var/lib/Qube";
 pub const CONTAINER_LIST_FILE: &str = "/var/lib/Qube/containers.txt";
@@ -30,6 +32,37 @@ pub fn remove_container_from_tracking(pid: i32) {
     }
 }
 
+pub fn get_running_containers() -> Vec<i32> {
+    let mut running_pids = Vec::new();
+
+    if let Ok(contents) = fs::read_to_string(CONTAINER_LIST_FILE) {
+        for line in contents.lines() {
+            let parts: Vec<&str> = line.trim().split_whitespace().collect();
+            if parts.len() == 2 {
+                if let Ok(pid) = parts[1].parse::<i32>() {
+                    let proc_path = format!("/proc/{}", pid);
+                    if Path::new(&proc_path).exists() {
+                        running_pids.push(pid);
+                    }
+                }
+            }
+        }
+    }
+
+    running_pids
+}
+
+pub fn restart_container(pid: i32) {
+    let proc_path = format!("/proc/{}", pid);
+    if Path::new(&proc_path).exists() {
+        Command::new("kill")
+            .arg("-CONT")
+            .arg(pid.to_string())
+            .output()
+            .expect("Failed to restart container");
+    }
+}
+
 pub fn get_process_uptime(pid: i32) -> Result<u64, std::io::Error> {
     let path = format!("/proc/{}/stat", pid);
     let mut buf = String::new();
@@ -46,4 +79,4 @@ pub fn get_process_uptime(pid: i32) -> Result<u64, std::io::Error> {
     let start_sec = start_time / hertz;
     let proc_uptime = sys_uptime - start_sec;
     Ok(proc_uptime.max(0.0) as u64)
-} 
+}

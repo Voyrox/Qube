@@ -18,6 +18,14 @@ fn main() {
         exit(1);
     }
 
+    let running_containers = tracking::get_running_containers();
+    if !running_containers.is_empty() {
+        for pid in running_containers {
+            println!("Attempting to restart container with PID: {}", pid);
+            tracking::restart_container(pid);
+        }
+    }
+
     match args[1].as_str() {
         "run" => {
             let container_cmd: Vec<String> = args[2..].to_vec();
