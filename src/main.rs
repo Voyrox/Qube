@@ -1,3 +1,4 @@
+mod daemon;
 mod container;
 mod cgroup;
 mod tracking;
@@ -14,19 +15,18 @@ fn main() {
 
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
-        eprintln!("{}", "Usage: qube <run|list|stop|kill> [args...]".bright_red());
+        eprintln!(
+            "{}",
+            "Usage: qube <daemon|run|list|stop|kill> [args...]".bright_red()
+        );
         exit(1);
     }
 
-    let running_containers = tracking::get_running_containers();
-    if !running_containers.is_empty() {
-        for pid in running_containers {
-            println!("Attempting to restart container with PID: {}", pid);
-            tracking::restart_container(pid);
-        }
-    }
-
     match args[1].as_str() {
+        "daemon" => {
+            println!("{}", "Starting Qubed Daemon...".green().bold());
+            daemon::start_daemon();
+        }
         "run" => {
             let container_cmd: Vec<String> = args[2..].to_vec();
             if container_cmd.is_empty() {
@@ -35,7 +35,9 @@ fn main() {
             }
             container::run_container(&container_cmd);
         }
-        "list" => container::list_containers(),
+        "list" => {
+            container::list_containers();
+        }
         "stop" => {
             if args.len() < 3 {
                 eprintln!("{}", "Usage: qube stop <pid>".bright_red());

@@ -12,9 +12,11 @@ use std::os::fd::RawFd;
 use std::path::Path;
 use std::process::Command;
 use nix::sys::signal::{Signal, self};
+use std::os::unix::process::CommandExt;
+
 
 pub const UBUNTU24_ROOTFS: &str = "/tmp/Qube_ubuntu24";
-pub const UBUNTU24_TAR: &str = "ubuntu24rootfs.tar";
+pub const UBUNTU24_TAR: &str = "ubuntu24rootfs_custom.tar";
 
 fn generate_container_id() -> String {
     let rand_str: String = rand::thread_rng()
@@ -26,11 +28,11 @@ fn generate_container_id() -> String {
 }
 
 extern "C" fn signal_handler(_sig: c_int) {
-    println!("Received SIGTERM, stopping container...");
+    println!("Received SIGTERM inside container's init process, stopping container...");
     std::process::exit(0);
 }
 
-pub fn run_container(_user_cmd: &[String]) {
+pub fn run_container(user_cmd: &[String]) {
     let total_steps_parent = 2;
     let pb_parent = ProgressBar::new(total_steps_parent);
     pb_parent.set_style(
@@ -57,9 +59,9 @@ pub fn run_container(_user_cmd: &[String]) {
         -1 => eprintln!("Failed to fork()"),
         0 => {
             close(pipe_rd).ok();
-            child_container_process(pipe_wr, &container_id);
+            child_container_process(pipe_wr, &container_id, user_cmd);
         }
-        _ => {
+        pid => {
             close(pipe_wr).ok();
             let mut buf = [0u8; 4];
             let n = read(pipe_rd, &mut buf).unwrap_or(0);
@@ -69,15 +71,25 @@ pub fn run_container(_user_cmd: &[String]) {
                 return;
             }
             let container_pid = i32::from_le_bytes(buf);
-            println!("\nContainer launched with ID: {} (PID: {})", container_id, container_pid);
-            println!("Use 'qube stop {}' or 'qube kill {}' to stop/kill it.\n", container_pid, container_pid);
+            println!(
+                "\nContainer launched with ID: {} (PID: {})",
+                container_id, container_pid
+            );
+            println!(
+                "Use 'qube stop {}' or 'qube kill {}' to stop/kill it.\n",
+                container_pid, container_pid
+            );
 
-            tracking::track_container_named(&container_id, container_pid);
+            tracking::track_container_named(
+                &container_id,
+                container_pid,
+                user_cmd.to_vec()
+            );
         }
     }
 }
 
-fn child_container_process(pipefd: RawFd, container_id: &str) -> ! {
+fn child_container_process(pipefd: RawFd, container_id: &str, user_cmd: &[String]) -> ! {
     let total_steps_child = 3;
     let pb_child = ProgressBar::new(total_steps_child);
     pb_child.set_style(
@@ -103,7 +115,6 @@ fn child_container_process(pipefd: RawFd, container_id: &str) -> ! {
 
     pb_child.finish_with_message("Container environment set up.");
 
-    // Register the signal handler for SIGTERM
     unsafe {
         signal::signal(Signal::SIGTERM, signal::SigHandler::Handler(signal_handler))
             .expect("Failed to register signal handler");
@@ -115,10 +126,9 @@ fn child_container_process(pipefd: RawFd, container_id: &str) -> ! {
             std::process::exit(1);
         }
         0 => {
-            container_init_loop();
+            launch_user_command(user_cmd);
         }
         grandchild_pid => {
-            tracking::track_container_named(container_id, grandchild_pid);
             let _ = write(pipefd, &grandchild_pid.to_le_bytes());
             let _ = close(pipefd);
             std::process::exit(0);
@@ -126,25 +136,21 @@ fn child_container_process(pipefd: RawFd, container_id: &str) -> ! {
     }
 }
 
-fn container_init_loop() -> ! {
-    use nix::sys::wait::{waitpid, WaitPidFlag, WaitStatus};
-    loop {
-        match waitpid(None, Some(WaitPidFlag::WNOHANG)) {
-            Ok(WaitStatus::StillAlive)
-            | Ok(WaitStatus::Exited(_, _))
-            | Ok(WaitStatus::Signaled(_, _, _))
-            | Ok(WaitStatus::Stopped(_, _))
-            | Ok(WaitStatus::Continued(_)) => {
-                std::thread::sleep(std::time::Duration::from_secs(5));
-            }
-            Err(_) => {
-                std::thread::sleep(std::time::Duration::from_secs(5));
-            }
-            _ => {
-                std::thread::sleep(std::time::Duration::from_secs(5));
-            }
-        }
+fn launch_user_command(user_cmd: &[String]) -> ! {
+
+    if user_cmd.is_empty() {
+        eprintln!("No command specified to launch in container.");
+        std::process::exit(1);
     }
+
+    let mut cmd = Command::new(&user_cmd[0]);
+    if user_cmd.len() > 1 {
+        cmd.args(&user_cmd[1..]);
+    }
+
+    let err = cmd.exec();
+    eprintln!("Failed to exec user command in container: {:?}", err);
+    std::process::exit(1);
 }
 
 fn prepare_rootfs_dir() {
@@ -156,7 +162,7 @@ fn prepare_rootfs_dir() {
 
 fn extract_rootfs_tar() {
     if !Path::new(UBUNTU24_TAR).exists() {
-        panic!("ERROR: ubuntu24rootfs.tar not found!");
+        panic!("ERROR: {} not found!", UBUNTU24_TAR);
     }
     let status = Command::new("tar")
         .args(["-xf", UBUNTU24_TAR, "-C", UBUNTU24_ROOTFS])
@@ -189,13 +195,12 @@ pub fn list_containers() {
         return;
     }
 
-    let mut valid_entries = Vec::new();
     println!("╔═════════════════╦════════════╦══════════════╗");
     println!(
         "{}",
         format!(
             "| {:<15} | {:<10} | {:<12} |",
-            "CONTAINER ID".bold().truecolor(255, 165, 0),
+            "PID".bold().truecolor(255, 165, 0),
             "STATUS".bold().truecolor(0, 200, 60),
             "UPTIME".bold().truecolor(150, 200, 150)
         )
@@ -210,12 +215,9 @@ pub fn list_containers() {
                 Err(_) => "N/A".to_string(),
             };
             println!("║ {:<15} ║ {:<10} ║ {:<12} ║", pid, "RUNNING", uptime);
-            valid_entries.push(format!("{} {}", "Qube", pid));
         }
     }
     println!("╚═════════════════╩════════════╩══════════════╝");
-    fs::write(tracking::CONTAINER_LIST_FILE, valid_entries.join("\n"))
-        .expect("Failed to update container list");
 }
 
 pub fn stop_container(pid: i32) {

@@ -1,0 +1,14 @@
+[Unit]
+Description=Qubed Daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/qube daemon
+Restart=always
+
+# Optionally set a nicer kill timeout, etc.
+TimeoutSec=30
+
+[Install]
+WantedBy=multi-user.target
