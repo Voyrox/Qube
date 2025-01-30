@@ -167,7 +167,7 @@ pub fn list_containers() {
     if let Ok(contents) = fs::read_to_string(tracking::CONTAINER_LIST_FILE) {
         let mut valid_pids = Vec::new();
 
-        println!("{}", "+——————————————+————————+——————————+");
+        println!("{}", "╔═════════════════╦════════════╦══════════════╗");
         println!(
             "{}",
             format!(
@@ -177,7 +177,7 @@ pub fn list_containers() {
                 "UPTIME".bold().truecolor(150, 200, 150)
             )
         );
-        println!("{}", "+——————————————+————————+——————————+");
+        println!("{}", "╠═════════════════╬════════════╬══════════════╣");
 
         for pid_str in contents.lines() {
             let pid_num = pid_str.parse::<i32>().unwrap_or(0);
@@ -193,7 +193,7 @@ pub fn list_containers() {
             }
         }
 
-        println!("{}", "+——————————————+————————+——————————+");
+        println!("{}", "╚═════════════════╩════════════╩══════════════╝");
 
         fs::write(tracking::CONTAINER_LIST_FILE, valid_pids.join("\n"))
             .expect("Failed to update container list");
