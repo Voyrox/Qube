@@ -1,6 +1,7 @@
 # Qube: A container runtime written in Rust.
-[![GitHub contributors](https://img.shields.io/github/contributors/containers/Qube)](https://github.com/containers/Qube/graphs/contributors)
-[![Github CI](https://github.com/containers/Qube/actions/workflows/basic.yml/badge.svg?branch=main)](https://github.com/containers/Qube/actions)
+[![GitHub contributors](https://img.shields.io/github/contributors/Voyrox/Qube)](https://github.com/Voyrox/Qube/graphs/contributors)
+[![Github CI](https://github.com/Voyrox/Qube/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/Voyrox/Qube/actions)
+
 <p align="center">
   <img src="OIG4.png" width="450">
 </p>
