@@ -30,10 +30,23 @@ fn main() {
         "run" => {
             let container_cmd: Vec<String> = args[2..].to_vec();
             if container_cmd.is_empty() {
-                eprintln!("{}", "Please specify a command to run inside the container, e.g. /bin/bash".bright_red());
+                eprintln!(
+                    "{}",
+                    "Please specify a command to run inside the container, e.g. /bin/bash".bright_red()
+                );
                 exit(1);
             }
-            container::run_container(&container_cmd);
+            let cwd = match env::current_dir() {
+                Ok(dir) => dir.to_string_lossy().to_string(),
+                Err(e) => {
+                    eprintln!(
+                        "{}",
+                        format!("Failed to get current directory: {}", e).bright_red()
+                    );
+                    exit(1);
+                }
+            };
+            container::run_container(None, &cwd, &container_cmd);
         }
         "list" => {
             container::list_containers();

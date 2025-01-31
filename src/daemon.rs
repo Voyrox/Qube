@@ -1,4 +1,4 @@
-use crate::tracking;
+use crate::tracking::{self};
 use colored::Colorize;
 use nix::sys::signal::{self, Signal};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -22,6 +22,7 @@ pub fn start_daemon() -> ! {
 
     while RUNNING.load(Ordering::SeqCst) {
         let all_tracked = tracking::get_all_tracked_entries();
+
         for entry in &all_tracked {
             let pid = entry.pid;
             if !is_process_alive(pid) {
@@ -31,12 +32,20 @@ pub fn start_daemon() -> ! {
                         .yellow()
                         .bold()
                 );
+
                 if !entry.command.is_empty() {
                     eprintln!(
                         "{}",
                         format!("Attempting to restart container: {}...", entry.name).blue().bold()
                     );
-                    crate::container::run_container(&entry.command);
+
+                    tracking::remove_container_from_tracking(pid);
+
+                    crate::container::run_container(
+                        Some(&entry.name),
+                        &entry.dir,
+                        &entry.command,
+                    );
                 } else {
                     eprintln!(
                         "{}",
@@ -57,7 +66,6 @@ pub fn start_daemon() -> ! {
     println!("{}", "Qubed Daemon shutting down...".green().bold());
     std::process::exit(0);
 }
-
 
 fn is_process_alive(pid: i32) -> bool {
     let proc_path = format!("/proc/{}", pid);
