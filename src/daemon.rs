@@ -71,14 +71,17 @@ pub fn start_daemon(debug: bool) -> ! {
 
 fn is_process_alive(pid: i32) -> bool {
     let proc_path = format!("/proc/{}/status", pid);
-    
     if !std::path::Path::new(&proc_path).exists() {
         return false;
     }
-
     if let Ok(status) = fs::read_to_string(proc_path) {
-        return status.contains("State:\tR");
+        if let Some(line) = status.lines().find(|l| l.starts_with("State:")) {
+            if line.contains("Z") {
+                return false;
+            } else {
+                return true;
+            }
+        }
     }
-    
     false
 }
