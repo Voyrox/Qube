@@ -6,10 +6,16 @@ mod tracking;
 use colored::*;
 use std::env;
 use std::process::exit;
+use rand::{distributions::Alphanumeric, Rng};
 
 fn main() {
     if nix::unistd::geteuid().as_raw() != 0 {
-        eprintln!("{}", "Error: This program must be run as root (use sudo).".bright_red().bold());
+        eprintln!(
+            "{}",
+            "Error: This program must be run as root (use sudo)."
+                .bright_red()
+                .bold()
+        );
         exit(1);
     }
 
@@ -28,14 +34,17 @@ fn main() {
             daemon::start_daemon();
         }
         "run" => {
-            let container_cmd: Vec<String> = args[2..].to_vec();
-            if container_cmd.is_empty() {
+            let cmd_flag_index = args.iter().position(|arg| arg == "-cmd");
+            if cmd_flag_index.is_none() || cmd_flag_index.unwrap() == args.len() - 1 {
                 eprintln!(
                     "{}",
-                    "Please specify a command to run inside the container, e.g. /bin/bash".bright_red()
+                    "Usage: qube run -cmd \"<command>\"".bright_red()
                 );
                 exit(1);
             }
+            let idx = cmd_flag_index.unwrap();
+            let user_cmd: Vec<String> = args[idx + 1..].to_vec();
+
             let cwd = match env::current_dir() {
                 Ok(dir) => dir.to_string_lossy().to_string(),
                 Err(e) => {
@@ -46,7 +55,20 @@ fn main() {
                     exit(1);
                 }
             };
-            container::run_container(None, &cwd, &container_cmd);
+
+            let rand_str: String = rand::thread_rng()
+                .sample_iter(&Alphanumeric)
+                .take(6)
+                .map(char::from)
+                .collect();
+            let container_id = format!("Qube-{}", rand_str);
+
+            crate::tracking::track_container_named(&container_id, -1, &cwd, user_cmd);
+
+            println!(
+                "\nContainer {} registered. It will be started by the daemon.",
+                container_id
+            );
         }
         "list" => {
             container::list_containers();
@@ -68,7 +90,10 @@ fn main() {
             container::kill_container(pid);
         }
         _ => {
-            eprintln!("{}", format!("Unknown subcommand: {}", args[1]).bright_red());
+            eprintln!(
+                "{}",
+                format!("Unknown subcommand: {}", args[1]).bright_red()
+            );
             exit(1);
         }
     }

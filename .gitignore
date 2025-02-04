@@ -19,3 +19,4 @@ Cargo.lock
 /target
 ubuntu24rootfs.tar
 ubuntu24rootfs_custom.tar
+/tools/wasm-sample/node_modules

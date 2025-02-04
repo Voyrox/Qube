@@ -4,6 +4,7 @@ use nix::sys::signal::{self, Signal};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
+use std::fs;
 
 static RUNNING: AtomicBool = AtomicBool::new(true);
 
@@ -68,6 +69,15 @@ pub fn start_daemon() -> ! {
 }
 
 fn is_process_alive(pid: i32) -> bool {
-    let proc_path = format!("/proc/{}", pid);
-    std::path::Path::new(&proc_path).exists()
+    let proc_path = format!("/proc/{}/status", pid);
+    
+    if !std::path::Path::new(&proc_path).exists() {
+        return false;
+    }
+
+    if let Ok(status) = fs::read_to_string(proc_path) {
+        return status.contains("State:\tR");
+    }
+    
+    false
 }

@@ -1,3 +1,4 @@
+// containers.rs
 use crate::cgroup;
 use crate::tracking;
 use colored::Colorize;
@@ -6,16 +7,19 @@ use libc::{fork, c_int};
 use nix::mount::{mount, MsFlags};
 use nix::sched::{unshare, CloneFlags};
 use nix::sys::signal::{self, Signal};
-use nix::unistd::{self, chdir, chroot, close, read, sethostname, write, setsid};
+use nix::unistd::{self, chdir, chroot, close, read, sethostname, write};
 use rand::{distributions::Alphanumeric, Rng};
 use std::fs;
 use std::os::fd::RawFd;
 use std::os::unix::process::CommandExt;
 use std::path::Path;
 use std::process::Command;
+use std::fs::File;
+use nix::unistd::dup2;
+use std::os::unix::io::AsRawFd;
 
-pub const UBUNTU24_ROOTFS: &str = "/tmp/Qube_ubuntu24";
-pub const UBUNTU24_TAR: &str = "ubuntu24rootfs_custom.tar";
+pub const QUBE_CONTAINERS_BASE: &str = "/var/tmp/Qube_containers";
+pub const UBUNTU24_TAR: &str = "/home/ewen/GitHub/Qube/ubuntu24rootfs_custom.tar";
 
 fn generate_container_id() -> String {
     let rand_str: String = rand::thread_rng()
@@ -47,13 +51,13 @@ pub fn run_container(existing_name: Option<&str>, work_dir: &str, user_cmd: &[St
             .progress_chars("█-"),
     );
     pb.set_message("Preparing container rootfs directory...");
-    prepare_rootfs_dir();
+    prepare_rootfs_dir(&container_id);
     pb.inc(1);
     pb.set_message("Extracting rootfs...");
-    extract_rootfs_tar();
+    extract_rootfs_tar(&container_id);
     pb.inc(1);
-    pb.set_message("Copying user directory -> /var/www/ ...");
-    copy_directory_into_www(work_dir);
+    pb.set_message("Copying current directory contents -> /home/ ...");
+    copy_directory_into_home(&container_id, work_dir);
     pb.inc(1);
     pb.finish_with_message("Container prepared".truecolor(0, 200, 60).to_string());
     let (r, w) = unistd::pipe().expect("Failed to create pipe");
@@ -64,7 +68,7 @@ pub fn run_container(existing_name: Option<&str>, work_dir: &str, user_cmd: &[St
             close(r).ok();
             child_container_process(w, &container_id, user_cmd);
         }
-        pid => {
+        _pid => {
             close(w).ok();
             let mut buf = [0u8; 4];
             let n = read(r, &mut buf).unwrap_or(0);
@@ -97,9 +101,10 @@ fn child_container_process(w: RawFd, cid: &str, cmd: &[String]) -> ! {
     cgroup::setup_cgroup2();
     pb.inc(1);
     pb.set_message("Mounting proc & chroot...");
-    mount_proc().unwrap();
-    chdir(UBUNTU24_ROOTFS).unwrap();
+    mount_proc(&cid).unwrap();
+    chdir(get_rootfs(&cid).as_str()).unwrap();
     chroot(".").unwrap();
+    chdir("/home").unwrap();
     pb.inc(1);
     pb.finish_with_message("Container environment set up.");
     unsafe {
@@ -111,6 +116,7 @@ fn child_container_process(w: RawFd, cid: &str, cmd: &[String]) -> ! {
             std::process::exit(1);
         }
         0 => {
+            detach_stdio();
             launch_user_command(cmd);
         }
         gpid => {
@@ -126,7 +132,6 @@ fn launch_user_command(cmd_args: &[String]) -> ! {
         eprintln!("No command specified to launch in container.");
         std::process::exit(1);
     }
-    setsid().ok();
     let mut c = Command::new(&cmd_args[0]);
     if cmd_args.len() > 1 {
         c.args(&cmd_args[1..]);
@@ -136,19 +141,21 @@ fn launch_user_command(cmd_args: &[String]) -> ! {
     std::process::exit(1);
 }
 
-fn prepare_rootfs_dir() {
-    if Path::new(UBUNTU24_ROOTFS).exists() {
-        fs::remove_dir_all(UBUNTU24_ROOTFS).ok();
+fn prepare_rootfs_dir(cid: &str) {
+    let rootfs = get_rootfs(cid);
+    if Path::new(&rootfs).exists() {
+        fs::remove_dir_all(&rootfs).ok();
     }
-    fs::create_dir_all(UBUNTU24_ROOTFS).unwrap();
+    fs::create_dir_all(&rootfs).unwrap();
 }
 
-fn extract_rootfs_tar() {
+fn extract_rootfs_tar(cid: &str) {
+    let rootfs = get_rootfs(cid);
     if !Path::new(UBUNTU24_TAR).exists() {
         panic!("ERROR: {} not found!", UBUNTU24_TAR);
     }
     let s = Command::new("tar")
-        .args(["-xf", UBUNTU24_TAR, "-C", UBUNTU24_ROOTFS])
+        .args(["-xf", UBUNTU24_TAR, "-C", &rootfs])
         .status()
         .unwrap();
     if !s.success() {
@@ -156,22 +163,23 @@ fn extract_rootfs_tar() {
     }
 }
 
-fn copy_directory_into_www(wd: &str) {
-    let wp = format!("{}/var/www", UBUNTU24_ROOTFS);
-    if !Path::new(&wp).exists() {
-        fs::create_dir_all(&wp).ok();
+fn copy_directory_into_home(cid: &str, wd: &str) {
+    let hp = format!("{}/home", get_rootfs(cid));
+    if !Path::new(&hp).exists() {
+        fs::create_dir_all(&hp).ok();
     }
+
     let s = Command::new("cp")
-        .args(["-r", wd, &wp])
+        .args(["-r", &format!("{}/.", wd), &hp])
         .status()
         .unwrap();
     if !s.success() {
-        eprintln!("Warning: copying {} -> {} failed.", wd, wp);
+        eprintln!("Warning: copying {} -> {} failed.", wd, hp);
     }
 }
 
-fn mount_proc() -> Result<(), std::io::Error> {
-    let p = format!("{}/proc", UBUNTU24_ROOTFS);
+fn mount_proc(cid: &str) -> Result<(), std::io::Error> {
+    let p = format!("{}/proc", get_rootfs(cid));
     fs::create_dir_all(&p)?;
     mount(
         Some("proc"),
@@ -183,6 +191,26 @@ fn mount_proc() -> Result<(), std::io::Error> {
     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
 }
 
+fn get_rootfs(cid: &str) -> String {
+    format!("{}/rootfs", format!("{}/{}", QUBE_CONTAINERS_BASE, cid))
+}
+
+fn detach_stdio() {
+    let dev_null = File::open("/dev/null").unwrap_or_else(|e| {
+        eprintln!("Failed to open /dev/null: {:?}", e);
+        std::process::exit(1);
+    });
+
+    let fd = dev_null.as_raw_fd();
+
+    for &fd_target in &[libc::STDIN_FILENO, libc::STDOUT_FILENO, libc::STDERR_FILENO] {
+        if let Err(e) = dup2(fd, fd_target) {
+            eprintln!("Failed to redirect fd {}: {:?}", fd_target, e);
+            std::process::exit(1);
+        }
+    }
+}
+
 pub fn list_containers() {
     let e = tracking::get_all_tracked_entries();
     if e.is_empty() {
@@ -190,7 +218,13 @@ pub fn list_containers() {
         return;
     }
     println!("╔════════════════════╦════════════╦═══════════╦══════════════╗");
-    println!("{}", format!("| {:<18} | {:<10} | {:<9} | {:<12} |","NAME".bold().truecolor(255, 165, 0),"PID".bold().truecolor(0, 200, 60),"UPTIME".bold().truecolor(150, 200, 150),"STATUS".bold().truecolor(150, 200, 150)));
+    println!("{}", format!(
+        "| {:<18} | {:<10} | {:<9} | {:<12} |",
+        "NAME".bold().truecolor(255, 165, 0),
+        "PID".bold().truecolor(0, 200, 60),
+        "UPTIME".bold().truecolor(150, 200, 150),
+        "STATUS".bold().truecolor(150, 200, 150)
+    ));
     println!("╠════════════════════╬════════════╬═══════════╬══════════════╣");
     for x in e {
         let path = format!("/proc/{}", x.pid);

@@ -21,6 +21,7 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
 > [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/containers/Qube?quickstart=1)
 > ```console
 > $ cargo build --release
+> $ sudo Qube run -cmd sh -c "npm i && node index.js"
 > $ sudo ./target/release/Qube run /bin/bash
 > ```
 
