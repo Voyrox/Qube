@@ -11,7 +11,6 @@ use nix::unistd::{self, chdir, chroot, close, read, sethostname, write};
 use rand::{distributions::Alphanumeric, Rng};
 use std::fs;
 use std::os::fd::RawFd;
-use std::os::unix::process::CommandExt;
 use std::path::Path;
 use std::process::Command;
 use std::fs::File;
@@ -132,14 +131,38 @@ fn launch_user_command(cmd_args: &[String]) -> ! {
         eprintln!("No command specified to launch in container.");
         std::process::exit(1);
     }
+
+    let cwd = std::env::current_dir().unwrap_or_else(|e| {
+        eprintln!("DEBUG: Failed to get current directory: {:?}", e);
+        std::process::exit(1);
+    });
+
+    eprintln!("DEBUG: Running command in directory: {:?}", cwd);
+    eprintln!("DEBUG: Running command: {:?}", cmd_args);
+
     let mut c = Command::new(&cmd_args[0]);
     if cmd_args.len() > 1 {
         c.args(&cmd_args[1..]);
     }
-    let e = c.exec();
-    eprintln!("Failed to exec user command in container: {:?}", e);
-    std::process::exit(1);
+
+    match c.output() {
+        Ok(output) => {
+            eprintln!("DEBUG: Command exited with status: {:?}", output.status);
+            if !output.stdout.is_empty() {
+                eprintln!("DEBUG: Command stdout:\n{}", String::from_utf8_lossy(&output.stdout));
+            }
+            if !output.stderr.is_empty() {
+                eprintln!("DEBUG: Command stderr:\n{}", String::from_utf8_lossy(&output.stderr));
+            }
+            std::process::exit(output.status.code().unwrap_or(1));
+        }
+        Err(e) => {
+            eprintln!("DEBUG: Failed to run command: {:?}", e);
+            std::process::exit(1);
+        }
+    }
 }
+
 
 fn prepare_rootfs_dir(cid: &str) {
     let rootfs = get_rootfs(cid);
