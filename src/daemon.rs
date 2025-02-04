@@ -12,13 +12,13 @@ extern "C" fn handle_signal(_: i32) {
     RUNNING.store(false, Ordering::SeqCst);
 }
 
-pub fn start_daemon() -> ! {
+pub fn start_daemon(debug: bool) -> ! {
     unsafe {
         let _ = signal::signal(Signal::SIGTERM, signal::SigHandler::Handler(handle_signal));
         let _ = signal::signal(Signal::SIGINT, signal::SigHandler::Handler(handle_signal));
     }
 
-    println!("{}","Qubed Daemon started successfully.".green().bold());
+    println!("{}", "Qubed Daemon started successfully.".green().bold());
     println!("Press Ctrl+C or send SIGTERM to stop.");
 
     while RUNNING.load(Ordering::SeqCst) {
@@ -46,6 +46,7 @@ pub fn start_daemon() -> ! {
                         Some(&entry.name),
                         &entry.dir,
                         &entry.command,
+                        debug,
                     );
                 } else {
                     eprintln!(

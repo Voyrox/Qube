@@ -1,4 +1,3 @@
-// containers.rs
 use crate::cgroup;
 use crate::tracking;
 use colored::Colorize;
@@ -33,7 +32,7 @@ extern "C" fn signal_handler(_: c_int) {
     std::process::exit(0);
 }
 
-pub fn run_container(existing_name: Option<&str>, work_dir: &str, user_cmd: &[String]) {
+pub fn run_container(existing_name: Option<&str>, work_dir: &str, user_cmd: &[String], debug: bool) {
     if user_cmd.is_empty() {
         eprintln!("No command specified to launch in container.");
         return;
@@ -65,7 +64,7 @@ pub fn run_container(existing_name: Option<&str>, work_dir: &str, user_cmd: &[St
         -1 => eprintln!("Failed to fork()"),
         0 => {
             close(r).ok();
-            child_container_process(w, &container_id, user_cmd);
+            child_container_process(w, &container_id, user_cmd, debug);
         }
         _pid => {
             close(w).ok();
@@ -84,7 +83,7 @@ pub fn run_container(existing_name: Option<&str>, work_dir: &str, user_cmd: &[St
     }
 }
 
-fn child_container_process(w: RawFd, cid: &str, cmd: &[String]) -> ! {
+fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool) -> ! {
     let p = 3;
     let pb = ProgressBar::new(p);
     pb.set_style(
@@ -115,7 +114,9 @@ fn child_container_process(w: RawFd, cid: &str, cmd: &[String]) -> ! {
             std::process::exit(1);
         }
         0 => {
-            detach_stdio();
+            if !debug {
+                detach_stdio();
+            }
             launch_user_command(cmd);
         }
         gpid => {
@@ -162,7 +163,6 @@ fn launch_user_command(cmd_args: &[String]) -> ! {
         }
     }
 }
-
 
 fn prepare_rootfs_dir(cid: &str) {
     let rootfs = get_rootfs(cid);

@@ -30,8 +30,9 @@ fn main() {
 
     match args[1].as_str() {
         "daemon" => {
+            let debug = args.iter().any(|arg| arg == "--debug");
             println!("{}", "Starting Qubed Daemon...".green().bold());
-            daemon::start_daemon();
+            daemon::start_daemon(debug);
         }
         "run" => {
             let cmd_flag_index = args.iter().position(|arg| arg == "-cmd");
