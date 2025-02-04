@@ -1,4 +1,4 @@
-use crate::tracking::{self};
+use crate::tracking;
 use colored::Colorize;
 use nix::sys::signal::{self, Signal};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -34,13 +34,13 @@ pub fn start_daemon(debug: bool) -> ! {
                         .bold()
                 );
 
+                tracking::remove_container_from_tracking_by_name(&entry.name);
+
                 if !entry.command.is_empty() {
                     eprintln!(
                         "{}",
                         format!("Attempting to restart container: {}...", entry.name).blue().bold()
                     );
-
-                    tracking::remove_container_from_tracking(pid);
 
                     crate::container::run_container(
                         Some(&entry.name),
@@ -71,9 +71,11 @@ pub fn start_daemon(debug: bool) -> ! {
 
 fn is_process_alive(pid: i32) -> bool {
     let proc_path = format!("/proc/{}/status", pid);
+    
     if !std::path::Path::new(&proc_path).exists() {
         return false;
     }
+
     if let Ok(status) = fs::read_to_string(proc_path) {
         if let Some(line) = status.lines().find(|l| l.starts_with("State:")) {
             if line.contains("Z") {

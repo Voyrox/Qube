@@ -45,6 +45,24 @@ pub fn remove_container_from_tracking(pid: i32) {
     }
 }
 
+pub fn remove_container_from_tracking_by_name(name: &str) {
+    if let Ok(c) = fs::read_to_string(CONTAINER_LIST_FILE) {
+        let new_lines: Vec<String> = c
+            .lines()
+            .filter(|l| {
+                let parts: Vec<&str> = l.splitn(4, '|').collect();
+                if parts.len() < 4 {
+                    return true;
+                }
+                parts[0] != name
+            })
+            .map(String::from)
+            .collect();
+        let joined = new_lines.join("\n");
+        let _ = fs::write(CONTAINER_LIST_FILE, joined);
+    }
+}
+
 pub fn get_all_tracked_entries() -> Vec<ContainerEntry> {
     let mut v = Vec::new();
     if let Ok(c) = fs::read_to_string(CONTAINER_LIST_FILE) {
