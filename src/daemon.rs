@@ -3,13 +3,20 @@ use colored::Colorize;
 use nix::sys::signal::{self, Signal};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::fs;
 
 static RUNNING: AtomicBool = AtomicBool::new(true);
 
 extern "C" fn handle_signal(_: i32) {
     RUNNING.store(false, Ordering::SeqCst);
+}
+
+fn current_timestamp() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
 }
 
 pub fn start_daemon(debug: bool) -> ! {
@@ -25,11 +32,13 @@ pub fn start_daemon(debug: bool) -> ! {
         let all_tracked = tracking::get_all_tracked_entries();
 
         for entry in &all_tracked {
-            let pid = entry.pid;
-            if !is_process_alive(pid) {
+            if entry.pid == -1 && current_timestamp().saturating_sub(entry.timestamp) < 5 {
+                continue;
+            }
+            if !is_process_alive(entry.pid) {
                 eprintln!(
                     "{}",
-                    format!("Container with PID {} seems to have exited. (ID={})", pid, entry.name)
+                    format!("Container with PID {} seems to have exited. (ID={})", entry.pid, entry.name)
                         .yellow()
                         .bold()
                 );

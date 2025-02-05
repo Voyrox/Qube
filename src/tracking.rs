@@ -1,6 +1,7 @@
 use std::fs;
-use std::io::{Read, Write};
+use std::io::{Read, Write, Seek, SeekFrom};
 use std::fs::File;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub const TRACKING_DIR: &str = "/var/lib/Qube";
 pub const CONTAINER_LIST_FILE: &str = "/var/lib/Qube/containers.txt";
@@ -11,25 +12,75 @@ pub struct ContainerEntry {
     pub pid: i32,
     pub dir: String,
     pub command: Vec<String>,
+    pub timestamp: u64,
 }
 
+fn current_timestamp() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
+}
+
+/// Format: name|pid|dir|command|timestamp
 pub fn track_container_named(n: &str, p: i32, d: &str, c: Vec<String>) {
     fs::create_dir_all(TRACKING_DIR).ok();
+    let timestamp = current_timestamp();
     let s = c.join("\t");
-    let line = format!("{}|{}|{}|{}", n, p, d, s);
+    let line = format!("{}|{}|{}|{}|{}", n, p, d, s, timestamp);
+
     let mut f = fs::OpenOptions::new()
         .create(true)
         .append(true)
         .open(CONTAINER_LIST_FILE)
         .expect("Failed to open container tracking file");
-    let _ = writeln!(f, "{}", line);
+
+    if let Ok(metadata) = fs::metadata(CONTAINER_LIST_FILE) {
+        if metadata.len() > 0 {
+            let mut file = File::open(CONTAINER_LIST_FILE).unwrap();
+            file.seek(SeekFrom::End(-1)).unwrap();
+            let mut buf = [0u8; 1];
+            file.read_exact(&mut buf).unwrap();
+            if buf[0] != b'\n' {
+                f.write_all(b"\n").unwrap();
+            }
+        }
+    }
+
+    writeln!(f, "{}", line).unwrap();
+}
+
+pub fn update_container_pid(name: &str, new_pid: i32, new_dir: &str, new_cmd: &[String]) {
+    let mut found = false;
+    let new_line = format!("{}|{}|{}|{}|{}", name, new_pid, new_dir, new_cmd.join("\t"), current_timestamp());
+    if let Ok(c) = fs::read_to_string(CONTAINER_LIST_FILE) {
+        let mut new_lines = Vec::new();
+        for l in c.lines() {
+            let parts: Vec<&str> = l.splitn(5, '|').collect();
+            if parts.len() < 4 {
+                new_lines.push(l.to_string());
+                continue;
+            }
+            if parts[0] == name {
+                new_lines.push(new_line.clone());
+                found = true;
+            } else {
+                new_lines.push(l.to_string());
+            }
+        }
+        let joined = new_lines.join("\n");
+        fs::write(CONTAINER_LIST_FILE, joined).unwrap();
+    }
+    if !found {
+        track_container_named(name, new_pid, new_dir, new_cmd.to_vec());
+    }
 }
 
 pub fn remove_container_from_tracking(pid: i32) {
     if let Ok(c) = fs::read_to_string(CONTAINER_LIST_FILE) {
         let mut nc = Vec::new();
         for l in c.lines() {
-            let parts: Vec<&str> = l.splitn(4, '|').collect();
+            let parts: Vec<&str> = l.splitn(5, '|').collect();
             if parts.len() < 4 {
                 continue;
             }
@@ -41,7 +92,7 @@ pub fn remove_container_from_tracking(pid: i32) {
             nc.push(l.to_string());
         }
         let joined = nc.join("\n");
-        let _ = fs::write(CONTAINER_LIST_FILE, joined);
+        fs::write(CONTAINER_LIST_FILE, joined).unwrap();
     }
 }
 
@@ -50,7 +101,7 @@ pub fn remove_container_from_tracking_by_name(name: &str) {
         let new_lines: Vec<String> = c
             .lines()
             .filter(|l| {
-                let parts: Vec<&str> = l.splitn(4, '|').collect();
+                let parts: Vec<&str> = l.splitn(5, '|').collect();
                 if parts.len() < 4 {
                     return true;
                 }
@@ -59,7 +110,7 @@ pub fn remove_container_from_tracking_by_name(name: &str) {
             .map(String::from)
             .collect();
         let joined = new_lines.join("\n");
-        let _ = fs::write(CONTAINER_LIST_FILE, joined);
+        fs::write(CONTAINER_LIST_FILE, joined).unwrap();
     }
 }
 
@@ -67,7 +118,7 @@ pub fn get_all_tracked_entries() -> Vec<ContainerEntry> {
     let mut v = Vec::new();
     if let Ok(c) = fs::read_to_string(CONTAINER_LIST_FILE) {
         for l in c.lines() {
-            let parts: Vec<&str> = l.splitn(4, '|').collect();
+            let parts: Vec<&str> = l.splitn(5, '|').collect();
             if parts.len() < 4 {
                 continue;
             }
@@ -76,7 +127,12 @@ pub fn get_all_tracked_entries() -> Vec<ContainerEntry> {
             let dir = parts[2].to_string();
             let cmd_str = parts[3];
             let cmd_parts: Vec<String> = cmd_str.split('\t').map(|s| s.to_string()).collect();
-            let e = ContainerEntry { name, pid, dir, command: cmd_parts };
+            let timestamp = if parts.len() >= 5 {
+                parts[4].parse::<u64>().unwrap_or(0)
+            } else {
+                0
+            };
+            let e = ContainerEntry { name, pid, dir, command: cmd_parts, timestamp };
             v.push(e);
         }
     }

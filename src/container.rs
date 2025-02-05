@@ -78,7 +78,7 @@ pub fn run_container(existing_name: Option<&str>, work_dir: &str, user_cmd: &[St
             let cpid = i32::from_le_bytes(buf);
             println!("\nContainer launched with ID: {} (PID: {})", container_id, cpid);
             println!("Use 'qube stop {}' or 'qube kill {}' to stop/kill it.\n", cpid, cpid);
-            tracking::track_container_named(&container_id, cpid, work_dir, user_cmd.to_vec());
+            tracking::update_container_pid(&container_id, cpid, work_dir, user_cmd);
         }
     }
 }
