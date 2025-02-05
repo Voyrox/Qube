@@ -22,21 +22,29 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
 > ```console
 > $ cargo build --release
 > $ sudo Qube run -cmd sh -c "npm i && node index.js"
-> $ sudo ./target/release/Qube run /bin/bash
 > ```
 
 # 📍 Status of Qube
 
 ### Manage Containers
 ```bash
+# Run a container
+sudo Qube run -cmd sh -c "<cmd>"
+# e.g.
+sudo Qube run -cmd sh -c "npm i && node index.js"
+
 # List running containers
-sudo ./target/release/Qube list
+sudo Qube list
 
 # Stop a container
-sudo ./target/release/Qube stop <pid>
+sudo Qube stop <pid>
 
 # Kill a container
-sudo ./target/release/Qube kill <pid>
+sudo Qube kill <pid>
+
+# eval a container
+sudo Qube <container_name|pid>           # Enter the container as root
+sudo Qube <container_name|pid> [command] # Eval command as root
 ```
 
 ### Dependencies

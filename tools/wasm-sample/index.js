@@ -1,31 +1,31 @@
 const express = require('express');
+const os = require('os');
 const app = express();
 
 app.use(express.json());
 
-app.get('/', (request, response) => {
-  response.send('Hello World!');
+app.get('/', (req, res) => {
+  res.send('Hello World!');
 });
 
-app.post('/demo-object', (request, response) => {
-
-  const body = request.body;
-
-  response.json(body);
+app.get('/env', (req, res) => {
+  res.json(process.env);
 });
 
-app.get('/demo-object/:id', (request, response) => {
-  
-  const params = request.params;
-
-  return response.json(params);
-});
-
-app.get('/demo-object', (request, response) => {
-  
-  const params = request.query;
-
-  return response.json(params);
+app.get('/info', (req, res) => {
+  const info = {
+    hostname: os.hostname(),
+    platform: os.platform(),
+    arch: os.arch(),
+    release: os.release(),
+    uptime: os.uptime(),
+    totalMemory: os.totalmem(),
+    freeMemory: os.freemem(),
+    cpus: os.cpus(),
+    loadAverage: os.loadavg(),
+    networkInterfaces: os.networkInterfaces(),
+  };
+  res.json(info);
 });
 
 app.listen(3000, () => {
