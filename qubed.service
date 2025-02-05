@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/qube daemon
+ExecStart=/usr/local/bin/Qube daemon
 Restart=always
 
 # Optionally set a nicer kill timeout, etc.

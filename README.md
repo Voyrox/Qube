@@ -21,37 +21,73 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
 > [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/containers/Qube?quickstart=1)
 > ```console
 > $ cargo build --release
+> $ cp qubed.service /etc/systemd/system/qubed.service
+> $ systemctl daemon-reload
 > $ sudo Qube run -cmd sh -c "npm i && node index.js"
 > ```
 
 # 📍 Status of Qube
 
 ### Manage Containers
-```bash
-# Run a container
-sudo Qube run -cmd sh -c "<cmd>"
-# e.g.
-sudo Qube run -cmd sh -c "npm i && node index.js"
+- Run a container
 
-# List running containers
-sudo Qube list
+  Registers a container (with a placeholder PID) and starts it automatically via the daemon.
+  ```bash
+  sudo Qube run -cmd sh -c "<cmd>"
+  # e.g.
+  sudo Qube run -cmd sh -c "npm i && node index.js"
+  ```
 
-# Stop a container
-sudo Qube stop <pid>
+- List running containers
 
-# Kill a container
-sudo Qube kill <pid>
+  Displays all tracked containers, along with their PIDs, uptime, and status.
+  ```bash
+  sudo Qube list
+  ```
+- Stop a container
+  Gracefully stops a container by sending it a SIGTERM.
 
-# eval a container
-sudo Qube <container_name|pid>           # Enter the container as root
-sudo Qube <container_name|pid> [command] # Eval command as root
-```
+  ```bash
+  sudo Qube stop <pid>
+  ```
+
+- Kill a container
+  Immediately kills a container by sending it a SIGKILL.
+
+  ```bash
+  sudo Qube kill <pid>
+  ```
+- Eval a container
+  
+  Allows you to attach to a container (by name or PID) and run commands as root inside it.
+WARNING: Running commands as root inside a container may alter its configuration and pose security risks. Use with caution!
+
+  ```bash
+  # Launch an interactive shell in the container:
+  sudo Qube eval <container_name|pid>
+
+  # Execute a specific command as root in the container:
+  sudo Qube eval <container_name|pid> [command]
+  ```
+
+- View container info
+  Shows detailed information about a container, such as its name, PID, working directory, command, timestamp, and uptime.
+
+  ```bash
+  sudo Qube info <container_name|pid>
+  ```
+- Snapshot a container
+  Creates a snapshot (a compressed tarball) of the container’s filesystem. The snapshot is stored in the container's working directory.
+
+  ```bash
+  sudo Qube snapshot <container_name|pid>
+  ```
 
 ### Dependencies
 Install the required dependencies:
 
 ```bash
-sudo apt-get install -y build-essential libseccomp-dev libssl-dev
+sudo apt-get install -y build-essential libseccomp-dev libssl-dev tar
 ```
 ### Setup
 To create a root filesystem for your container:
@@ -70,15 +106,11 @@ sudo tar -C /tmp/ubuntu24rootfs -cf ubuntu24rootfs.tar .
 
 ### DNS Configuration
 You may need a valid `/etc/resolv.conf` for DNS:
-```
+```bash
 sudo cp /etc/resolv.conf /tmp/Qube_ubuntu24/etc/resolv.conf
 ```
 
 ### Dev Notes
-```bash
-# To run multiple containers, add CloneFlags::CLONE_NEWPID:
-unshare(CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWPID | CloneFlags::CLONE_NEWNS)
-```
 
 ### Roadmap
 - [ ] Networking: Add CLONE_NEWNET for network interfaces inside the container.
