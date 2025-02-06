@@ -69,9 +69,14 @@ fn main() {
 
             crate::tracking::track_container_named(&container_id, -1, &cwd, user_cmd);
 
-            println!(
+            eprintln!(
+                "{}",
+                format!(
                 "\nContainer {} registered. It will be started by the daemon.",
                 container_id
+                )
+                .green()
+                .bold()
             );
         }
         "list" => {

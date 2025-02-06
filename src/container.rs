@@ -1,7 +1,6 @@
 use crate::cgroup;
 use crate::tracking;
 use colored::Colorize;
-use indicatif::{ProgressBar, ProgressStyle};
 use libc::{fork, c_int};
 use nix::mount::{mount, MsFlags};
 use nix::sched::{unshare, CloneFlags};
@@ -41,23 +40,9 @@ pub fn run_container(existing_name: Option<&str>, work_dir: &str, user_cmd: &[St
         Some(x) => x.to_string(),
         None => generate_container_id(),
     };
-    let p = 3;
-    let pb = ProgressBar::new(p);
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template("{spinner:.green} {msg} [{bar:40.white/blue}] {pos}/{len} ({eta})")
-            .progress_chars("█-"),
-    );
-    pb.set_message("Preparing container rootfs directory...");
     prepare_rootfs_dir(&container_id);
-    pb.inc(1);
-    pb.set_message("Extracting rootfs...");
     extract_rootfs_tar(&container_id);
-    pb.inc(1);
-    pb.set_message("Copying current directory contents -> /home/ ...");
     copy_directory_into_home(&container_id, work_dir);
-    pb.inc(1);
-    pb.finish_with_message("Container prepared".truecolor(0, 200, 60).to_string());
     let (r, w) = unistd::pipe().expect("Failed to create pipe");
     let f = unsafe { fork() };
     match f {
@@ -84,27 +69,13 @@ pub fn run_container(existing_name: Option<&str>, work_dir: &str, user_cmd: &[St
 }
 
 fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool) -> ! {
-    let p = 3;
-    let pb = ProgressBar::new(p);
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template("{spinner:.green} {msg} [{bar:40.white/blue}] {pos}/{len} ({eta})")
-            .progress_chars("=>-"),
-    );
-    pb.set_message("Unsharing namespaces...");
     unshare(CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWNS).unwrap();
     sethostname("Qube").unwrap();
-    pb.inc(1);
-    pb.set_message("Setting up cgroup...");
     cgroup::setup_cgroup2();
-    pb.inc(1);
-    pb.set_message("Mounting proc & chroot...");
     mount_proc(&cid).unwrap();
     chdir(get_rootfs(&cid).as_str()).unwrap();
     chroot(".").unwrap();
     chdir("/home").unwrap();
-    pb.inc(1);
-    pb.finish_with_message("Container environment set up.");
     unsafe {
         signal::signal(Signal::SIGTERM, signal::SigHandler::Handler(signal_handler)).unwrap();
     }
