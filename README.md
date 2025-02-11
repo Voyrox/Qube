@@ -47,19 +47,21 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
   ```bash
   sudo Qube list
   ```
+  
 - Stop a container
-  Gracefully stops a container by sending it a SIGTERM.
+  Immediately Stops a container by sending it a SIGKILL.
 
   ```bash
-  sudo Qube stop <pid>
+  sudo Qube stop <pid|container_name>
   ```
 
-- Kill a container
-  Immediately kills a container by sending it a SIGKILL.
+- Start a container
+  Starts a stopped container.
 
   ```bash
-  sudo Qube kill <pid>
+  sudo Qube start <pid|container_name>
   ```
+
 - Eval a container
   
   Allows you to attach to a container (by name or PID) and run commands as root inside it.

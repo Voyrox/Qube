@@ -32,10 +32,14 @@ pub fn start_daemon(debug: bool) -> ! {
         let all_tracked = tracking::get_all_tracked_entries();
 
         for entry in &all_tracked {
+            if entry.pid == -2 {
+                continue;
+            }
             if entry.pid == -1 && current_timestamp().saturating_sub(entry.timestamp) < 5 {
                 continue;
             }
-            if !is_process_alive(entry.pid) {
+ 
+            if entry.pid >= -1 && !is_process_alive(entry.pid) {
                 eprintln!(
                     "{}",
                     format!("Container with PID {} seems to have exited. (ID={})", entry.pid, entry.name)
@@ -81,7 +85,7 @@ pub fn start_daemon(debug: bool) -> ! {
     std::process::exit(0);
 }
 
-fn is_process_alive(pid: i32) -> bool {
+pub fn is_process_alive(pid: i32) -> bool {
     let proc_path = format!("/proc/{}/status", pid);
     
     if !std::path::Path::new(&proc_path).exists() {

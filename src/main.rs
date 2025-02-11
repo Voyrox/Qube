@@ -27,7 +27,7 @@ fn main() {
     if args.len() < 2 {
         eprintln!(
             "{}",
-            "Usage: qube <daemon|run|list|stop|kill|eval|info|snapshot> [args...]".bright_red()
+            "Usage: qube <daemon|run|list|stop|start|delete|eval|info|snapshot> [args...]".bright_red()
         );
         exit(1);
     }
@@ -116,12 +116,9 @@ fn main() {
 
             eprintln!(
                 "{}",
-                format!(
-                    "\nContainer {} registered. It will be started by the daemon.",
-                    container_id
-                )
-                .green()
-                .bold()
+                format!("\nContainer {} registered. It will be started by the daemon.", container_id)
+                    .green()
+                    .bold()
             );
         }
         "list" => {
@@ -129,15 +126,59 @@ fn main() {
         }
         "stop" => {
             if args.len() < 3 {
-                eprintln!("{}", "Usage: qube stop <pid>".bright_red());
+                eprintln!("{}", "Usage: qube stop <pid|container_name>".bright_red());
                 exit(1);
             }
-            let pid: i32 = args[2].parse().expect("Invalid PID");
-            container::stop_container(pid);
+            let identifier = args[2].clone();
+            if let Ok(pid) = identifier.parse::<i32>() {
+                container::stop_container(pid);
+            } else {
+                let tracked = crate::tracking::get_all_tracked_entries();
+                if let Some(entry) = tracked.iter().find(|e| e.name == identifier) {
+                    container::stop_container(entry.pid);
+                } else {
+                    eprintln!("No container found with identifier {}", identifier);
+                    exit(1);
+                }
+            }
         }
-        "kill" => {
+        "start" => {
             if args.len() < 3 {
-                eprintln!("{}", "Usage: qube kill <pid>".bright_red());
+                eprintln!("{}", "Usage: qube start <container_name|pid>".bright_red());
+                exit(1);
+            }
+            let identifier = &args[2];
+            let tracked = crate::tracking::get_all_tracked_entries();
+            let entry_opt = tracked.iter().find(|e| {
+                e.name == *identifier || e.pid.to_string() == *identifier
+            });
+            if let Some(entry) = entry_opt {
+                // If the container is running, do nothing
+                if entry.pid > 0 && std::path::Path::new(&format!("/proc/{}", entry.pid)).exists() {
+                    println!("Container {} is already running (PID: {}).", entry.name, entry.pid);
+                } else if entry.pid == -1 {
+                    println!("Container {} is already scheduled to start.", entry.name);
+                } else {
+                    // Set pid to -1 to indicate that the daemon should (re)start it.
+                    crate::tracking::update_container_pid(
+                        &entry.name,
+                        -1,
+                        &entry.dir,
+                        &entry.command,
+                        &entry.image,
+                        &entry.ports,
+                        entry.firewall,
+                    );
+                    println!("Container {} marked to start. The daemon will start it shortly.", entry.name);
+                }
+            } else {
+                eprintln!("Container with identifier {} not found in tracking.", identifier);
+                exit(1);
+            }
+        }
+        "delete" => {
+            if args.len() < 3 {
+                eprintln!("{}", "Usage: qube delete <pid>".bright_red());
                 exit(1);
             }
             let pid: i32 = args[2].parse().expect("Invalid PID");
@@ -253,7 +294,7 @@ fn main() {
                 "{}",
                 format!("Unknown subcommand: {}", args[1]).bright_red()
             );
-            eprintln!("Available commands: daemon, run, list, stop, kill, eval, info, snapshot");
+            eprintln!("Available commands: daemon, run, list, stop, start, delete, eval, info, snapshot");
             exit(1);
         }
     }

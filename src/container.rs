@@ -1,11 +1,12 @@
 use crate::cgroup;
 use crate::tracking;
+
 use colored::Colorize;
 use libc::{fork, c_int};
 use nix::mount::{mount, MsFlags};
 use nix::sched::{unshare, CloneFlags};
-use nix::sys::signal::{self, Signal};
-use nix::unistd::{self, chdir, chroot, close, read, sethostname, write};
+use nix::sys::signal::{self, Signal, kill};
+use nix::unistd::{self, chdir, chroot, close, read, sethostname, write, Pid};
 use rand::{distributions::Alphanumeric, Rng};
 use std::fs;
 use std::os::fd::RawFd;
@@ -70,7 +71,7 @@ pub fn run_container(
             }
             let cpid = i32::from_le_bytes(buf);
             println!("\nContainer launched with ID: {} (PID: {})", container_id, cpid);
-            println!("Use 'qube stop {}' or 'qube kill {}' to stop/kill it.\n", cpid, cpid);
+            println!("Use 'qube stop {}' or 'qube delete {}' to stop/delete it.\n", cpid, cpid);
             tracking::update_container_pid(&container_id, cpid, work_dir, user_cmd, image, ports, firewall);
         }
     }
@@ -242,7 +243,9 @@ pub fn list_containers() {
             Ok(u) => u.to_string(),
             Err(_) => "N/A".to_string(),
         };
-        let status = if Path::new(&path).exists() { "RUNNING" } else { "EXITED" };
+        let status = if x.pid > 0 && Path::new(&path).exists() { "RUNNING" }
+                     else if x.pid == -2 { "STOPPED" }
+                     else { "EXITED" };
         println!("║ {:<18} ║ {:<10} ║ {:<9} ║ {:<12} ║ {:<12} ║ {:<12} ║ {:<12} ║",
                  x.name, x.pid, uptime_str, status, x.image, x.ports, if x.firewall { "true" } else { "false" });
     }
@@ -250,24 +253,27 @@ pub fn list_containers() {
 }
 
 pub fn stop_container(pid: i32) {
-    use nix::sys::signal::{kill, Signal};
-    use nix::unistd::Pid;
-    let p = format!("/proc/{}", pid);
-    if !Path::new(&p).exists() {
-        println!("Container {} is not running.", pid);
-        return;
-    }
-    if kill(Pid::from_raw(pid), Signal::SIGTERM).is_ok() {
-        println!("Stopped container with PID: {}", pid);
-        tracking::remove_container_from_tracking(pid);
+    if let Some(entry) = crate::tracking::get_all_tracked_entries().iter().find(|e| e.pid == pid) {
+        kill_container(pid);
+
+        crate::tracking::update_container_pid(
+            &entry.name,
+            -2,
+            &entry.dir,
+            &entry.command,
+            &entry.image,
+            &entry.ports,
+            entry.firewall
+        );
+
+        crate::tracking::remove_container_from_tracking(pid);
+        println!("Container {} has been fully removed and marked as stopped.", pid);
     } else {
-        println!("Failed to stop container with PID: {}", pid);
+        eprintln!("No container found with PID: {}", pid);
     }
 }
 
 pub fn kill_container(pid: i32) {
-    use nix::sys::signal::{kill, Signal};
-    use nix::unistd::Pid;
     let p = format!("/proc/{}", pid);
     if !Path::new(&p).exists() {
         println!("Container {} is not running.", pid);
