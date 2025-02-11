@@ -13,6 +13,9 @@ pub struct ContainerEntry {
     pub dir: String,
     pub command: Vec<String>,
     pub timestamp: u64,
+    pub image: String,
+    pub ports: String,
+    pub firewall: bool,
 }
 
 fn current_timestamp() -> u64 {
@@ -22,12 +25,12 @@ fn current_timestamp() -> u64 {
         .as_secs()
 }
 
-/// Format: name|pid|dir|command|timestamp
-pub fn track_container_named(n: &str, p: i32, d: &str, c: Vec<String>) {
+/// New format: name|pid|dir|command|timestamp|image|ports|firewall
+pub fn track_container_named(n: &str, p: i32, d: &str, c: Vec<String>, image: &str, ports: &str, firewall: bool) {
     fs::create_dir_all(TRACKING_DIR).ok();
     let timestamp = current_timestamp();
     let s = c.join("\t");
-    let line = format!("{}|{}|{}|{}|{}", n, p, d, s, timestamp);
+    let line = format!("{}|{}|{}|{}|{}|{}|{}|{}", n, p, d, s, timestamp, image, ports, firewall);
 
     let mut f = fs::OpenOptions::new()
         .create(true)
@@ -50,13 +53,13 @@ pub fn track_container_named(n: &str, p: i32, d: &str, c: Vec<String>) {
     writeln!(f, "{}", line).unwrap();
 }
 
-pub fn update_container_pid(name: &str, new_pid: i32, new_dir: &str, new_cmd: &[String]) {
+pub fn update_container_pid(name: &str, new_pid: i32, new_dir: &str, new_cmd: &[String], image: &str, ports: &str, firewall: bool) {
     let mut found = false;
-    let new_line = format!("{}|{}|{}|{}|{}", name, new_pid, new_dir, new_cmd.join("\t"), current_timestamp());
+    let new_line = format!("{}|{}|{}|{}|{}|{}|{}|{}", name, new_pid, new_dir, new_cmd.join("\t"), current_timestamp(), image, ports, firewall);
     if let Ok(c) = fs::read_to_string(CONTAINER_LIST_FILE) {
         let mut new_lines = Vec::new();
         for l in c.lines() {
-            let parts: Vec<&str> = l.splitn(5, '|').collect();
+            let parts: Vec<&str> = l.split('|').collect();
             if parts.len() < 4 {
                 new_lines.push(l.to_string());
                 continue;
@@ -72,7 +75,7 @@ pub fn update_container_pid(name: &str, new_pid: i32, new_dir: &str, new_cmd: &[
         fs::write(CONTAINER_LIST_FILE, joined).unwrap();
     }
     if !found {
-        track_container_named(name, new_pid, new_dir, new_cmd.to_vec());
+        track_container_named(name, new_pid, new_dir, new_cmd.to_vec(), image, ports, firewall);
     }
 }
 
@@ -80,7 +83,7 @@ pub fn remove_container_from_tracking(pid: i32) {
     if let Ok(c) = fs::read_to_string(CONTAINER_LIST_FILE) {
         let mut nc = Vec::new();
         for l in c.lines() {
-            let parts: Vec<&str> = l.splitn(5, '|').collect();
+            let parts: Vec<&str> = l.split('|').collect();
             if parts.len() < 4 {
                 continue;
             }
@@ -101,7 +104,7 @@ pub fn remove_container_from_tracking_by_name(name: &str) {
         let new_lines: Vec<String> = c
             .lines()
             .filter(|l| {
-                let parts: Vec<&str> = l.splitn(5, '|').collect();
+                let parts: Vec<&str> = l.split('|').collect();
                 if parts.len() < 4 {
                     return true;
                 }
@@ -118,8 +121,8 @@ pub fn get_all_tracked_entries() -> Vec<ContainerEntry> {
     let mut v = Vec::new();
     if let Ok(c) = fs::read_to_string(CONTAINER_LIST_FILE) {
         for l in c.lines() {
-            let parts: Vec<&str> = l.splitn(5, '|').collect();
-            if parts.len() < 4 {
+            let parts: Vec<&str> = l.split('|').collect();
+            if parts.len() < 8 {
                 continue;
             }
             let name = parts[0].to_string();
@@ -127,12 +130,11 @@ pub fn get_all_tracked_entries() -> Vec<ContainerEntry> {
             let dir = parts[2].to_string();
             let cmd_str = parts[3];
             let cmd_parts: Vec<String> = cmd_str.split('\t').map(|s| s.to_string()).collect();
-            let timestamp = if parts.len() >= 5 {
-                parts[4].parse::<u64>().unwrap_or(0)
-            } else {
-                0
-            };
-            let e = ContainerEntry { name, pid, dir, command: cmd_parts, timestamp };
+            let timestamp = parts[4].parse::<u64>().unwrap_or(0);
+            let image = parts[5].to_string();
+            let ports = parts[6].to_string();
+            let firewall = parts[7].trim() == "true";
+            let e = ContainerEntry { name, pid, dir, command: cmd_parts, timestamp, image, ports, firewall };
             v.push(e);
         }
     }

@@ -21,9 +21,10 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
 > [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/containers/Qube?quickstart=1)
 > ```console
 > $ cargo build --release
+> $ sudo ln -s /mnt/e/Github/Qube/target/release/Qube /usr/local/bin/Qube
 > $ cp qubed.service /etc/systemd/system/qubed.service
 > $ systemctl daemon-reload
-> $ sudo Qube run -cmd sh -c "npm i && node index.js"
+> $ sudo Qube run --ports 3000 --cmd sh -c "npm i && node index.js"
 > ```
 
 # 📍 Status of Qube
@@ -35,8 +36,10 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
   ```bash
   sudo Qube run -cmd sh -c "<cmd>"
   # e.g.
-  sudo Qube run -cmd sh -c "npm i && node index.js"
+  sudo Qube run --ports 3000 --cmd sh -c "npm i && node index.js"
   ```
+  
+<image src="./images/image.png" style="display: block;margin-left: auto;margin-right: auto;">
 
 - List running containers
 

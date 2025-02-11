@@ -56,6 +56,9 @@ pub fn start_daemon(debug: bool) -> ! {
                         &entry.dir,
                         &entry.command,
                         debug,
+                        &entry.image,
+                        &entry.ports,
+                        entry.firewall,
                     );
                 } else {
                     eprintln!(

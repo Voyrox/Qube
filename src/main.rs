@@ -9,6 +9,7 @@ use std::process::exit;
 use rand::{distributions::Alphanumeric, Rng};
 use std::process::Command;
 use std::io::{self, Write};
+
 const QUBE_CONTAINERS_BASE: &str = "/var/tmp/Qube_containers";
 
 fn main() {
@@ -38,16 +39,52 @@ fn main() {
             daemon::start_daemon(debug);
         }
         "run" => {
-            let cmd_flag_index = args.iter().position(|arg| arg == "-cmd");
+            let cmd_flag_index = args.iter().position(|arg| arg == "--cmd");
             if cmd_flag_index.is_none() || cmd_flag_index.unwrap() == args.len() - 1 {
-                eprintln!(
-                    "{}",
-                    "Usage: qube run -cmd \"<command>\"".bright_red()
-                );
+                eprintln!("{}", "Usage: Qube run [--image <image>] [--ports <ports>] [--firewall] --cmd \"<command>\"".bright_red());
                 exit(1);
             }
-            let idx = cmd_flag_index.unwrap();
-            let user_cmd: Vec<String> = args[idx + 1..].to_vec();
+            let cmd_index = cmd_flag_index.unwrap();
+
+            let mut image = "ubuntu".to_string();
+            let mut ports = "".to_string();
+            let mut firewall = false;
+
+            let mut i = 2;
+            while i < cmd_index {
+                match args[i].as_str() {
+                    "--image" => {
+                        if i + 1 < cmd_index {
+                            image = args[i + 1].clone();
+                            i += 2;
+                            continue;
+                        } else {
+                            eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--firewall] --cmd \"<command>\"".bright_red());
+                            exit(1);
+                        }
+                    }
+                    "--ports" => {
+                        if i + 1 < cmd_index {
+                            ports = args[i + 1].clone();
+                            i += 2;
+                            continue;
+                        } else {
+                            eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--firewall] --cmd \"<command>\"".bright_red());
+                            exit(1);
+                        }
+                    }
+                    "--firewall" => {
+                        firewall = true;
+                        i += 1;
+                        continue;
+                    }
+                    _ => {
+                        i += 1;
+                    }
+                }
+            }
+
+            let user_cmd: Vec<String> = args[cmd_index + 1..].to_vec();
 
             let cwd = match env::current_dir() {
                 Ok(dir) => dir.to_string_lossy().to_string(),
@@ -67,13 +104,21 @@ fn main() {
                 .collect();
             let container_id = format!("Qube-{}", rand_str);
 
-            crate::tracking::track_container_named(&container_id, -1, &cwd, user_cmd);
+            crate::tracking::track_container_named(
+                &container_id,
+                -1,
+                &cwd,
+                user_cmd.clone(),
+                &image,
+                &ports,
+                firewall,
+            );
 
             eprintln!(
                 "{}",
                 format!(
-                "\nContainer {} registered. It will be started by the daemon.",
-                container_id
+                    "\nContainer {} registered. It will be started by the daemon.",
+                    container_id
                 )
                 .green()
                 .bold()
@@ -163,6 +208,9 @@ fn main() {
                 println!("Working Dir: {}", entry.dir);
                 println!("Command:     {}", entry.command.join(" "));
                 println!("Timestamp:   {}", entry.timestamp);
+                println!("Image:       {}", entry.image);
+                println!("Ports:       {}", entry.ports);
+                println!("Firewall:    {}", if entry.firewall { "ENABLED" } else { "DISABLED" });
                 match crate::tracking::get_process_uptime(entry.pid) {
                     Ok(uptime) => println!("Uptime:      {} seconds", uptime),
                     Err(_) => println!("Uptime:      N/A"),

@@ -16,7 +16,7 @@ use nix::unistd::dup2;
 use std::os::unix::io::AsRawFd;
 
 pub const QUBE_CONTAINERS_BASE: &str = "/var/tmp/Qube_containers";
-pub const UBUNTU24_TAR: &str = "/home/ewen/GitHub/Qube/ubuntu24rootfs_custom.tar";
+pub const UBUNTU24_TAR: &str = "/mnt/e/Github/Qube/ubuntu24rootfs_custom.tar";
 
 fn generate_container_id() -> String {
     let rand_str: String = rand::thread_rng()
@@ -31,7 +31,15 @@ extern "C" fn signal_handler(_: c_int) {
     std::process::exit(0);
 }
 
-pub fn run_container(existing_name: Option<&str>, work_dir: &str, user_cmd: &[String], debug: bool) {
+pub fn run_container(
+    existing_name: Option<&str>,
+    work_dir: &str,
+    user_cmd: &[String],
+    debug: bool,
+    image: &str,
+    ports: &str,
+    firewall: bool,
+) {
     if user_cmd.is_empty() {
         eprintln!("No command specified to launch in container.");
         return;
@@ -49,7 +57,7 @@ pub fn run_container(existing_name: Option<&str>, work_dir: &str, user_cmd: &[St
         -1 => eprintln!("Failed to fork()"),
         0 => {
             close(r).ok();
-            child_container_process(w, &container_id, user_cmd, debug);
+            child_container_process(w, &container_id, user_cmd, debug, image, ports, firewall);
         }
         _pid => {
             close(w).ok();
@@ -63,13 +71,17 @@ pub fn run_container(existing_name: Option<&str>, work_dir: &str, user_cmd: &[St
             let cpid = i32::from_le_bytes(buf);
             println!("\nContainer launched with ID: {} (PID: {})", container_id, cpid);
             println!("Use 'qube stop {}' or 'qube kill {}' to stop/kill it.\n", cpid, cpid);
-            tracking::update_container_pid(&container_id, cpid, work_dir, user_cmd);
+            tracking::update_container_pid(&container_id, cpid, work_dir, user_cmd, image, ports, firewall);
         }
     }
 }
 
-fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool) -> ! {
-    unshare(CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWNS).unwrap();
+fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _image: &str, _ports: &str, firewall: bool) -> ! {
+    let mut flags = CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWNS;
+    if firewall {
+        flags |= CloneFlags::CLONE_NEWNET;
+    }
+    unshare(flags).unwrap();
     sethostname("Qube").unwrap();
     cgroup::setup_cgroup2();
     mount_proc(&cid).unwrap();
@@ -211,27 +223,30 @@ pub fn list_containers() {
         println!("{}", "No containers tracked.".red().bold());
         return;
     }
-    println!("╔════════════════════╦════════════╦═══════════╦══════════════╗");
+
+    println!("╔════════════════════╦════════════╦═══════════╦══════════════╦══════════════╦══════════════╦══════════════╗");
     println!("{}", format!(
-        "| {:<18} | {:<10} | {:<9} | {:<12} |",
+        "| {:<18} | {:<10} | {:<9} | {:<12} | {:<12} | {:<12} | {:<12} |",
         "NAME".bold().truecolor(255, 165, 0),
         "PID".bold().truecolor(0, 200, 60),
         "UPTIME".bold().truecolor(150, 200, 150),
-        "STATUS".bold().truecolor(150, 200, 150)
+        "STATUS".bold().truecolor(150, 200, 150),
+        "IMAGE".bold().truecolor(100, 150, 255),
+        "PORTS".bold().truecolor(100, 150, 255),
+        "FIREWALL".bold().truecolor(200, 100, 255)
     ));
-    println!("╠════════════════════╬════════════╬═══════════╬══════════════╣");
+    println!("╠════════════════════╬════════════╬═══════════╬══════════════╬══════════════╬══════════════╬══════════════╣");
     for x in e {
         let path = format!("/proc/{}", x.pid);
-        if Path::new(&path).exists() {
-            match tracking::get_process_uptime(x.pid) {
-                Ok(u) => println!("║ {:<18} ║ {:<10} ║ {:<9} ║ {:<12} ║", x.name, x.pid, u, "RUNNING"),
-                Err(_) => println!("║ {:<18} ║ {:<10} ║ {:<9} ║ {:<12} ║", x.name, x.pid, "N/A", "RUNNING"),
-            }
-        } else {
-            println!("║ {:<18} ║ {:<10} ║ {:<9} ║ {:<12} ║", x.name, x.pid, 0, "EXITED");
-        }
+        let uptime_str = match tracking::get_process_uptime(x.pid) {
+            Ok(u) => u.to_string(),
+            Err(_) => "N/A".to_string(),
+        };
+        let status = if Path::new(&path).exists() { "RUNNING" } else { "EXITED" };
+        println!("║ {:<18} ║ {:<10} ║ {:<9} ║ {:<12} ║ {:<12} ║ {:<12} ║ {:<12} ║",
+                 x.name, x.pid, uptime_str, status, x.image, x.ports, if x.firewall { "true" } else { "false" });
     }
-    println!("╚════════════════════╩════════════╩═══════════╩══════════════╝");
+    println!("╚════════════════════╩════════════╩═══════════╩══════════════╩══════════════╩══════════════╩══════════════╝");
 }
 
 pub fn stop_container(pid: i32) {
