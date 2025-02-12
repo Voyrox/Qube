@@ -32,7 +32,7 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
 ### Manage Containers
 - Run a container
 
-  Registers a container (with a placeholder PID) and starts it automatically via the daemon.
+  Registers a container (with a placeholder PID) and starts it automatically via the daemon. | Add `--isolation` to disable the network namespace.
   ```bash
   sudo Qube run -cmd sh -c "<cmd>"
   # e.g.
