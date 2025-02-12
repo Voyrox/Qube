@@ -15,7 +15,7 @@ pub struct ContainerEntry {
     pub timestamp: u64,
     pub image: String,
     pub ports: String,
-    pub firewall: bool,
+    pub isolated: bool,
 }
 
 fn current_timestamp() -> u64 {
@@ -25,12 +25,12 @@ fn current_timestamp() -> u64 {
         .as_secs()
 }
 
-/// New format: name|pid|dir|command|timestamp|image|ports|firewall
-pub fn track_container_named(n: &str, p: i32, d: &str, c: Vec<String>, image: &str, ports: &str, firewall: bool) {
+/// New format: name|pid|dir|command|timestamp|image|ports|isolated
+pub fn track_container_named(n: &str, p: i32, d: &str, c: Vec<String>, image: &str, ports: &str, isolated: bool) {
     fs::create_dir_all(TRACKING_DIR).ok();
     let timestamp = current_timestamp();
     let s = c.join("\t");
-    let line = format!("{}|{}|{}|{}|{}|{}|{}|{}", n, p, d, s, timestamp, image, ports, firewall);
+    let line = format!("{}|{}|{}|{}|{}|{}|{}|{}", n, p, d, s, timestamp, image, ports, isolated);
 
     let mut f = fs::OpenOptions::new()
         .create(true)
@@ -53,9 +53,9 @@ pub fn track_container_named(n: &str, p: i32, d: &str, c: Vec<String>, image: &s
     writeln!(f, "{}", line).unwrap();
 }
 
-pub fn update_container_pid(name: &str, new_pid: i32, new_dir: &str, new_cmd: &[String], image: &str, ports: &str, firewall: bool) {
+pub fn update_container_pid(name: &str, new_pid: i32, new_dir: &str, new_cmd: &[String], image: &str, ports: &str, isolated: bool) {
     let mut found = false;
-    let new_line = format!("{}|{}|{}|{}|{}|{}|{}|{}", name, new_pid, new_dir, new_cmd.join("\t"), current_timestamp(), image, ports, firewall);
+    let new_line = format!("{}|{}|{}|{}|{}|{}|{}|{}", name, new_pid, new_dir, new_cmd.join("\t"), current_timestamp(), image, ports, isolated);
     if let Ok(c) = fs::read_to_string(CONTAINER_LIST_FILE) {
         let mut new_lines = Vec::new();
         for l in c.lines() {
@@ -75,7 +75,7 @@ pub fn update_container_pid(name: &str, new_pid: i32, new_dir: &str, new_cmd: &[
         fs::write(CONTAINER_LIST_FILE, joined).unwrap();
     }
     if !found {
-        track_container_named(name, new_pid, new_dir, new_cmd.to_vec(), image, ports, firewall);
+        track_container_named(name, new_pid, new_dir, new_cmd.to_vec(), image, ports, isolated);
     }
 }
 
@@ -133,8 +133,8 @@ pub fn get_all_tracked_entries() -> Vec<ContainerEntry> {
             let timestamp = parts[4].parse::<u64>().unwrap_or(0);
             let image = parts[5].to_string();
             let ports = parts[6].to_string();
-            let firewall = parts[7].trim() == "true";
-            let e = ContainerEntry { name, pid, dir, command: cmd_parts, timestamp, image, ports, firewall };
+            let isolated = parts[7].trim() == "true";
+            let e = ContainerEntry { name, pid, dir, command: cmd_parts, timestamp, image, ports, isolated };
             v.push(e);
         }
     }

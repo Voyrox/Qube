@@ -39,7 +39,7 @@ pub fn run_container(
     debug: bool,
     image: &str,
     ports: &str,
-    firewall: bool,
+    isolated: bool,
 ) {
     if user_cmd.is_empty() {
         eprintln!("No command specified to launch in container.");
@@ -58,7 +58,7 @@ pub fn run_container(
         -1 => eprintln!("Failed to fork()"),
         0 => {
             close(r).ok();
-            child_container_process(w, &container_id, user_cmd, debug, image, ports, firewall);
+            child_container_process(w, &container_id, user_cmd, debug, image, ports, isolated);
         }
         _pid => {
             close(w).ok();
@@ -72,14 +72,14 @@ pub fn run_container(
             let cpid = i32::from_le_bytes(buf);
             println!("\nContainer launched with ID: {} (PID: {})", container_id, cpid);
             println!("Use 'qube stop {}' or 'qube delete {}' to stop/delete it.\n", cpid, cpid);
-            tracking::update_container_pid(&container_id, cpid, work_dir, user_cmd, image, ports, firewall);
+            tracking::update_container_pid(&container_id, cpid, work_dir, user_cmd, image, ports, isolated);
         }
     }
 }
 
-fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _image: &str, _ports: &str, firewall: bool) -> ! {
+fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _image: &str, _ports: &str, isolated: bool) -> ! {
     let mut flags = CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWNS;
-    if firewall {
+    if isolated {
         flags |= CloneFlags::CLONE_NEWNET;
     }
     unshare(flags).unwrap();
@@ -234,7 +234,7 @@ pub fn list_containers() {
         "STATUS".bold().truecolor(150, 200, 150),
         "IMAGE".bold().truecolor(100, 150, 255),
         "PORTS".bold().truecolor(100, 150, 255),
-        "FIREWALL".bold().truecolor(200, 100, 255)
+        "Isolated".bold().truecolor(200, 100, 255)
     ));
     println!("╠════════════════════╬════════════╬═══════════╬══════════════╬══════════════╬══════════════╬══════════════╣");
     for x in e {
@@ -247,7 +247,7 @@ pub fn list_containers() {
                      else if x.pid == -2 { "STOPPED" }
                      else { "EXITED" };
         println!("║ {:<18} ║ {:<10} ║ {:<9} ║ {:<12} ║ {:<12} ║ {:<12} ║ {:<12} ║",
-                 x.name, x.pid, uptime_str, status, x.image, x.ports, if x.firewall { "true" } else { "false" });
+                 x.name, x.pid, uptime_str, status, x.image, x.ports, if x.isolated { "true" } else { "false" });
     }
     println!("╚════════════════════╩════════════╩═══════════╩══════════════╩══════════════╩══════════════╩══════════════╝");
 }
@@ -263,7 +263,7 @@ pub fn stop_container(pid: i32) {
             &entry.command,
             &entry.image,
             &entry.ports,
-            entry.firewall
+            entry.isolated
         );
 
         crate::tracking::remove_container_from_tracking(pid);

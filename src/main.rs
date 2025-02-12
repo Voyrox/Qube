@@ -41,14 +41,14 @@ fn main() {
         "run" => {
             let cmd_flag_index = args.iter().position(|arg| arg == "--cmd");
             if cmd_flag_index.is_none() || cmd_flag_index.unwrap() == args.len() - 1 {
-                eprintln!("{}", "Usage: Qube run [--image <image>] [--ports <ports>] [--firewall] --cmd \"<command>\"".bright_red());
+                eprintln!("{}", "Usage: Qube run [--image <image>] [--ports <ports>] [--isolated] --cmd \"<command>\"".bright_red());
                 exit(1);
             }
             let cmd_index = cmd_flag_index.unwrap();
 
             let mut image = "ubuntu".to_string();
             let mut ports = "".to_string();
-            let mut firewall = false;
+            let mut isolated = false;
 
             let mut i = 2;
             while i < cmd_index {
@@ -59,7 +59,7 @@ fn main() {
                             i += 2;
                             continue;
                         } else {
-                            eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--firewall] --cmd \"<command>\"".bright_red());
+                            eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] --cmd \"<command>\"".bright_red());
                             exit(1);
                         }
                     }
@@ -69,12 +69,12 @@ fn main() {
                             i += 2;
                             continue;
                         } else {
-                            eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--firewall] --cmd \"<command>\"".bright_red());
+                            eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] --cmd \"<command>\"".bright_red());
                             exit(1);
                         }
                     }
-                    "--firewall" => {
-                        firewall = true;
+                    "--isolated" => {
+                        isolated = true;
                         i += 1;
                         continue;
                     }
@@ -111,7 +111,7 @@ fn main() {
                 user_cmd.clone(),
                 &image,
                 &ports,
-                firewall,
+                isolated,
             );
 
             eprintln!(
@@ -167,7 +167,7 @@ fn main() {
                         &entry.command,
                         &entry.image,
                         &entry.ports,
-                        entry.firewall,
+                        entry.isolated,
                     );
                     println!("Container {} marked to start. The daemon will start it shortly.", entry.name);
                 }
@@ -251,7 +251,7 @@ fn main() {
                 println!("Timestamp:   {}", entry.timestamp);
                 println!("Image:       {}", entry.image);
                 println!("Ports:       {}", entry.ports);
-                println!("Firewall:    {}", if entry.firewall { "ENABLED" } else { "DISABLED" });
+                println!("Isolated:    {}", if entry.isolated { "ENABLED" } else { "DISABLED" });
                 match crate::tracking::get_process_uptime(entry.pid) {
                     Ok(uptime) => println!("Uptime:      {} seconds", uptime),
                     Err(_) => println!("Uptime:      N/A"),

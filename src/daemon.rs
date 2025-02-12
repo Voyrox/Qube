@@ -62,7 +62,7 @@ pub fn start_daemon(debug: bool) -> ! {
                         debug,
                         &entry.image,
                         &entry.ports,
-                        entry.firewall,
+                        entry.isolated,
                     );
                 } else {
                     eprintln!(
