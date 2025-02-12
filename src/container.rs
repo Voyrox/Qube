@@ -21,7 +21,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 
 pub const QUBE_CONTAINERS_BASE: &str = "/var/tmp/Qube_containers";
 
-fn ensure_image_exists(image: &str) -> Result<String, Box<dyn std::error::Error>> {
+pub fn ensure_image_exists(image: &str) -> Result<String, Box<dyn std::error::Error>> {
     let images_dir = format!("{}/images", QUBE_CONTAINERS_BASE);
     let image_path = format!("{}/{}", images_dir, image);
     if !Path::new(&image_path).exists() {
@@ -60,6 +60,11 @@ fn ensure_image_exists(image: &str) -> Result<String, Box<dyn std::error::Error>
         pb.finish_with_message("Download complete");
     }
     Ok(image_path)
+}
+
+pub fn validate_image(image: &str) -> Result<(), Box<dyn std::error::Error>> {
+    ensure_image_exists(image)?;
+    Ok(())
 }
 
 fn generate_container_id() -> String {

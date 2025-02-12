@@ -88,15 +88,18 @@ fn main() {
                 image = "ubuntu24rootfs_custom.tar".to_string();
             }
 
+            if let Err(e) = crate::container::validate_image(&image) {
+                eprintln!("{}", format!("Error: Invalid image provided ('{}'). Reason: {}", image, e)
+                    .bright_red().bold());
+                exit(1);
+            }
+
             let user_cmd: Vec<String> = args[cmd_index + 1..].to_vec();
 
             let cwd = match env::current_dir() {
                 Ok(dir) => dir.to_string_lossy().to_string(),
                 Err(e) => {
-                    eprintln!(
-                        "{}",
-                        format!("Failed to get current directory: {}", e).bright_red()
-                    );
+                    eprintln!("{}", format!("Failed to get current directory: {}", e).bright_red());
                     exit(1);
                 }
             };
@@ -118,12 +121,8 @@ fn main() {
                 isolated,
             );
 
-            eprintln!(
-                "{}",
-                format!("\nContainer {} registered. It will be started by the daemon.", container_id)
-                    .green()
-                    .bold()
-            );
+            eprintln!("{}", format!("\nContainer {} registered. It will be started by the daemon.", container_id)
+                .green().bold());
         }
         "list" => {
             container::list_containers();
@@ -157,13 +156,11 @@ fn main() {
                 e.name == *identifier || e.pid.to_string() == *identifier
             });
             if let Some(entry) = entry_opt {
-                // If the container is running, do nothing
                 if entry.pid > 0 && std::path::Path::new(&format!("/proc/{}", entry.pid)).exists() {
                     println!("Container {} is already running (PID: {}).", entry.name, entry.pid);
                 } else if entry.pid == -1 {
                     println!("Container {} is already scheduled to start.", entry.name);
                 } else {
-                    // Set pid to -1 to indicate that the daemon should (re)start it.
                     crate::tracking::update_container_pid(
                         &entry.name,
                         -1,
