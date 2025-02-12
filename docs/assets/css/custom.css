@@ -1,0 +1,26 @@
+:root {
+    --color-background: #ffffff;
+    --color-text: #333;
+    --color-link: #1a73e8;
+    --color-heading: #222;
+}
+
+[data-theme="dark"] {
+    --color-background: #1F2937;
+    --color-text: #ccc;
+    --color-link: lightgreen;
+    --color-heading: orange;
+}
+
+body {
+    background-color: var(--color-background);
+    color: var(--color-text);
+}
+
+a {
+    color: var(--color-link);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--color-heading);
+}
