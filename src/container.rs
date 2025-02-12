@@ -95,7 +95,16 @@ pub fn run_container(
     let rootfs = get_rootfs(&container_id);
     if !Path::new(&rootfs).exists() {
         prepare_rootfs_dir(&container_id);
-        extract_rootfs_tar(&container_id, image);
+        if let Err(e) = extract_rootfs_tar(&container_id, image) {
+            eprintln!(
+                "{}",
+                format!("Error: Invalid image provided ('{}'). Reason: {}", image, e)
+                    .bright_red()
+                    .bold()
+            );
+            crate::tracking::remove_container_from_tracking_by_name(&container_id);
+            return;
+        }
     }
     copy_directory_into_home(&container_id, work_dir);
     let (r, w) = unistd::pipe().expect("Failed to create pipe");
@@ -202,22 +211,17 @@ fn prepare_rootfs_dir(cid: &str) {
     fs::create_dir_all(&rootfs).unwrap();
 }
 
-fn extract_rootfs_tar(cid: &str, image: &str) {
+fn extract_rootfs_tar(cid: &str, image: &str) -> Result<(), Box<dyn std::error::Error>> {
     let rootfs = get_rootfs(cid);
-    match ensure_image_exists(image) {
-        Ok(image_path) => {
-            let s = Command::new("tar")
-                .args(["-xf", &image_path, "-C", &rootfs])
-                .status()
-                .expect("Failed to execute tar command");
-            if !s.success() {
-                panic!("Failed to extract the image {}!", image_path);
-            }
-        },
-        Err(e) => {
-            panic!("Error ensuring image exists: {}", e);
-        }
+    let image_path = ensure_image_exists(image)?;
+    
+    let status = Command::new("tar")
+        .args(["-xf", &image_path, "-C", &rootfs])
+        .status()?;
+    if !status.success() {
+        return Err(format!("Failed to extract the image {}!", image_path).into());
     }
+    Ok(())
 }
 
 fn copy_directory_into_home(cid: &str, wd: &str) {
