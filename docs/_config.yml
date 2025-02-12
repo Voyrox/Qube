@@ -11,4 +11,4 @@ plugins:
   - jekyll-include-cache
 
 just_the_docs:
-  custom_styles: "docs/assets/css/custom.css"
+  custom_styles: "assets/css/custom.css"
