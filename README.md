@@ -5,6 +5,10 @@
   <img src="OIG4.png" width="450">
 </p>
 
+## Fix
+- Add the ability to select os
+- Fix ports
+
 ## Features
 - Lightweight and fast container runtime.
 - Written in Rust for memory safety and performance.
