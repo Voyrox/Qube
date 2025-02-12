@@ -123,6 +123,7 @@ bundle exec jekyll serve
 ```
 
 ### Roadmap
+- [ ] Mount: Add the ability to mount external drives
 - [ ] Networking: Add CLONE_NEWNET for network interfaces inside the container.
 - [ ] Rootless Containers: Add CLONE_NEWUSER and map UID/GIDs to avoid requiring sudo.
 - [ ] Security: Integrate seccomp, capabilities, and AppArmor/SELinux for enhanced security.
