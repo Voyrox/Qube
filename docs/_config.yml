@@ -6,9 +6,3 @@ url: https://just-the-docs.github.io
 
 aux_links:
   Repository: https://github.com/Voyrox/Qube
-
-plugins:
-  - jekyll-include-cache
-
-just_the_docs:
-  custom_styles: "assets/css/custom.css"
