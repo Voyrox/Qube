@@ -1,0 +1,15 @@
+[Unit]
+Description=Rust File Server
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/rust-file-server
+WorkingDirectory=/var/www/rust-file-server
+Restart=always
+RestartSec=5
+User=www-data
+Group=www-data
+Environment=RUST_LOG=info
+
+[Install]
+WantedBy=multi-user.target

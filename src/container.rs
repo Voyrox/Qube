@@ -1,6 +1,5 @@
 use crate::cgroup;
 use crate::tracking;
-
 use colored::Colorize;
 use libc::{fork, c_int};
 use nix::mount::{mount, MsFlags};
@@ -16,8 +15,52 @@ use std::fs::File;
 use nix::unistd::dup2;
 use std::os::unix::io::AsRawFd;
 
+use std::io::{Read, Write};
+use reqwest;
+use indicatif::{ProgressBar, ProgressStyle};
+
 pub const QUBE_CONTAINERS_BASE: &str = "/var/tmp/Qube_containers";
-pub const UBUNTU24_TAR: &str = "/mnt/e/Github/Qube/ubuntu24rootfs_custom.tar";
+
+fn ensure_image_exists(image: &str) -> Result<String, Box<dyn std::error::Error>> {
+    let images_dir = format!("{}/images", QUBE_CONTAINERS_BASE);
+    let image_path = format!("{}/{}", images_dir, image);
+    if !Path::new(&image_path).exists() {
+        fs::create_dir_all(&images_dir)?;
+        println!("{}", format!("Image {} not found locally. Downloading...", image).blue());
+
+        let url = format!("https://files.ewenmacculloch.com/files/{}", image);
+        let mut resp = reqwest::blocking::get(&url)?;
+        if !resp.status().is_success() {
+            return Err(format!("Failed to download image from {}. Status: {}", url, resp.status()).into());
+        }
+        let total_size = resp
+            .content_length()
+            .unwrap_or(0);
+
+        let pb = ProgressBar::new(total_size);
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {bytes}/{total_bytes} ({eta}, {percent}%)")
+                .unwrap()
+                .progress_chars(":∷")
+        );        
+
+        let mut file = File::create(&image_path)?;
+        let mut buffer = [0; 8192];
+        let mut downloaded: u64 = 0;
+        loop {
+            let n = resp.read(&mut buffer)?;
+            if n == 0 {
+                break;
+            }
+            file.write_all(&buffer[..n])?;
+            downloaded += n as u64;
+            pb.set_position(downloaded);
+        }
+        pb.finish_with_message("Download complete");
+    }
+    Ok(image_path)
+}
 
 fn generate_container_id() -> String {
     let rand_str: String = rand::thread_rng()
@@ -49,8 +92,11 @@ pub fn run_container(
         Some(x) => x.to_string(),
         None => generate_container_id(),
     };
-    prepare_rootfs_dir(&container_id);
-    extract_rootfs_tar(&container_id);
+    let rootfs = get_rootfs(&container_id);
+    if !Path::new(&rootfs).exists() {
+        prepare_rootfs_dir(&container_id);
+        extract_rootfs_tar(&container_id, image);
+    }
     copy_directory_into_home(&container_id, work_dir);
     let (r, w) = unistd::pipe().expect("Failed to create pipe");
     let f = unsafe { fork() };
@@ -156,17 +202,21 @@ fn prepare_rootfs_dir(cid: &str) {
     fs::create_dir_all(&rootfs).unwrap();
 }
 
-fn extract_rootfs_tar(cid: &str) {
+fn extract_rootfs_tar(cid: &str, image: &str) {
     let rootfs = get_rootfs(cid);
-    if !Path::new(UBUNTU24_TAR).exists() {
-        panic!("ERROR: {} not found!", UBUNTU24_TAR);
-    }
-    let s = Command::new("tar")
-        .args(["-xf", UBUNTU24_TAR, "-C", &rootfs])
-        .status()
-        .unwrap();
-    if !s.success() {
-        panic!("Failed to extract the Ubuntu 24 rootfs!");
+    match ensure_image_exists(image) {
+        Ok(image_path) => {
+            let s = Command::new("tar")
+                .args(["-xf", &image_path, "-C", &rootfs])
+                .status()
+                .expect("Failed to execute tar command");
+            if !s.success() {
+                panic!("Failed to extract the image {}!", image_path);
+            }
+        },
+        Err(e) => {
+            panic!("Error ensuring image exists: {}", e);
+        }
     }
 }
 

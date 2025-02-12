@@ -84,6 +84,10 @@ fn main() {
                 }
             }
 
+            if image == "ubuntu" {
+                image = "ubuntu24rootfs_custom.tar".to_string();
+            }
+
             let user_cmd: Vec<String> = args[cmd_index + 1..].to_vec();
 
             let cwd = match env::current_dir() {
