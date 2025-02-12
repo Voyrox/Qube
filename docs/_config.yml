@@ -6,3 +6,6 @@ url: https://just-the-docs.github.io
 
 aux_links:
   Repository: https://github.com/Voyrox/Qube
+
+favicon_ico: "/assets/images/favicon.ico"
+color_scheme: dark

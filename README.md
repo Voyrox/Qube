@@ -116,6 +116,12 @@ sudo cp /etc/resolv.conf /tmp/Qube_ubuntu24/etc/resolv.conf
 
 ### Dev Notes
 
+#### Building the Docs Site
+```bash
+bundle install
+bundle exec jekyll serve
+```
+
 ### Roadmap
 - [ ] Networking: Add CLONE_NEWNET for network interfaces inside the container.
 - [ ] Rootless Containers: Add CLONE_NEWUSER and map UID/GIDs to avoid requiring sudo.

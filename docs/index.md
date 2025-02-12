@@ -8,7 +8,7 @@ layout: home
 [![Github CI](https://github.com/Voyrox/Qube/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/Voyrox/Qube/actions)
 
 <p align="center">
-  <img src="../OIG4.png" width="450">
+  <img src="./assets/images/logo.png" width="450">
 </p>
 
 ## Features

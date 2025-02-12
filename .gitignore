@@ -20,3 +20,5 @@ Cargo.lock
 ubuntu24rootfs.tar
 ubuntu24rootfs_custom.tar
 /tools/wasm-sample/node_modules
+/docs/_site
+/docs/.jekyll-cache
