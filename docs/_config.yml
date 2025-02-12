@@ -9,3 +9,4 @@ aux_links:
 
 favicon_ico: "/assets/images/favicon.ico"
 color_scheme: dark
+nav_enabled: true
