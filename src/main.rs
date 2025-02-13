@@ -84,7 +84,7 @@ fn main() {
             }
 
             if image == "ubuntu" {
-                image = "ubuntu24rootfs_custom.tar".to_string();
+                image = "ubuntu24.tar".to_string();
             }
 
             if let Err(e) = crate::container::validate_image(&image) {
