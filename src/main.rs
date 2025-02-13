@@ -5,29 +5,20 @@ mod tracking;
 
 use colored::*;
 use std::env;
-use std::process::exit;
-use std::process::Command;
+use std::process::{exit, Command};
 use std::io::{self, Write};
 
 const QUBE_CONTAINERS_BASE: &str = "/var/tmp/Qube_containers";
 
 fn main() {
     if nix::unistd::geteuid().as_raw() != 0 {
-        eprintln!(
-            "{}",
-            "Error: This program must be run as root (use sudo)."
-                .bright_red()
-                .bold()
-        );
+        eprintln!("{}", "Error: This program must be run as root (use sudo).".bright_red().bold());
         exit(1);
     }
 
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
-        eprintln!(
-            "{}",
-            "Usage: qube <daemon|run|list|stop|start|delete|eval|info|snapshot> [args...]".bright_red()
-        );
+        eprintln!("{}", "Usage: qube <daemon|run|list|stop|start|delete|eval|info|snapshot> [args...]".bright_red());
         exit(1);
     }
 
