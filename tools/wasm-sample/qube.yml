@@ -1,6 +1,7 @@
 system: ubuntu
-install:
+packages:
   - node
   - python3
   - rust
-cmd: "node -v && npm -v"
+ports: 3000
+cmd: "npm i && node index.js"

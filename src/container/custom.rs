@@ -1,6 +1,6 @@
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::path::Path;
+use std::process::Command;
 use std::io;
 use reqwest::blocking::get;
 use tar::Archive;
@@ -8,96 +8,53 @@ use flate2::read::GzDecoder;
 use xz2::read::XzDecoder;
 use serde::Deserialize;
 use glob::glob;
-
-/**
-fn main() {
-    let config = match read_qube_yaml() {
-        Ok(cfg) => cfg,
-        Err(e) => {
-            eprintln!("Error reading qube.yml: {}", e);
-            return;
-        }
-    };
-
-    if config.system != "ubuntu" {
-        eprintln!("Only Ubuntu systems are supported!");
-        return;
-    }
-
-    let rootfs_path = "/mnt/c/Users/ewen2/Downloads/testrootfs";
-
-    let container_path = match extract_ubuntu_container(rootfs_path) {
-        Ok(path) => path,
-        Err(e) => {
-            eprintln!("Error extracting Ubuntu: {}", e);
-            return;
-        }
-    };
-    if let Err(e) = install_software(config.install, container_path.to_str().unwrap()) {
-        eprintln!("Error installing software: {}", e);
-        return;
-    }
-
-    if let Err(e) = run_cmd(&config.cmd) {
-        eprintln!("Error running command: {}", e);
-    }
-}
- **/
-
 #[derive(Deserialize)]
-struct Config {
-    system: String,
-    install: Vec<String>,
-    cmd: String,
+pub struct Config {
+    pub system: String,
+    pub packages: Vec<String>,
+    pub cmd: String,
+    pub ports: Option<String>,
+    pub isolated: Option<bool>,
+    pub debug: Option<bool>,
 }
 
-fn read_qube_yaml() -> Result<Config, Box<dyn std::error::Error>> {
+pub fn read_qube_yaml() -> Result<Config, Box<dyn std::error::Error>> {
     let path = Path::new("./qube.yml");
-
     if !path.exists() {
         return Err("qube.yml file not found in the current directory".into());
     }
-
     println!("Reading configuration from {}", path.display());
     let yaml_str = fs::read_to_string(path)?;
     let config: Config = serde_yaml::from_str(&yaml_str)?;
-
-    println!("Configuration loaded: system = {}, install = {:?}, cmd = {}",
-             config.system, config.install, config.cmd);
+    println!(
+        "Configuration loaded: system = {}, packages = {:?}, cmd = {}, ports = {:?}, isolated = {:?}, debug = {:?}",
+        config.system, config.packages, config.cmd, config.ports, config.isolated, config.debug
+    );
     Ok(config)
 }
 
-fn download_file(url: &str, dest_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Downloading from {} to {}", url, dest_path.display());
-    let mut response = get(url)?;
-    let mut file = fs::File::create(dest_path)?;
-    io::copy(&mut response, &mut file)?;
-    println!("Download complete.");
-    Ok(())
-}
-
-fn install_software(software_list: Vec<String>, rootfs: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn install_software(software_list: Vec<String>, rootfs: &str) -> Result<(), Box<dyn std::error::Error>> {
     for software in software_list {
         match software.as_str() {
             "node" => {
                 println!("Installing Node.js...");
                 install_nodejs(None, rootfs)?;
-            },
+            }
             "python3" => {
                 println!("Installing Python 3...");
                 install_python(None, rootfs)?;
-            },
+            }
             "rust" => {
                 println!("Installing Rust...");
                 install_rust(None, rootfs)?;
-            },
+            }
             other => eprintln!("Unknown software: {}", other),
         }
     }
     Ok(())
 }
 
-fn install_python(version: Option<&str>, rootfs: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn install_python(version: Option<&str>, rootfs: &str) -> Result<(), Box<dyn std::error::Error>> {
     let python_version = version.unwrap_or("latest");
     let python_url = if python_version == "latest" {
         "https://www.python.org/ftp/python/3.10.6/Python-3.10.6.tgz".to_string()
@@ -125,7 +82,7 @@ fn install_python(version: Option<&str>, rootfs: &str) -> Result<(), Box<dyn std
     Ok(())
 }
 
-fn install_rust(version: Option<&str>, rootfs: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn install_rust(version: Option<&str>, rootfs: &str) -> Result<(), Box<dyn std::error::Error>> {
     let rust_version = version.unwrap_or("stable");
     let rustup_script_url = if rust_version == "stable" {
         "https://sh.rustup.rs".to_string()
@@ -152,12 +109,15 @@ fn install_rust(version: Option<&str>, rootfs: &str) -> Result<(), Box<dyn std::
     Ok(())
 }
 
-fn install_nodejs(version: Option<&str>, rootfs: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn install_nodejs(version: Option<&str>, rootfs: &str) -> Result<(), Box<dyn std::error::Error>> {
     let node_version = version.unwrap_or("latest");
     let node_url = if node_version == "latest" {
         "https://nodejs.org/dist/v23.7.0/node-v23.7.0-linux-x64.tar.xz".to_string()
     } else {
-        format!("https://nodejs.org/dist/v{}/node-v{}-linux-x64.tar.xz", node_version, node_version)
+        format!(
+            "https://nodejs.org/dist/v{}/node-v{}-linux-x64.tar.xz",
+            node_version, node_version
+        )
     };
 
     let node_dir = Path::new(rootfs).join("tmp/node");
@@ -178,7 +138,16 @@ fn install_nodejs(version: Option<&str>, rootfs: &str) -> Result<(), Box<dyn std
     Ok(())
 }
 
-fn create_symlinks(source_dir: &str, bin_pattern: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn download_file(url: &str, dest_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    println!("Downloading from {} to {}", url, dest_path.display());
+    let mut response = get(url)?;
+    let mut file = fs::File::create(dest_path)?;
+    io::copy(&mut response, &mut file)?;
+    println!("Download complete.");
+    Ok(())
+}
+
+pub fn create_symlinks(source_dir: &str, bin_pattern: &str) -> Result<(), Box<dyn std::error::Error>> {
     let search_pattern = format!("{}/{}", source_dir, bin_pattern);
     println!("Creating symlinks using glob pattern: {}", search_pattern);
 
@@ -203,7 +172,7 @@ fn create_symlinks(source_dir: &str, bin_pattern: &str) -> Result<(), Box<dyn st
                     }
                     found = true;
                 }
-            },
+            }
             Err(e) => eprintln!("Glob error: {:?}", e),
         }
     }

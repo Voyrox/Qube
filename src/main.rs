@@ -6,115 +6,193 @@ mod config;
 
 use colored::*;
 use std::env;
-use std::process::{exit, Command};
 use std::io::{self, Write};
+use std::path::Path;
+use std::process::{exit, Command};
 
 use crate::config::QUBE_CONTAINERS_BASE;
 
 fn main() {
     if nix::unistd::geteuid().as_raw() != 0 {
-        eprintln!("{}", "Error: This program must be run as root (use sudo).".bright_red().bold());
+        eprintln!(
+            "{}",
+            "Error: This program must be run as root (use sudo)."
+                .bright_red()
+                .bold()
+        );
         exit(1);
     }
 
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
-        eprintln!("{}", "Usage: qube <daemon|run|list|stop|start|delete|eval|info|snapshot> [args...]".bright_red());
+        eprintln!(
+            "{}",
+            "Usage: qube <daemon|run|list|stop|start|delete|eval|info|snapshot> [args...]"
+                .bright_red()
+        );
         exit(1);
     }
 
     match args[1].as_str() {
         "daemon" => {
-            let debug = args.iter().any(|arg| arg == "--debug");
+            let _debug = args.iter().any(|arg| arg == "--debug");
             println!("{}", "Starting Qubed Daemon...".green().bold());
-            daemon::start_daemon(debug);
+            daemon::start_daemon(_debug);
         }
         "run" => {
-            let cmd_flag_index = args.iter().position(|arg| arg == "--cmd");
-            if cmd_flag_index.is_none() || cmd_flag_index.unwrap() == args.len() - 1 {
-                eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
-                exit(1);
-            }
-            let cmd_index = cmd_flag_index.unwrap();
+            if let Some(cmd_flag_index) = args.iter().position(|arg| arg == "--cmd") {
+                let mut image = "ubuntu".to_string();
+                let mut ports = "".to_string();
+                let mut isolated = false;
+                let mut i = 2;
 
-            let mut image = "ubuntu".to_string();
-            let mut ports = "".to_string();
-            let mut isolated = false;
+                while i < cmd_flag_index {
+                    match args[i].as_str() {
+                        "--image" => {
+                            if i + 1 < cmd_flag_index {
+                                image = args[i + 1].clone();
+                                i += 2;
+                                continue;
+                            } else {
+                                eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
+                                exit(1);
+                            }
+                        }
+                        "--packages" => {
 
-            let mut i = 2;
-            while i < cmd_index {
-                match args[i].as_str() {
-                    "--image" => {
-                        if i + 1 < cmd_index {
-                            image = args[i + 1].clone();
-                            i += 2;
-                            continue;
-                        } else {
-                            eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
-                            exit(1);
                         }
-                    }
-                    "--ports" => {
-                        if i + 1 < cmd_index {
-                            ports = args[i + 1].clone();
-                            i += 2;
-                            continue;
-                        } else {
-                            eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
-                            exit(1);
+                        "--ports" => {
+                            if i + 1 < cmd_flag_index {
+                                ports = args[i + 1].clone();
+                                i += 2;
+                                continue;
+                            } else {
+                                eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
+                                exit(1);
+                            }
                         }
-                    }
-                    "--isolated" => {
-                        isolated = true;
-                        i += 1;
-                        continue;
-                    }
-                    _ => {
-                        i += 1;
+                        "--isolated" => {
+                            isolated = true;
+                            i += 1;
+                            continue;
+                        }
+                        _ => {
+                            i += 1;
+                        }
                     }
                 }
-            }
 
-            if image == "ubuntu" {
-                image = "ubuntu24.tar".to_string();
-            }
+                if image == "ubuntu" {
+                    image = "ubuntu24.tar".to_string();
+                }
 
-            if let Err(e) = crate::container::validate_image(&image) {
-                eprintln!(
-                    "{}",
-                    format!("Error: Invalid image provided ('{}'). Reason: {}", image, e)
-                        .bright_red()
-                        .bold()
-                );
-                exit(1);
-            }
-
-            let user_cmd: Vec<String> = args[cmd_index + 1..].to_vec();
-
-            let cwd = match env::current_dir() {
-                Ok(dir) => dir.to_string_lossy().to_string(),
-                Err(e) => {
-                    eprintln!("{}", format!("Failed to get current directory: {}", e).bright_red());
+                if let Err(e) = crate::container::validate_image(&image) {
+                    eprintln!(
+                        "{}",
+                        format!("Error: Invalid image provided ('{}'). Reason: {}", image, e)
+                            .bright_red()
+                            .bold()
+                    );
                     exit(1);
                 }
-            };
 
-            let container_id = container::build_container(None, &cwd, &image);
+                let user_cmd: Vec<String> = args[cmd_flag_index + 1..].to_vec();
+                let cwd = match env::current_dir() {
+                    Ok(dir) => dir.to_string_lossy().to_string(),
+                    Err(e) => {
+                        eprintln!("{}", format!("Failed to get current directory: {}", e).bright_red());
+                        exit(1);
+                    }
+                };
 
-            crate::tracking::track_container_named(
-                &container_id,
-                -1,
-                &cwd,
-                user_cmd.clone(),
-                &image,
-                &ports,
-                isolated,
-            );
-            eprintln!("{}", format!("\nContainer {} built. It will be started by the daemon.", container_id)
-                .green().bold());
+                let container_id = crate::container::lifecycle::build_container(None, &cwd, &image);
+
+                crate::tracking::track_container_named(
+                    &container_id,
+                    -1,
+                    &cwd,
+                    user_cmd.clone(),
+                    &image,
+                    &ports,
+                    isolated,
+                );
+                eprintln!(
+                    "{}",
+                    format!("\nContainer {} built. It will be started by the daemon.", container_id)
+                        .green()
+                        .bold()
+                );
+            } else if Path::new("./qube.yml").exists() {
+                println!("{}", "Detected qube.yml configuration file. Building container based on YAML configuration.".green().bold());
+
+                let config = match crate::container::custom::read_qube_yaml() {
+                    Ok(cfg) => cfg,
+                    Err(e) => {
+                        eprintln!("Error reading qube.yml: {}", e);
+                        exit(1);
+                    }
+                };
+
+                if config.system.to_lowercase() != "ubuntu" {
+                    eprintln!("Only Ubuntu systems are supported in YAML mode.");
+                    exit(1);
+                }
+
+                let ports = config.ports.unwrap_or_else(|| "".to_string());
+                let isolated = config.isolated.unwrap_or(false);
+                let _debug = config.debug.unwrap_or(false);
+
+                let cwd = match env::current_dir() {
+                    Ok(dir) => dir.to_string_lossy().to_string(),
+                    Err(e) => {
+                        eprintln!("{}", format!("Failed to get current directory: {}", e).bright_red());
+                        exit(1);
+                    }
+                };
+
+                let image = "ubuntu24.tar".to_string();
+                if let Err(e) = crate::container::validate_image(&image) {
+                    eprintln!(
+                        "{}",
+                        format!("Error: Invalid image provided ('{}'). Reason: {}", image, e)
+                            .bright_red()
+                            .bold()
+                    );
+                    exit(1);
+                }
+
+                let container_id = crate::container::lifecycle::build_container(None, &cwd, &image);
+
+                let rootfs_path = QUBE_CONTAINERS_BASE.to_string() + "/" + &container_id;
+                if let Err(e) = crate::container::custom::install_software(config.packages, &rootfs_path) {
+                    eprintln!("Error installing software: {}", e);
+                    return;
+                }
+
+                let cmd_vec = config.cmd.split_whitespace().map(String::from).collect::<Vec<String>>();
+                crate::tracking::track_container_named(
+                    &container_id,
+                    -1,
+                    &cwd,
+                    cmd_vec,
+                    &image,
+                    &ports,
+                    isolated,
+                );
+
+                eprintln!(
+                    "{}",
+                    format!("\nContainer {} built from YAML configuration. It will be started by the daemon.", container_id)
+                        .green()
+                        .bold()
+                );
+            } else {
+                eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\" OR a qube.yml file must be present in the current directory.".bright_red());
+                exit(1);
+            }
         }
         "list" => {
-            container::list_containers();
+            container::lifecycle::list_containers();
         }
         "stop" => {
             if args.len() < 3 {
@@ -123,11 +201,11 @@ fn main() {
             }
             let identifier = args[2].clone();
             if let Ok(pid) = identifier.parse::<i32>() {
-                container::stop_container(pid);
+                container::lifecycle::stop_container(pid);
             } else {
                 let tracked = crate::tracking::get_all_tracked_entries();
                 if let Some(entry) = tracked.iter().find(|e| e.name == identifier) {
-                    container::stop_container(entry.pid);
+                    container::lifecycle::stop_container(entry.pid);
                 } else {
                     eprintln!("No container found with identifier {}", identifier);
                     exit(1);
@@ -145,7 +223,7 @@ fn main() {
                 e.name == *identifier || e.pid.to_string() == *identifier
             });
             if let Some(entry) = entry_opt {
-                if entry.pid > 0 && std::path::Path::new(&format!("/proc/{}", entry.pid)).exists() {
+                if entry.pid > 0 && Path::new(&format!("/proc/{}", entry.pid)).exists() {
                     println!("Container {} is already running (PID: {}).", entry.name, entry.pid);
                 } else if entry.pid == -1 {
                     println!("Container {} is already scheduled to start.", entry.name);
@@ -172,7 +250,7 @@ fn main() {
                 exit(1);
             }
             let pid: i32 = args[2].parse().expect("Invalid PID");
-            container::kill_container(pid);
+            container::lifecycle::kill_container(pid);
         }
         "eval" => {
             if args.len() < 3 {
@@ -280,10 +358,7 @@ fn main() {
             }
         }
         _ => {
-            eprintln!(
-                "{}",
-                format!("Unknown subcommand: {}", args[1]).bright_red()
-            );
+            eprintln!("{}", format!("Unknown subcommand: {}", args[1]).bright_red());
             eprintln!("Available commands: daemon, run, list, stop, start, delete, eval, info, snapshot");
             exit(1);
         }
