@@ -1,8 +1,7 @@
 use std::fs;
 use std::path::Path;
 use std::process::Command;
-
-pub const QUBE_CONTAINERS_BASE: &str = "/var/tmp/Qube_containers";
+use crate::config::QUBE_CONTAINERS_BASE;
 
 pub fn get_rootfs(cid: &str) -> String {
     format!("{}/rootfs", format!("{}/{}", QUBE_CONTAINERS_BASE, cid))

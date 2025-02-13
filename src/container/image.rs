@@ -6,7 +6,8 @@ use std::io::{Read, Write};
 use std::path::Path;
 use std::process::Command;
 
-pub const QUBE_CONTAINERS_BASE: &str = "/var/tmp/Qube_containers";
+use crate::config::QUBE_CONTAINERS_BASE;
+use crate::config::BASE_URL;
 
 pub fn ensure_image_exists(image: &str) -> Result<String, Box<dyn std::error::Error>> {
     let images_dir = format!("{}/images", QUBE_CONTAINERS_BASE);
@@ -15,7 +16,7 @@ pub fn ensure_image_exists(image: &str) -> Result<String, Box<dyn std::error::Er
         fs::create_dir_all(&images_dir)?;
         println!("{}", format!("Image {} not found locally. Downloading...", image).blue());
 
-        let url = format!("https://files.ewenmacculloch.com/files/{}", image);
+        let url = format!("{}/files/{}", BASE_URL, image);
         let mut resp = reqwest::blocking::get(&url)?;
         if !resp.status().is_success() {
             return Err(format!("Failed to download image from {}. Status: {}", url, resp.status()).into());

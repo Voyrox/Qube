@@ -3,9 +3,7 @@ use std::io::{Read, Write, Seek, SeekFrom};
 use std::fs::File;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub const TRACKING_DIR: &str = "/var/lib/Qube";
-pub const CONTAINER_LIST_FILE: &str = "/var/lib/Qube/containers.txt";
-
+use crate::config::{TRACKING_DIR, CONTAINER_LIST_FILE};
 #[derive(Debug)]
 pub struct ContainerEntry {
     pub name: String,

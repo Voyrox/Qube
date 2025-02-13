@@ -2,13 +2,14 @@ mod daemon;
 mod container;
 mod cgroup;
 mod tracking;
+mod config;
 
 use colored::*;
 use std::env;
 use std::process::{exit, Command};
 use std::io::{self, Write};
 
-const QUBE_CONTAINERS_BASE: &str = "/var/tmp/Qube_containers";
+use crate::config::QUBE_CONTAINERS_BASE;
 
 fn main() {
     if nix::unistd::geteuid().as_raw() != 0 {

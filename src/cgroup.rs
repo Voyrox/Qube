@@ -1,9 +1,10 @@
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 
-pub const CGROUP_ROOT: &str = "/sys/fs/cgroup/QubeContainers";
-pub const MEMORY_MAX: &str = "2147483648";
-pub const MEMORY_SWAP_MAX: &str = "1073741824";
+use crate::config::{CGROUP_ROOT, MEMORY_MAX_MB, MEMORY_SWAP_MAX_MB};
+
+pub const MEMORY_MAX: u64 = MEMORY_MAX_MB * 1024 * 1024;
+pub const MEMORY_SWAP_MAX: u64 = MEMORY_SWAP_MAX_MB * 1024 * 1024;
 
 pub fn setup_cgroup2() -> i32 {
     use nix::unistd::getpid;
@@ -23,11 +24,11 @@ pub fn setup_cgroup2() -> i32 {
     let mem_max_path = format!("{}/memory.max", cgroup_path);
     let mem_swap_path = format!("{}/memory.swap.max", cgroup_path);
     
-    if fs::write(&mem_max_path, MEMORY_MAX).is_err() {
+    if fs::write(&mem_max_path, MEMORY_MAX.to_string()).is_err() {
         eprintln!("Warning: Failed to set memory max limit.");
     }
     
-    if fs::write(&mem_swap_path, MEMORY_SWAP_MAX).is_err() {
+    if fs::write(&mem_swap_path, MEMORY_SWAP_MAX.to_string()).is_err() {
         eprintln!("Warning: Failed to set swap max limit.");
     }
     
@@ -39,4 +40,3 @@ pub fn setup_cgroup2() -> i32 {
     
     pid
 }
-
