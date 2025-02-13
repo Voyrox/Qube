@@ -40,10 +40,10 @@ pub fn ensure_image_exists(image: &str) -> Result<String, Box<dyn std::error::Er
         let pb = ProgressBar::new(total_size);
         pb.set_style(
             ProgressStyle::default_bar()
-                .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {bytes}/{total_bytes} ({eta}, {percent}%)")
+                .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/red}] {bytes}/{total_bytes} ({eta}, {percent}%)")
                 .unwrap()
-                .progress_chars(":∷")
-        );        
+                .progress_chars("∷∷")
+        );
 
         let mut file = File::create(&image_path)?;
         let mut buffer = [0; 8192];
@@ -80,6 +80,56 @@ extern "C" fn signal_handler(_: c_int) {
     std::process::exit(0);
 }
 
+pub fn build_container(
+    existing_name: Option<&str>,
+    work_dir: &str,
+    image: &str
+) -> String {
+    let container_id = match existing_name {
+        Some(name) => name.to_string(),
+        None => generate_container_id(),
+    };
+
+    let rootfs = get_rootfs(&container_id);
+    if !Path::new(&rootfs).exists() {
+        let pb = ProgressBar::new(4);
+        pb.set_style(
+            ProgressStyle::default_bar()
+            .template("{spinner:.green} Building container [{elapsed_precise}] [{bar:40.cyan/red}] {bytes}/{total_bytes} ({eta}, {percent}%)")
+            .unwrap()
+            .progress_chars("∷∷")
+        );
+        pb.set_message("Preparing container filesystem...");
+        prepare_rootfs_dir(&container_id);
+        pb.inc(1);
+
+        pb.set_message("Extracting container image...");
+        if let Err(e) = extract_rootfs_tar(&container_id, image) {
+            pb.finish_with_message("Extraction failed!");
+            eprintln!(
+                "{}",
+                format!("Error: Invalid image provided ('{}'). Reason: {}", image, e)
+                    .bright_red()
+                    .bold()
+            );
+            crate::tracking::remove_container_from_tracking_by_name(&container_id);
+            return container_id;
+        }
+        pb.inc(1);
+
+        pb.set_message("Copying working directory...");
+        copy_directory_into_home(&container_id, work_dir);
+        pb.inc(1);
+
+        pb.set_message("Container build complete!");
+        pb.inc(1);
+        pb.finish_with_message("Container build complete!");
+    } else {
+        println!("Container filesystem already exists. Skipping build.");
+    }
+    container_id
+}
+
 pub fn run_container(
     existing_name: Option<&str>,
     work_dir: &str,
@@ -99,8 +149,19 @@ pub fn run_container(
     };
     let rootfs = get_rootfs(&container_id);
     if !Path::new(&rootfs).exists() {
+        let pb = ProgressBar::new(4);
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template("{spinner:.green} {msg}")
+                .unwrap()
+        );
+        pb.set_message("Preparing container filesystem...");
         prepare_rootfs_dir(&container_id);
+        pb.inc(1);
+
+        pb.set_message("Extracting container image...");
         if let Err(e) = extract_rootfs_tar(&container_id, image) {
+            pb.finish_with_message("Extraction failed!");
             eprintln!(
                 "{}",
                 format!("Error: Invalid image provided ('{}'). Reason: {}", image, e)
@@ -110,8 +171,18 @@ pub fn run_container(
             crate::tracking::remove_container_from_tracking_by_name(&container_id);
             return;
         }
+        pb.inc(1);
+
+        pb.set_message("Copying working directory...");
+        copy_directory_into_home(&container_id, work_dir);
+        pb.inc(1);
+
+        pb.set_message("Launching container...");
+        pb.inc(1);
+        pb.finish_with_message("Container build complete!");
+    } else {
+        println!("Container filesystem already exists. Skipping build.");
     }
-    copy_directory_into_home(&container_id, work_dir);
     let (r, w) = unistd::pipe().expect("Failed to create pipe");
     let f = unsafe { fork() };
     match f {

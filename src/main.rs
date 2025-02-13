@@ -6,7 +6,6 @@ mod tracking;
 use colored::*;
 use std::env;
 use std::process::exit;
-use rand::{distributions::Alphanumeric, Rng};
 use std::process::Command;
 use std::io::{self, Write};
 
@@ -41,7 +40,7 @@ fn main() {
         "run" => {
             let cmd_flag_index = args.iter().position(|arg| arg == "--cmd");
             if cmd_flag_index.is_none() || cmd_flag_index.unwrap() == args.len() - 1 {
-                eprintln!("{}", "Usage: Qube run [--image <image>] [--ports <ports>] [--isolated] --cmd \"<command>\"".bright_red());
+                eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
                 exit(1);
             }
             let cmd_index = cmd_flag_index.unwrap();
@@ -59,7 +58,7 @@ fn main() {
                             i += 2;
                             continue;
                         } else {
-                            eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] --cmd \"<command>\"".bright_red());
+                            eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
                             exit(1);
                         }
                     }
@@ -69,7 +68,7 @@ fn main() {
                             i += 2;
                             continue;
                         } else {
-                            eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] --cmd \"<command>\"".bright_red());
+                            eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
                             exit(1);
                         }
                     }
@@ -89,8 +88,12 @@ fn main() {
             }
 
             if let Err(e) = crate::container::validate_image(&image) {
-                eprintln!("{}", format!("Error: Invalid image provided ('{}'). Reason: {}", image, e)
-                    .bright_red().bold());
+                eprintln!(
+                    "{}",
+                    format!("Error: Invalid image provided ('{}'). Reason: {}", image, e)
+                        .bright_red()
+                        .bold()
+                );
                 exit(1);
             }
 
@@ -104,12 +107,7 @@ fn main() {
                 }
             };
 
-            let rand_str: String = rand::thread_rng()
-                .sample_iter(&Alphanumeric)
-                .take(6)
-                .map(char::from)
-                .collect();
-            let container_id = format!("Qube-{}", rand_str);
+            let container_id = container::build_container(None, &cwd, &image);
 
             crate::tracking::track_container_named(
                 &container_id,
@@ -120,8 +118,7 @@ fn main() {
                 &ports,
                 isolated,
             );
-
-            eprintln!("{}", format!("\nContainer {} registered. It will be started by the daemon.", container_id)
+            eprintln!("{}", format!("\nContainer {} built. It will be started by the daemon.", container_id)
                 .green().bold());
         }
         "list" => {
