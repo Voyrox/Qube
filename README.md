@@ -2,7 +2,7 @@
 [![Github CI](https://github.com/Voyrox/Qube/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/Voyrox/Qube/actions)
 
 <p align="center">
-  <img src="OIG4.png" width="450">
+  <img src="./docs/assets/images/logo.png" width="450">
 </p>
 
 ## Fix
@@ -41,8 +41,8 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
   # e.g.
   sudo Qube run --ports 3000 --cmd sh -c "npm i && node index.js"
   ```
-  
-<image src="./images/image.png" style="display: block;margin-left: auto;margin-right: auto;">
+  <image src="./images/download.png" style="display: block;margin-left: auto;margin-right: auto;">
+  <image src="./images/image.png" style="display: block;margin-left: auto;margin-right: auto;">
 
 - List running containers
 
