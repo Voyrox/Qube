@@ -1,0 +1,6 @@
+system: ubuntu
+install:
+  - node
+  - python3
+  - rust
+cmd: "node -v && npm -v"
