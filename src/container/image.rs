@@ -11,12 +11,14 @@ use crate::config::BASE_URL;
 
 pub fn ensure_image_exists(image: &str) -> Result<String, Box<dyn std::error::Error>> {
     let images_dir = format!("{}/images", QUBE_CONTAINERS_BASE);
-    let image_path = format!("{}/{}", images_dir, image);
+    let image_filename = format!("{}.tar", image);
+    let image_path = format!("{}/{}", images_dir, image_filename);
+
     if !Path::new(&image_path).exists() {
         fs::create_dir_all(&images_dir)?;
         println!("{}", format!("Image {} not found locally. Downloading...", image).blue());
 
-        let url = format!("{}/files/{}", BASE_URL, image);
+        let url = format!("{}/files/{}.tar", BASE_URL, image);
         let mut resp = reqwest::blocking::get(&url)?;
         if !resp.status().is_success() {
             return Err(format!("Failed to download image from {}. Status: {}", url, resp.status()).into());

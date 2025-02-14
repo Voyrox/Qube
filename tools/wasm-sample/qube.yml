@@ -1,3 +1,18 @@
-system: ubuntu
-ports: 3000
-cmd: "npm i && node index.js"
+container:
+  # The base system image to use for the container.
+  system: Ubuntu24_NODE
+
+  # Ports to be exposed by the container.
+  ports:
+    - "3000"
+
+  # Command to run inside the container.
+  cmd:
+    - npm install
+    - node index.js
+
+  # Optional: Enable network isolation for the container.
+  isolated: false
+
+  # Optional: Enable debug mode for more verbose output.
+  debug: false

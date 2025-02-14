@@ -102,6 +102,7 @@ fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _im
     std::env::set_current_dir(&crate::container::fs::get_rootfs(cid)).unwrap();
     nix::unistd::chroot(".").unwrap();
     nix::unistd::chdir("/home").unwrap();
+
     unsafe {
         signal::signal(Signal::SIGTERM, signal::SigHandler::Handler(signal_handler)).unwrap();
     }
@@ -139,7 +140,7 @@ fn launch_user_command(cmd_args: &[String]) -> ! {
     eprintln!("DEBUG: Running command in directory: {:?}", cwd);
     eprintln!("DEBUG: Running command: {:?}", cmd_args);
 
-    let mut command = Command::new("sh"); 
+    let mut command = Command::new("sh");
     command.arg("-c").arg(cmd_args.join(" "));
 
     match command.output() {

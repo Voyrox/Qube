@@ -35,11 +35,48 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
 ### Manage Containers
 - Run a container
 
+  ### Prebuilt Images
+  - Ubuntu24_Multi: A multi-purpose Ubuntu 24.04 container with Node.js, Rust, and Python3 pre-installed.
+  - Ubuntu24_NODE: A Node.js container based on Ubuntu 24.04.
+  - Ubuntu24_RUST: A Rust container based on Ubuntu 24.04.
+  - Ubuntu24_PYTHON: A Python3 container based on Ubuntu 24.04.
+  - Ubuntu24_GOLANG: A Go container based on Ubuntu 24.04.
+  - Ubuntu24_JAVA: A Java container based on Ubuntu 24.04.
+
   Registers a container (with a placeholder PID) and starts it automatically via the daemon. | Add `--isolation` to disable the network namespace.
   ```bash
-  sudo Qube run -cmd sh -c "<cmd>"
+  sudo Qube run --image Ubuntu24_Multi -cmd "<cmd>"
   # e.g.
-  sudo Qube run --ports 3000 --cmd sh -c "npm i && node index.js"
+  sudo Qube run --image Ubuntu24_NODE --ports 3000 --cmd "npm i && node index.js"
+  ```
+
+  ### QML File
+  The QML file is used to define the configuration and behavior of your containers. It allows you to specify various settings such as the container's name, image, command, ports, and more. Here is an example of a QML file:
+
+  ```yaml
+  container:
+    # The base system image to use for the container.
+    system: Ubuntu24_NODE
+
+    # Ports to be exposed by the container.
+    ports:
+      - "3000"
+
+    # Command to run inside the container.
+    cmd:
+      - npm install
+      - node index.js
+
+    # Optional: Enable network isolation for the container.
+    isolated: false
+
+    # Optional: Enable debug mode for more verbose output.
+    debug: false
+  ```
+
+  To use the QML file, you need to run the `run` command in the same directory as the QML file. The `run` command will automatically detect the QML file and use it to create the container.
+  ```bash
+  sudo Qube run
   ```
   <image src="./images/download.png" style="display: block;margin-left: auto;margin-right: auto;">
   <image src="./images/image.png" style="display: block;margin-left: auto;margin-right: auto;">
@@ -92,15 +129,27 @@ WARNING: Running commands as root inside a container may alter its configuration
   ```
 
 
-### Custom Images
+# Custom Images 📦
 - Create a custom image
   Creates a custom image from a container. The image is stored in the images directory.
 
+  ### Default Image
+  - Node.js
+  - Rust
+  - Python3
+
+  #### Options
+  - `INSTALL_NODE=true` Install Node.js and npm.
+  - `INSTALL_RUST=true` Install Rust.
+  - `INSTALL_PYTHON=true` Install Python.
+  - `INSTALL_GOLANG=true` Install Go.
+  - `INSTALL_JAVA=true` Install Java.
+
   ```bash
-  INSTALL_NODE=true INSTALL_RUST=true INSTALL_PYTHON=true ./buildIMG/install_and_pack.sh
+  INSTALL_<NAME> ./buildIMG/install_and_pack.sh
   ```
 
-### Dependencies
+# Dependencies
 Install the required dependencies:
 
 ```bash
@@ -119,12 +168,6 @@ sudo debootstrap \
     http://archive.ubuntu.com/ubuntu/
 
 sudo tar -C /tmp/ubuntu24rootfs -cf ubuntu24rootfs.tar .
-```
-
-### DNS Configuration
-You may need a valid `/etc/resolv.conf` for DNS:
-```bash
-sudo cp /etc/resolv.conf /tmp/Qube_ubuntu24/etc/resolv.conf
 ```
 
 ### Dev Notes

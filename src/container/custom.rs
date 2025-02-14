@@ -1,22 +1,32 @@
-use std::fs;
-use std::path::Path;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-pub struct Config {
+#[serde(untagged)]
+pub enum CommandValue {
+    Single(String),
+    List(Vec<String>),
+}
+
+#[derive(Deserialize)]
+pub struct ContainerConfig {
     pub system: String,
-    pub cmd: String,
-    pub ports: Option<String>,
+    pub cmd: CommandValue,
+    pub ports: Option<Vec<String>>,
     pub isolated: Option<bool>,
     pub debug: Option<bool>,
 }
 
-pub fn read_qube_yaml() -> Result<Config, Box<dyn std::error::Error>> {
-    let path = Path::new("./qube.yml");
+#[derive(Deserialize)]
+struct QubeConfig {
+    container: ContainerConfig,
+}
+
+pub fn read_qube_yaml() -> Result<ContainerConfig, Box<dyn std::error::Error>> {
+    let path = std::path::Path::new("./qube.yml");
     if !path.exists() {
         return Err("qube.yml file not found in the current directory".into());
     }
-    let yaml_str = fs::read_to_string(path)?;
-    let config: Config = serde_yaml::from_str(&yaml_str)?;
-    Ok(config)
+    let yaml_str = std::fs::read_to_string(path)?;
+    let qube_config: QubeConfig = serde_yaml::from_str(&yaml_str)?;
+    Ok(qube_config.container)
 }

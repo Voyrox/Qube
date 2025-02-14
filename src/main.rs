@@ -11,6 +11,7 @@ use std::path::Path;
 use std::process::{exit, Command};
 
 use crate::config::QUBE_CONTAINERS_BASE;
+use crate::container::custom::CommandValue;
 
 fn main() {
     if nix::unistd::geteuid().as_raw() != 0 {
@@ -41,47 +42,51 @@ fn main() {
         }
         "run" => {
             if let Some(cmd_flag_index) = args.iter().position(|arg| arg == "--cmd") {
-                let mut image = "ubuntu".to_string();
-                let mut ports = "".to_string();
-                let mut isolated = false;
+            let mut image = None;
+            let mut ports = "".to_string();
+            let mut isolated = false;
 
-                let mut i = 2;
-                while i < cmd_flag_index {
-                    match args[i].as_str() {
-                        "--image" => {
-                            if let Some(val) = args.get(i + 1) {
-                                image = val.clone();
-                                i += 2;
-                                continue;
-                            } else {
-                                eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
-                                exit(1);
-                            }
-                        }
-                        "--ports" => {
-                            if let Some(val) = args.get(i + 1) {
-                                ports = val.clone();
-                                i += 2;
-                                continue;
-                            } else {
-                                eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
-                                exit(1);
-                            }
-                        }
-                        "--isolated" => {
-                            isolated = true;
-                            i += 1;
-                            continue;
-                        }
-                        _ => {
-                            i += 1;
-                        }
+            let mut i = 2;
+            while i < cmd_flag_index {
+                match args[i].as_str() {
+                "--image" => {
+                    if let Some(val) = args.get(i + 1) {
+                    image = Some(val.clone());
+                    i += 2;
+                    continue;
+                    } else {
+                    eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
+                    exit(1);
                     }
                 }
-
-                if image == "ubuntu" {
-                    image = "ubuntu24.tar".to_string();
+                "--ports" => {
+                    if let Some(val) = args.get(i + 1) {
+                    ports = val.clone();
+                    i += 2;
+                    continue;
+                    } else {
+                    eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
+                    exit(1);
+                    }
                 }
+                "--isolated" => {
+                    isolated = true;
+                    i += 1;
+                    continue;
+                }
+                _ => {
+                    i += 1;
+                }
+                }
+            }
+
+            let image = match image {
+                Some(img) => img,
+                None => {
+                eprintln!("{}", "Error: --image flag must be specified.".bright_red());
+                exit(1);
+                }
+            };
 
                 if let Err(e) = crate::container::validate_image(&image) {
                     eprintln!(
@@ -127,21 +132,21 @@ fn main() {
                     }
                 };
 
-                if config.system.to_lowercase() != "ubuntu" {
-                    eprintln!("Only Ubuntu systems are supported in YAML mode.");
-                    exit(1);
-                }
-
-                let ports = config.ports.unwrap_or_else(|| "".to_string());
+                let ports = config.ports.map(|ports| ports.join(",")).unwrap_or_else(|| "".to_string());
                 let isolated = config.isolated.unwrap_or(false);
                 let _debug = config.debug.unwrap_or(false);
+                let image = if config.system.trim().is_empty() {
+                    eprintln!("{}", "Error: 'system' field in qube.yml is an invalid image.".bright_red());
+                    exit(1);
+                } else {
+                    config.system
+                };
 
                 let cwd = env::current_dir().map(|dir| dir.to_string_lossy().to_string()).unwrap_or_else(|e| {
                     eprintln!("{}", format!("Failed to get current directory: {}", e).bright_red());
                     exit(1);
                 });
 
-                let image = "ubuntu24.tar".to_string();
                 if let Err(e) = crate::container::validate_image(&image) {
                     eprintln!(
                         "{}",
@@ -154,7 +159,12 @@ fn main() {
 
                 let container_id = crate::container::lifecycle::build_container(None, &cwd, &image);
 
-                let cmd_vec = config.cmd.split_whitespace().map(String::from).collect::<Vec<String>>();
+                let command_str = match config.cmd {
+                    CommandValue::Single(s) => s,
+                    CommandValue::List(l) => l.join(" && "),
+                };
+                let cmd_vec = vec![command_str];                                     
+
                 crate::tracking::track_container_named(
                     &container_id,
                     -1,

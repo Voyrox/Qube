@@ -3,7 +3,7 @@
 ROOTFS="ubuntu-24.04-server-cloudimg-amd64-root.tar.xz"
 MOUNT_DIR="/mnt/rootfs"
 LOG_FILE="/mnt/install_log.txt"
-OUTPUT_TAR="${PWD}/packagesUbuntu24.tar"
+OUTPUT_TAR="${PWD}/Ubuntu24_Multi.tar"
 
 mkdir -p $MOUNT_DIR
 
@@ -19,6 +19,9 @@ mount --bind /run $MOUNT_DIR/run
 chroot $MOUNT_DIR /bin/bash <<EOF
 # Update package list
 apt-get update
+apt-get install -y software-properties-common
+rm -rf /etc/resolv.conf
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
 
 # Install Node.js and npm
 if [[ "\$INSTALL_NODE" == "true" ]]; then
@@ -51,6 +54,26 @@ if [[ "\$INSTALL_PYTHON" == "true" ]]; then
     pip3 --version >> $LOG_FILE
 else
     echo "Skipping Python 3 and pip3 installation."
+fi
+
+# Install Java
+if [[ "\$INSTALL_JAVA" == "true" ]]; then
+    echo "Installing Java..."
+    apt-get install -y openjdk-11-jdk
+    echo "Java version:" >> $LOG_FILE
+    java -version >> $LOG_FILE
+else
+    echo "Skipping Java installation."
+fi
+
+# Install Go (Golang)
+if [[ "\$INSTALL_GOLANG" == "true" ]]; then
+    echo "Installing Go..."
+    apt-get install -y golang
+    echo "Go version:" >> $LOG_FILE
+    go version >> $LOG_FILE
+else
+    echo "Skipping Go installation."
 fi
 EOF
 
