@@ -44,13 +44,13 @@ fn main() {
                 let mut image = "ubuntu".to_string();
                 let mut ports = "".to_string();
                 let mut isolated = false;
-                let mut i = 2;
 
+                let mut i = 2;
                 while i < cmd_flag_index {
                     match args[i].as_str() {
                         "--image" => {
-                            if i + 1 < cmd_flag_index {
-                                image = args[i + 1].clone();
+                            if let Some(val) = args.get(i + 1) {
+                                image = val.clone();
                                 i += 2;
                                 continue;
                             } else {
@@ -58,12 +58,9 @@ fn main() {
                                 exit(1);
                             }
                         }
-                        "--packages" => {
-
-                        }
                         "--ports" => {
-                            if i + 1 < cmd_flag_index {
-                                ports = args[i + 1].clone();
+                            if let Some(val) = args.get(i + 1) {
+                                ports = val.clone();
                                 i += 2;
                                 continue;
                             } else {
@@ -97,15 +94,12 @@ fn main() {
                 }
 
                 let user_cmd: Vec<String> = args[cmd_flag_index + 1..].to_vec();
-                let cwd = match env::current_dir() {
-                    Ok(dir) => dir.to_string_lossy().to_string(),
-                    Err(e) => {
-                        eprintln!("{}", format!("Failed to get current directory: {}", e).bright_red());
-                        exit(1);
-                    }
-                };
+                let cwd = env::current_dir().map(|dir| dir.to_string_lossy().to_string()).unwrap_or_else(|e| {
+                    eprintln!("{}", format!("Failed to get current directory: {}", e).bright_red());
+                    exit(1);
+                });
 
-                let container_id = crate::container::lifecycle::build_container(None, &cwd, &image);
+                let container_id = crate::container::lifecycle::build_container(None, &cwd, &image);           
 
                 crate::tracking::track_container_named(
                     &container_id,
@@ -142,13 +136,10 @@ fn main() {
                 let isolated = config.isolated.unwrap_or(false);
                 let _debug = config.debug.unwrap_or(false);
 
-                let cwd = match env::current_dir() {
-                    Ok(dir) => dir.to_string_lossy().to_string(),
-                    Err(e) => {
-                        eprintln!("{}", format!("Failed to get current directory: {}", e).bright_red());
-                        exit(1);
-                    }
-                };
+                let cwd = env::current_dir().map(|dir| dir.to_string_lossy().to_string()).unwrap_or_else(|e| {
+                    eprintln!("{}", format!("Failed to get current directory: {}", e).bright_red());
+                    exit(1);
+                });
 
                 let image = "ubuntu24.tar".to_string();
                 if let Err(e) = crate::container::validate_image(&image) {
@@ -162,12 +153,6 @@ fn main() {
                 }
 
                 let container_id = crate::container::lifecycle::build_container(None, &cwd, &image);
-
-                let rootfs_path = QUBE_CONTAINERS_BASE.to_string() + "/" + &container_id;
-                if let Err(e) = crate::container::custom::install_software(config.packages, &rootfs_path) {
-                    eprintln!("Error installing software: {}", e);
-                    return;
-                }
 
                 let cmd_vec = config.cmd.split_whitespace().map(String::from).collect::<Vec<String>>();
                 crate::tracking::track_container_named(

@@ -91,6 +91,15 @@ WARNING: Running commands as root inside a container may alter its configuration
   sudo Qube snapshot <container_name|pid>
   ```
 
+
+### Custom Images
+- Create a custom image
+  Creates a custom image from a container. The image is stored in the images directory.
+
+  ```bash
+  INSTALL_NODE=true INSTALL_RUST=true INSTALL_PYTHON=true ./buildIMG/install_and_pack.sh
+  ```
+
 ### Dependencies
 Install the required dependencies:
 

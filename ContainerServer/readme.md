@@ -11,4 +11,5 @@ sudo systemctl daemon-reload
 sudo systemctl start rust-file-server
 sudo systemctl enable rust-file-server
 sudo systemctl status rust-file-server
+sudo systemctl restart rust-file-server
 ```

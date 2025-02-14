@@ -1,7 +1,3 @@
 system: ubuntu
-packages:
-  - node
-  - python3
-  - rust
 ports: 3000
 cmd: "npm i && node index.js"

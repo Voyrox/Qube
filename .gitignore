@@ -22,3 +22,5 @@ ubuntu24rootfs_custom.tar
 /tools/wasm-sample/node_modules
 /docs/_site
 /docs/.jekyll-cache
+ubuntu-24.04-server-cloudimg-amd64-root.tar.xz
+packagesUbuntu24.tar
