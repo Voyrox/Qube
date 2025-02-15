@@ -27,7 +27,6 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
 > $ sudo ln -s /mnt/e/Github/Qube/target/release/Qube /usr/local/bin/Qube
 > $ cp qubed.service /etc/systemd/system/qubed.service
 > $ systemctl daemon-reload
-> $ sudo Qube run --ports 3000 --cmd sh -c "npm i && node index.js"
 > ```
 
 # 📍 Status of Qube
