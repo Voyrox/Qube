@@ -5,10 +5,6 @@
   <img src="./docs/assets/images/logo.png" width="450">
 </p>
 
-## Fix
-- Add the ability to select os
-- Fix ports
-
 ## Features
 - Lightweight and fast container runtime.
 - Written in Rust for memory safety and performance.
