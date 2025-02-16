@@ -22,6 +22,7 @@ pub fn run_container(
     image: &str,
     ports: &str,
     isolated: bool,
+    volumes: &[(String, String)],
 ) {
     if user_cmd.is_empty() {
         eprintln!("No command specified to launch in container.");
@@ -82,7 +83,7 @@ pub fn run_container(
         }
         Ok(ForkResult::Child) => {
             close(r).ok();
-            child_container_process(w, &container_id, user_cmd, debug, image, ports, isolated);
+            child_container_process(w, &container_id, user_cmd, debug, image, ports, isolated, volumes);
         }
         Err(_e) => {
             eprintln!("Failed to fork()");
@@ -90,7 +91,7 @@ pub fn run_container(
     }
 }
 
-fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _image: &str, _ports: &str, isolated: bool) -> ! {
+fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _image: &str, _ports: &str, isolated: bool, volumes: &[(String, String)]) -> ! {
     let mut flags = CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWNS;
     if isolated {
         flags |= CloneFlags::CLONE_NEWNET;
@@ -99,6 +100,24 @@ fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _im
     nix::unistd::sethostname("Qube").unwrap();
     crate::cgroup::setup_cgroup2();
     crate::container::fs::mount_proc(cid).unwrap();
+    
+    for (host_path, container_path) in volumes {
+        println!("DEBUG: Attempting to mount {} -> {}", host_path, container_path);
+        
+        if let Err(e) = crate::container::fs::mount_volume(cid, host_path, container_path) {
+            eprintln!("ERROR: Mount failed for {} -> {}: {:?}", host_path, container_path, e);
+            std::process::exit(1);
+        } else {
+            println!("DEBUG: Successfully mounted {} -> {}", host_path, container_path);
+        }
+    
+        println!("DEBUG: Checking mounts inside the container...");
+        let output = Command::new("mount")
+            .output()
+            .expect("Failed to check mounted filesystems inside the container");
+        println!("DEBUG: Container Mounts: \n{}", String::from_utf8_lossy(&output.stdout));
+    }    
+    
     std::env::set_current_dir(&crate::container::fs::get_rootfs(cid)).unwrap();
     nix::unistd::chroot(".").unwrap();
     nix::unistd::chdir("/home").unwrap();

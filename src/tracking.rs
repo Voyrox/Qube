@@ -24,7 +24,7 @@ fn current_timestamp() -> u64 {
 }
 
 /// New format: name|pid|dir|command|timestamp|image|ports|isolated
-pub fn track_container_named(n: &str, p: i32, d: &str, c: Vec<String>, image: &str, ports: &str, isolated: bool) {
+pub fn track_container_named(n: &str, p: i32, d: &str, c: Vec<String>, image: &str, ports: &str, isolated: bool, _volumes: &[(String, String)]) {
     fs::create_dir_all(TRACKING_DIR).ok();
     let timestamp = current_timestamp();
     let s = c.join("\t");
@@ -73,7 +73,7 @@ pub fn update_container_pid(name: &str, new_pid: i32, new_dir: &str, new_cmd: &[
         fs::write(CONTAINER_LIST_FILE, joined).unwrap();
     }
     if !found {
-        track_container_named(name, new_pid, new_dir, new_cmd.to_vec(), image, ports, isolated);
+        track_container_named(name, new_pid, new_dir, new_cmd.to_vec(), image, ports, isolated, &[]);
     }
 }
 

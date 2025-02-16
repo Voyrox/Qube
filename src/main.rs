@@ -45,6 +45,7 @@ fn main() {
             let mut image = None;
             let mut ports = "".to_string();
             let mut isolated = false;
+            let mut volumes: Vec<(String, String)> = Vec::new();
 
             let mut i = 2;
             while i < cmd_flag_index {
@@ -73,6 +74,21 @@ fn main() {
                     isolated = true;
                     i += 1;
                     continue;
+                }
+                "--volume" => {
+                    if let Some(val) = args.get(i + 1) {
+                        let parts: Vec<&str> = val.splitn(2, ':').collect();
+                        if parts.len() != 2 {
+                            eprintln!("Error: --volume argument must be in the format /host/path:/container/path");
+                            exit(1);
+                        }
+                        volumes.push((parts[0].to_string(), parts[1].to_string()));
+                        i += 2;
+                        continue;
+                    } else {
+                        eprintln!("Usage: qube run [--volume <host_path>:<container_path>] ...");
+                        exit(1);
+                    }
                 }
                 _ => {
                     i += 1;
@@ -114,6 +130,7 @@ fn main() {
                     &image,
                     &ports,
                     isolated,
+                    &volumes
                 );
                 eprintln!(
                     "{}",
@@ -135,6 +152,7 @@ fn main() {
                 let ports = config.ports.map(|ports| ports.join(",")).unwrap_or_else(|| "".to_string());
                 let isolated = config.isolated.unwrap_or(false);
                 let _debug = config.debug.unwrap_or(false);
+                let volumes: Vec<(String, String)> = Vec::new();
                 let image = if config.system.trim().is_empty() {
                     eprintln!("{}", "Error: 'system' field in qube.yml is an invalid image.".bright_red());
                     exit(1);
@@ -173,6 +191,7 @@ fn main() {
                     &image,
                     &ports,
                     isolated,
+                    &volumes
                 );
 
                 eprintln!(

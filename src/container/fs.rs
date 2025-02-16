@@ -1,7 +1,37 @@
 use std::fs;
 use std::path::Path;
 use std::process::Command;
+use nix::mount::{mount, MsFlags, umount2, MntFlags};
 use crate::config::QUBE_CONTAINERS_BASE;
+
+pub fn mount_volume(cid: &str, host_path: &str, container_path: &str) -> Result<(), std::io::Error> {
+    if !Path::new(host_path).exists() {
+        return Err(std::io::Error::new(std::io::ErrorKind::NotFound,
+            format!("Host path '{}' does not exist", host_path)));
+    }
+
+    let rootfs = get_rootfs(cid);
+    let dest = format!("{}/{}", rootfs, container_path.trim_start_matches('/'));
+
+    if !Path::new(&dest).exists() {
+        println!("DEBUG: Creating mount point at {}", dest);
+        fs::create_dir_all(&dest)?;
+    }    
+
+    println!("DEBUG: Attempting to mount {} -> {}", host_path, dest);
+
+    let _ = umount2(Path::new(&dest), MntFlags::MNT_DETACH);
+
+    let rootfs_path = std::path::Path::new(&rootfs);
+    let _ = mount(
+        Some(rootfs_path),
+        rootfs_path,
+        None::<&str>,
+        MsFlags::MS_REC | MsFlags::MS_SHARED,
+        None::<&str>,
+    );
+    Ok(())
+}
 
 pub fn get_rootfs(cid: &str) -> String {
     format!("{}/rootfs", format!("{}/{}", QUBE_CONTAINERS_BASE, cid))
