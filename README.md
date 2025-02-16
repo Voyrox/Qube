@@ -174,8 +174,10 @@ bundle exec jekyll serve
 ```
 
 ### Roadmap
-- [ ] Mount: Add the ability to mount external drives
-- [ ] Networking: Add CLONE_NEWNET for network interfaces inside the container.
+- [ ] Resource Limiting: Add support for limiting CPU, memory, and disk usage. `sudo Qube run --image Ubuntu24_Multi --cpu 2 --memory 512M --cmd "npm i && node index.js"`
+- [ ] Environment Variables: Allow users to set environment variables for containers to configure the runtime environment. `sudo Qube run --image Ubuntu24_Multi --env NODE_ENV=production --cmd "npm i && node index.js"`
+- [ ] Restore: Allow users to save the state of a container and revert to it later. `sudo Qube snapshot restore <snapshot_id>` | `sudo Qube snapshot create <container_name|pid>`
+- [ ] Mount: Add the ability to mount external drives `sudo Qube run --image Ubuntu24_Multi --volume /host/path:/container/path --cmd "npm i && node index.js"`
 - [ ] Rootless Containers: Add CLONE_NEWUSER and map UID/GIDs to avoid requiring sudo.
 - [ ] Security: Integrate seccomp, capabilities, and AppArmor/SELinux for enhanced security.
 
