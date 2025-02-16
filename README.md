@@ -31,12 +31,12 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
 - Run a container
 
   ### Prebuilt Images
-  - Ubuntu24_Multi: A multi-purpose Ubuntu 24.04 container with Node.js, Rust, and Python3 pre-installed.
-  - Ubuntu24_NODE: A Node.js container based on Ubuntu 24.04.
-  - Ubuntu24_RUST: A Rust container based on Ubuntu 24.04.
-  - Ubuntu24_PYTHON: A Python3 container based on Ubuntu 24.04.
-  - Ubuntu24_GOLANG: A Go container based on Ubuntu 24.04.
-  - Ubuntu24_JAVA: A Java container based on Ubuntu 24.04.
+  - `Ubuntu24_Multi`: A multi-purpose Ubuntu 24.04 container with Node.js, Rust, and Python3 pre-installed.
+  - `Ubuntu24_NODE`: A Node.js container based on Ubuntu 24.04.
+  - `Ubuntu24_RUST`: A Rust container based on Ubuntu 24.04.
+  - `Ubuntu24_PYTHON`: A Python3 container based on Ubuntu 24.04.
+  - `Ubuntu24_GOLANG`: A Go container based on Ubuntu 24.04.
+  - `Ubuntu24_JAVA`: A Java container based on Ubuntu 24.04.
 
   Registers a container (with a placeholder PID) and starts it automatically via the daemon. | Add `--isolation` to disable the network namespace.
   ```bash
