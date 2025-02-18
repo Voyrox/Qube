@@ -203,8 +203,9 @@ fn main() {
                 let cmd_vec = vec![command_str];                  
 
                 let env_vars = match config.enviroment {
-                    ENVValue::Single(s) => vec![s],
-                    ENVValue::List(l) => l,
+                    Some(ENVValue::Single(s)) => vec![s],
+                    Some(ENVValue::List(l)) => l,
+                    None => vec![],
                 };
 
                 crate::tracking::track_container_named(

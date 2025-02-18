@@ -27,7 +27,7 @@ pub struct ContainerConfig {
     pub isolated: Option<bool>,
     pub debug: Option<bool>,
     pub volumes: Option<Vec<VolumeConfig>>,
-    pub enviroment: ENVValue,
+    pub enviroment: Option<ENVValue>,
 }
 
 #[derive(Deserialize)]
