@@ -8,12 +8,26 @@ pub enum CommandValue {
 }
 
 #[derive(Deserialize)]
+#[serde(untagged)]
+pub enum ENVValue {
+    Single(String),
+    List(Vec<String>),
+}
+#[derive(Deserialize)]
+pub struct VolumeConfig {
+    pub host_path: String,
+    pub container_path: String,
+}
+
+#[derive(Deserialize)]
 pub struct ContainerConfig {
     pub system: String,
     pub cmd: CommandValue,
     pub ports: Option<Vec<String>>,
     pub isolated: Option<bool>,
     pub debug: Option<bool>,
+    pub volumes: Option<Vec<VolumeConfig>>,
+    pub enviroment: ENVValue,
 }
 
 #[derive(Deserialize)]

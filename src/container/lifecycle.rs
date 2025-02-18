@@ -64,22 +64,37 @@ pub fn list_containers() {
         println!("{}", "No containers tracked.".red().bold());
         return;
     }
-    println!("╔════════════════════╦════════════╦═══════════╦══════════════╦══════════════╦══════════════╦══════════════╗");
-    println!("{}", format!(
-        "| {:<18} | {:<10} | {:<9} | {:<12} | {:<12} | {:<12} | {:<12} |",
+    println!("╔════════════════════╦════════════╦══════════════╦══════════════╦══════════════════╦══════════════╦══════════════╗");
+    println!(
+        "║ {:<18} ║ {:<10} ║ {:<12} ║ {:<12} ║ {:<16} ║ {:<12} ║ {:<12} ║",
         "NAME".bold().truecolor(255, 165, 0),
         "PID".bold().truecolor(0, 200, 60),
         "UPTIME".bold().truecolor(150, 200, 150),
         "STATUS".bold().truecolor(150, 200, 150),
         "IMAGE".bold().truecolor(100, 150, 255),
         "PORTS".bold().truecolor(100, 150, 255),
-        "Isolated".bold().truecolor(200, 100, 255)
-    ));
-    println!("╠════════════════════╬════════════╬═══════════╬══════════════╬══════════════╬══════════════╬══════════════╣");
+        "ISOLATED".bold().truecolor(200, 100, 255)
+    );
+    println!("╠════════════════════╬════════════╬══════════════╬══════════════╬══════════════════╬══════════════╬══════════════╣");
     for entry in entries {
         let proc_path = format!("/proc/{}", entry.pid);
         let uptime_str = match tracking::get_process_uptime(entry.pid) {
-            Ok(u) => u.to_string(),
+            Ok(u) => {
+                let seconds = u % 60;
+                let minutes = (u / 60) % 60;
+                let hours = (u / 3600) % 24;
+                let days = u / 86400;
+        
+                if days > 0 {
+                    format!("{}d {}h {}m {}s", days, hours, minutes, seconds)
+                } else if hours > 0 {
+                    format!("{}h {}m {}s", hours, minutes, seconds)
+                } else if minutes > 0 {
+                    format!("{}m {}s", minutes, seconds)
+                } else {
+                    format!("{}s", seconds)
+                }
+            }
             Err(_) => "N/A".to_string(),
         };
         let status = if entry.pid > 0 && Path::new(&proc_path).exists() {
@@ -89,10 +104,18 @@ pub fn list_containers() {
         } else {
             "EXITED"
         };
-        println!("║ {:<18} ║ {:<10} ║ {:<9} ║ {:<12} ║ {:<12} ║ {:<12} ║ {:<12} ║",
-            entry.name, entry.pid, uptime_str, status, entry.image, entry.ports, if entry.isolated { "true" } else { "false" });
+        println!(
+            "║ {:<18} ║ {:<10} ║ {:<12} ║ {:<12} ║ {:<16} ║ {:<12} ║ {:<12} ║",
+            entry.name,
+            entry.pid,
+            uptime_str,
+            status,
+            entry.image,
+            entry.ports,
+            if entry.isolated { "true" } else { "false" }
+        );
     }
-    println!("╚════════════════════╩════════════╩═══════════╩══════════════╩══════════════╩══════════════╩══════════════╝");
+    println!("╚════════════════════╩════════════╩══════════════╩══════════════╩══════════════════╩══════════════╩══════════════╝");
 }
 
 pub fn stop_container(pid: i32) {
@@ -105,7 +128,9 @@ pub fn stop_container(pid: i32) {
             &entry.command,
             &entry.image,
             &entry.ports,
-            entry.isolated
+            entry.isolated,
+            &entry.volumes,
+            &entry.env_vars,
         );
         crate::tracking::remove_container_from_tracking(pid);
         println!("Container {} has been fully removed and marked as stopped.", pid);

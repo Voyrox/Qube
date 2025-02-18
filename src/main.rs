@@ -11,7 +11,7 @@ use std::path::Path;
 use std::process::{exit, Command};
 
 use crate::config::QUBE_CONTAINERS_BASE;
-use crate::container::custom::CommandValue;
+use crate::container::custom::{CommandValue, ENVValue};
 
 fn main() {
     if nix::unistd::geteuid().as_raw() != 0 {
@@ -46,6 +46,7 @@ fn main() {
             let mut ports = "".to_string();
             let mut isolated = false;
             let mut volumes: Vec<(String, String)> = Vec::new();
+            let mut env_vars: Vec<String> = Vec::new();
 
             let mut i = 2;
             while i < cmd_flag_index {
@@ -56,7 +57,7 @@ fn main() {
                     i += 2;
                     continue;
                     } else {
-                    eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
+                    eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--env <NAME=VALUE>] [--volume /host/path:/container/path] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
                     exit(1);
                     }
                 }
@@ -66,7 +67,7 @@ fn main() {
                     i += 2;
                     continue;
                     } else {
-                    eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
+                    eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--env <NAME=VALUE>] [--volume /host/path:/container/path] [--isolated] [--debug] --cmd \"<command>\"".bright_red());
                     exit(1);
                     }
                 }
@@ -87,6 +88,21 @@ fn main() {
                         continue;
                     } else {
                         eprintln!("Usage: qube run [--volume <host_path>:<container_path>] ...");
+                        exit(1);
+                    }
+                }
+                "--env" => {
+                    if let Some(val) = args.get(i + 1) {
+                        if val.contains('=') {
+                            env_vars.push(val.clone());
+                            i += 2;
+                            continue;
+                        } else {
+                            eprintln!("Error: --env argument must be in the format KEY=VALUE");
+                            exit(1);
+                        }
+                    } else {
+                        eprintln!("Usage: qube run [--env KEY=VALUE] ...");
                         exit(1);
                     }
                 }
@@ -130,7 +146,8 @@ fn main() {
                     &image,
                     &ports,
                     isolated,
-                    &volumes
+                    &volumes,
+                    &env_vars
                 );
                 eprintln!(
                     "{}",
@@ -152,7 +169,9 @@ fn main() {
                 let ports = config.ports.map(|ports| ports.join(",")).unwrap_or_else(|| "".to_string());
                 let isolated = config.isolated.unwrap_or(false);
                 let _debug = config.debug.unwrap_or(false);
-                let volumes: Vec<(String, String)> = Vec::new();
+                let volumes: Vec<(String, String)> = config.volumes.unwrap_or_default().into_iter()
+                .map(|v| (v.host_path, v.container_path))
+                .collect();
                 let image = if config.system.trim().is_empty() {
                     eprintln!("{}", "Error: 'system' field in qube.yml is an invalid image.".bright_red());
                     exit(1);
@@ -181,7 +200,12 @@ fn main() {
                     CommandValue::Single(s) => s,
                     CommandValue::List(l) => l.join(" && "),
                 };
-                let cmd_vec = vec![command_str];                                     
+                let cmd_vec = vec![command_str];                  
+
+                let env_vars = match config.enviroment {
+                    ENVValue::Single(s) => vec![s],
+                    ENVValue::List(l) => l,
+                };
 
                 crate::tracking::track_container_named(
                     &container_id,
@@ -191,7 +215,8 @@ fn main() {
                     &image,
                     &ports,
                     isolated,
-                    &volumes
+                    &volumes,
+                    &env_vars
                 );
 
                 eprintln!(
@@ -201,7 +226,7 @@ fn main() {
                         .bold()
                 );
             } else {
-                eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--isolated] [--debug] --cmd \"<command>\" OR a qube.yml file must be present in the current directory.".bright_red());
+                eprintln!("{}", "Usage: qube run [--image <image>] [--ports <ports>] [--env <NAME=VALUE>] [--volume /host/path:/container/path] [--isolated] [--debug] --cmd \"<command>\" OR a qube.yml file must be present in the current directory.".bright_red());
                 exit(1);
             }
         }
@@ -250,6 +275,8 @@ fn main() {
                         &entry.image,
                         &entry.ports,
                         entry.isolated,
+                        &entry.volumes,
+                        &entry.env_vars,
                     );
                     println!("Container {} marked to start. The daemon will start it shortly.", entry.name);
                 }

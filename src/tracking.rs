@@ -14,6 +14,8 @@ pub struct ContainerEntry {
     pub image: String,
     pub ports: String,
     pub isolated: bool,
+    pub volumes: Vec<(String, String)>,
+    pub env_vars: Vec<String>,
 }
 
 fn current_timestamp() -> u64 {
@@ -24,7 +26,7 @@ fn current_timestamp() -> u64 {
 }
 
 /// New format: name|pid|dir|command|timestamp|image|ports|isolated
-pub fn track_container_named(n: &str, p: i32, d: &str, c: Vec<String>, image: &str, ports: &str, isolated: bool, _volumes: &[(String, String)]) {
+pub fn track_container_named(n: &str, p: i32, d: &str, c: Vec<String>, image: &str, ports: &str, isolated: bool, _volumes: &[(String, String)], _env_vars: &[String],) {
     fs::create_dir_all(TRACKING_DIR).ok();
     let timestamp = current_timestamp();
     let s = c.join("\t");
@@ -51,7 +53,7 @@ pub fn track_container_named(n: &str, p: i32, d: &str, c: Vec<String>, image: &s
     writeln!(f, "{}", line).unwrap();
 }
 
-pub fn update_container_pid(name: &str, new_pid: i32, new_dir: &str, new_cmd: &[String], image: &str, ports: &str, isolated: bool) {
+pub fn update_container_pid(name: &str, new_pid: i32, new_dir: &str, new_cmd: &[String], image: &str, ports: &str, isolated: bool, _volumes: &[(String, String)], _env_vars: &[String]) {
     let mut found = false;
     let new_line = format!("{}|{}|{}|{}|{}|{}|{}|{}", name, new_pid, new_dir, new_cmd.join("\t"), current_timestamp(), image, ports, isolated);
     if let Ok(c) = fs::read_to_string(CONTAINER_LIST_FILE) {
@@ -73,7 +75,7 @@ pub fn update_container_pid(name: &str, new_pid: i32, new_dir: &str, new_cmd: &[
         fs::write(CONTAINER_LIST_FILE, joined).unwrap();
     }
     if !found {
-        track_container_named(name, new_pid, new_dir, new_cmd.to_vec(), image, ports, isolated, &[]);
+        track_container_named(name, new_pid, new_dir, new_cmd.to_vec(), image, ports, isolated, &[], &[]);
     }
 }
 
@@ -132,7 +134,9 @@ pub fn get_all_tracked_entries() -> Vec<ContainerEntry> {
             let image = parts[5].to_string();
             let ports = parts[6].to_string();
             let isolated = parts[7].trim() == "true";
-            let e = ContainerEntry { name, pid, dir, command: cmd_parts, timestamp, image, ports, isolated };
+            let volumes = Vec::new();
+            let env_vars = Vec::new();
+            let e = ContainerEntry { name, pid, dir, command: cmd_parts, timestamp, image, ports, isolated, volumes, env_vars };
             v.push(e);
         }
     }

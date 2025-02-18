@@ -23,6 +23,7 @@ pub fn run_container(
     ports: &str,
     isolated: bool,
     volumes: &[(String, String)],
+    env_vars: &[String],
 ) {
     if user_cmd.is_empty() {
         eprintln!("No command specified to launch in container.");
@@ -79,11 +80,11 @@ pub fn run_container(
             let cpid = i32::from_le_bytes(buf);
             println!("\nContainer launched with ID: {} (PID: {})", container_id, cpid);
             println!("Use 'qube stop {}' or 'qube delete {}' to stop/delete it.\n", cpid, cpid);
-            tracking::update_container_pid(&container_id, cpid, work_dir, user_cmd, image, ports, isolated);
+            tracking::update_container_pid(&container_id, cpid, work_dir, user_cmd, image, ports, isolated, volumes, env_vars);
         }
         Ok(ForkResult::Child) => {
             close(r).ok();
-            child_container_process(w, &container_id, user_cmd, debug, image, ports, isolated, volumes);
+            child_container_process(w, &container_id, user_cmd, debug, image, ports, isolated, volumes, env_vars);
         }
         Err(_e) => {
             eprintln!("Failed to fork()");
@@ -91,7 +92,7 @@ pub fn run_container(
     }
 }
 
-fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _image: &str, _ports: &str, isolated: bool, volumes: &[(String, String)]) -> ! {
+fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _image: &str, _ports: &str, isolated: bool, volumes: &[(String, String)], env_vars: &[String],) -> ! {
     let mut flags = CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWNS;
     if isolated {
         flags |= CloneFlags::CLONE_NEWNET;
@@ -130,7 +131,7 @@ fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _im
             if !debug {
                 detach_stdio();
             }
-            launch_user_command(cmd);
+            launch_user_command(cmd, env_vars);
         }
         Ok(ForkResult::Parent { child: _child, .. }) => {
             let child_pid = _child.as_raw();
@@ -145,7 +146,7 @@ fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _im
     }
 }
 
-fn launch_user_command(cmd_args: &[String]) -> ! {
+fn launch_user_command(cmd_args: &[String], env_vars: &[String]) -> ! {
     if cmd_args.is_empty() {
         eprintln!("No command specified to launch in container.");
         std::process::exit(1);
@@ -161,6 +162,13 @@ fn launch_user_command(cmd_args: &[String]) -> ! {
 
     let mut command = Command::new("sh");
     command.arg("-c").arg(cmd_args.join(" "));
+
+    for env in env_vars {
+        let parts: Vec<&str> = env.splitn(2, '=').collect();
+        if parts.len() == 2 {
+            command.env(parts[0], parts[1]);
+        }
+    }
 
     match command.output() {
         Ok(output) => {

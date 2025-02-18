@@ -63,7 +63,8 @@ pub fn start_daemon(debug: bool) -> ! {
                         &entry.image,
                         &entry.ports,
                         entry.isolated,
-                        &[] as &[(String, String)]
+                        &[] as &[(String, String)],
+                        &entry.env_vars,
                     );
                 } else {
                     eprintln!(

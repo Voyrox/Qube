@@ -14,5 +14,14 @@ container:
   # Optional: Enable network isolation for the container.
   isolated: false
 
+  # Optopnal: Add Enviromental variables to the container.
+  enviroment:
+    - SUPER_TOKEN = "1234567890abcdefghijklmnopqrstuvwxyz"
+
+  # Optional: Volumes to mount into the container.
+  volumes:
+    - host_path: "/path/on/host"
+      container_path: "/path/in/container"
+
   # Optional: Enable debug mode for more verbose output.
   debug: false
