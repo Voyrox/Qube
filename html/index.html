@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Qube Desktop (Beta)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #10151b;
+      color: #fff;
+    }
+
+    .topbar {
+      background-color: #032167;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+    .topbar .title {
+      font-weight: bold;
+      font-size: 20px;
+    }
+    .topbar .search {
+      margin: 0 20px;
+    }
+    .topbar .search input {
+      width: 250px;
+      padding: 8px 10px;
+      font-size: 16px;
+    }
+    .topbar .icons {
+      display: flex;
+      gap: 15px;
+      font-size: 18px;
+      align-items: center;
+    }
+    .topbar .icons div {
+      cursor: pointer;
+    }
+    .topbar .icons div:hover {
+      opacity: 0.7;
+    }
+
+    .container {
+      display: flex;
+      height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      width: 220px;
+      background-color: #080b0e;
+      color: #fff;
+      padding: 20px;
+    }
+    .sidebar h2 {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+    .sidebar ul li {
+      margin: 15px 0;
+      cursor: pointer;
+    }
+    .sidebar ul li:hover {
+      text-decoration: underline;
+    }
+
+    /* Main content area styles */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .main {
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .main h2 {
+      margin-top: 0;
+    }
+    .main p {
+      margin: 10px 0;
+    }
+
+    .running-containers {
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .running-containers p.running-text {
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+
+    .curved-boxes {
+      display: flex;
+      gap: 20px;
+      max-width: 75rem;
+    }
+    .curved-box {
+      flex: 1;
+      background-color: #0e1114;
+      border: 1px solid #ddd;
+      border-radius: 15px;
+      padding: 20px;
+    }
+    .curved-box h3 {
+      margin-top: 0;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+      }
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .topbar .search {
+        width: 100%;
+        margin: 10px 0;
+      }
+      .topbar .search input {
+        width: 100%;
+      }
+      .curved-boxes {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="title">Qube Desktop (Beta)</div>
+    <div class="search">
+      <input type="text" placeholder="Search...">
+    </div>
+    <div class="icons">
+      <div class="notifications">🔔</div>
+      <div class="settings">⚙️</div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <ul>
+        <li>Containers</li>
+        <li>Images</li>
+        <li>Volumes</li>
+        <li>Builds</li>
+        <li>Github</li>
+      </ul>
+    </div>
+
+    <div class="main-content">
+      <div class="main">
+        <h2>Containers:</h2>
+        <p>View all your running containers and applications</p>
+        <div class="running-containers">
+          <p class="running-text">Your running containers show up here</p>
+          <p>(A container is an isolated environment for your code)</p>
+        </div>
+        <div class="curved-boxes">
+          <div class="curved-box">
+            <h3>What is a container?</h3>
+            <p>A container is a lightweight, standalone, executable package that includes everything needed to run a piece of software.</p>
+          </div>
+          <div class="curved-box">
+            <h3>How do I run a container?</h3>
+            <p>You can run a container using command-line tools or through a graphical interface by selecting the container and clicking 'run'.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

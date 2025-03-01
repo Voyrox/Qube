@@ -1,4 +1,4 @@
-use crate::tracking;
+use crate::{api, tracking};
 use colored::Colorize;
 use nix::sys::signal::{self, Signal};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -25,6 +25,10 @@ pub fn start_daemon(debug: bool) -> ! {
         let _ = signal::signal(Signal::SIGINT, signal::SigHandler::Handler(handle_signal));
     }
 
+    thread::spawn(|| {
+        api::start_server();
+    });
+    
     println!("{}", "Qubed Daemon started successfully.".green().bold());
     println!("Press Ctrl+C or send SIGTERM to stop.");
 
