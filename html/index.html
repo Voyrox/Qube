@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Qube Desktop (Beta)</title>
+  <script src="script.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
       box-sizing: border-box;
@@ -10,7 +12,7 @@
     body, html {
       margin: 0;
       padding: 0;
-      font-family: Arial, sans-serif;
+      font-family: 'Arial', sans-serif;
       background-color: #10151b;
       color: #fff;
     }
@@ -25,24 +27,36 @@
     }
     .topbar .title {
       font-weight: bold;
-      font-size: 20px;
+      font-size: 24px;
+      color: #fff;
     }
     .topbar .search {
       margin: 0 20px;
+      flex: 1;
+      max-width: 400px;
     }
     .topbar .search input {
-      width: 250px;
-      padding: 8px 10px;
+      width: 100%;
+      padding: 10px 15px;
       font-size: 16px;
+      border: none;
+      border-radius: 25px;
+      background-color: #1a2a3a;
+      color: #fff;
+      outline: none;
+    }
+    .topbar .search input::placeholder {
+      color: #a0a0a0;
     }
     .topbar .icons {
       display: flex;
-      gap: 15px;
-      font-size: 18px;
+      gap: 20px;
+      font-size: 20px;
       align-items: center;
     }
     .topbar .icons div {
       cursor: pointer;
+      transition: opacity 0.2s;
     }
     .topbar .icons div:hover {
       opacity: 0.7;
@@ -50,7 +64,7 @@
 
     .container {
       display: flex;
-      height: calc(100vh - 60px);
+      height: calc(100vh - 70px);
     }
 
     .sidebar {
@@ -59,64 +73,90 @@
       color: #fff;
       padding: 20px;
     }
-    .sidebar h2 {
-      font-size: 18px;
-      margin-bottom: 15px;
-    }
     .sidebar ul {
       list-style: none;
       padding: 0;
     }
     .sidebar ul li {
-      margin: 15px 0;
+      margin: 20px 0;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      transition: color 0.2s;
     }
     .sidebar ul li:hover {
-      text-decoration: underline;
+      color: #4dabf7;
     }
 
-    /* Main content area styles */
     .main-content {
       flex: 1;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      padding: 20px;
     }
 
     .main {
+      width: 100%;
+      max-width: 1200px;
       padding: 20px;
       overflow-y: auto;
     }
     .main h2 {
       margin-top: 0;
+      font-size: 24px;
+      color: #fff;
     }
     .main p {
       margin: 10px 0;
+      color: #a0a0a0;
     }
 
     .running-containers {
       padding: 20px;
       margin: 20px 0;
       text-align: center;
+      background-color: #0e1114;
+      border-radius: 15px;
     }
     .running-containers p.running-text {
       font-weight: bold;
-      font-size: 1.1em;
+      font-size: 1.2em;
+      color: #fff;
+    }
+    .running-containers p {
+      color: #a0a0a0;
     }
 
     .curved-boxes {
       display: flex;
       gap: 20px;
-      max-width: 75rem;
+      max-width: 1200px;
+      width: 100%;
+      justify-content: center;
     }
     .curved-box {
       flex: 1;
       background-color: #0e1114;
-      border: 1px solid #ddd;
+      border: 1px solid #1a2a3a;
       border-radius: 15px;
       padding: 20px;
+      max-width: 400px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .curved-box:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     }
     .curved-box h3 {
       margin-top: 0;
+      font-size: 20px;
+      color: #fff;
+    }
+    .curved-box p {
+      color: #a0a0a0;
     }
 
     @media (max-width: 768px) {
@@ -125,21 +165,55 @@
       }
       .sidebar {
         width: 100%;
+        text-align: center;
       }
       .topbar {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
+        gap: 10px;
       }
       .topbar .search {
         width: 100%;
         margin: 10px 0;
       }
-      .topbar .search input {
-        width: 100%;
-      }
       .curved-boxes {
         flex-direction: column;
+        align-items: center;
       }
+    }
+    .containers-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    .containers-table th, .containers-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #1a2a3a;
+    }
+    .containers-table th {
+      background-color: #1a2a3a;
+      color: #fff;
+    }
+    .containers-table tr:hover {
+      background-color: #1a2a3a;
+    }
+
+    .action-button {
+      background-color: #4dabf7;
+      border: none;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 5px;
+      transition: background-color 0.2s;
+    }
+    .action-button:hover {
+      background-color: #3b8ec6;
+    }
+    .action-button:active {
+      background-color: #2a6a9c;
     }
   </style>
 </head>
@@ -159,11 +233,11 @@
     <!-- Sidebar -->
     <div class="sidebar">
       <ul>
-        <li>Containers</li>
-        <li>Images</li>
-        <li>Volumes</li>
-        <li>Builds</li>
-        <li>Github</li>
+        <li><i class="fa-solid fa-server"></i> Containers</li>
+        <li><i class="fa-solid fa-sd-card"></i> Images</li>
+        <li><i class="fa-solid fa-hard-drive"></i> Volumes</li>
+        <li><i class="fa-solid fa-wrench"></i> Builds</li>
+        <li><i class="fa-brands fa-github"></i> Github</li>
       </ul>
     </div>
 
