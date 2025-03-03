@@ -19,7 +19,7 @@
 
     .topbar {
       background-color: #032167;
-      padding: 20px;
+      padding: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -29,6 +29,11 @@
       font-weight: bold;
       font-size: 24px;
       color: #fff;
+      display: flex;
+      align-items: center;
+    }
+    .topbar .title img {
+      margin-right: 10px;
     }
     .topbar .search {
       margin: 0 20px;
@@ -48,6 +53,9 @@
     .topbar .search input::placeholder {
       color: #a0a0a0;
     }
+    .icons {
+      padding-right: 1rem;
+    }
     .topbar .icons {
       display: flex;
       gap: 20px;
@@ -66,26 +74,32 @@
       display: flex;
       height: calc(100vh - 70px);
     }
-
     .sidebar {
       width: 220px;
       background-color: #080b0e;
       color: #fff;
       padding: 20px;
+      border-radius: 15px;
     }
     .sidebar ul {
       list-style: none;
       padding: 0;
     }
     .sidebar ul li {
-      margin: 20px 0;
+      margin: 10px 0;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 10px;
-      font-size: 18px;
+      font-size: 16px;
       transition: color 0.2s;
+      padding: 10px;
+      border-radius: 4px;
     }
+    .sidebar ul li.active {
+      background-color: #1e2831;
+    }
+
     .sidebar ul li:hover {
       color: #4dabf7;
     }
@@ -219,13 +233,13 @@
 </head>
 <body>
   <div class="topbar">
-    <div class="title">Qube Desktop (Beta)</div>
+    <div class="title"><img src="./logo.png" style="width:3rem;"> Qube Desktop</div>
     <div class="search">
       <input type="text" placeholder="Search...">
     </div>
     <div class="icons">
-      <div class="notifications">🔔</div>
-      <div class="settings">⚙️</div>
+      <div class="notifications"><i class="fa-solid fa-bell"></i></div>
+      <div class="settings"><i class="fa-solid fa-gear"></i></div>
     </div>
   </div>
 
@@ -233,7 +247,7 @@
     <!-- Sidebar -->
     <div class="sidebar">
       <ul>
-        <li><i class="fa-solid fa-server"></i> Containers</li>
+        <li class="active"><i class="fa-solid fa-server"></i> Containers</li>
         <li><i class="fa-solid fa-sd-card"></i> Images</li>
         <li><i class="fa-solid fa-hard-drive"></i> Volumes</li>
         <li><i class="fa-solid fa-wrench"></i> Builds</li>

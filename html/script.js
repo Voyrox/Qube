@@ -53,7 +53,29 @@ function displayContainers() {
             row.appendChild(portsCell);
 
             const uptimeCell = document.createElement('td');
-            uptimeCell.textContent = "N/A";
+            const currentTime = Math.floor(Date.now() / 1000);
+            const uptimeSeconds = currentTime - container.timestamp;
+
+            let uptimeText = '';
+            const days = Math.floor(uptimeSeconds / 86400);
+            const hours = Math.floor((uptimeSeconds % 86400) / 3600);
+            const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+            const seconds = uptimeSeconds % 60;
+
+            if (days > 0) {
+                uptimeText += `${days}d `;
+            }
+            if (hours > 0) {
+                uptimeText += `${hours}h `;
+            }
+            if (minutes > 0) {
+                uptimeText += `${minutes}m `;
+            }
+            if (seconds > 0) {
+                uptimeText += `${seconds}s`;
+            }
+
+            uptimeCell.textContent = uptimeText;
             row.appendChild(uptimeCell);
 
             const actionsCell = document.createElement('td');
