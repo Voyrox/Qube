@@ -182,6 +182,11 @@ bundle install
 bundle exec jekyll serve
 ```
 
+#### Reset testing environment
+```bash
+rm -rf /var/lib/Qube/containers.txt && rm -rf /var/tmp/Qube_containers/Qube-
+```
+
 ### API
 
 #### `/stop`
