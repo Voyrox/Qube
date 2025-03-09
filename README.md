@@ -182,6 +182,43 @@ bundle install
 bundle exec jekyll serve
 ```
 
+### API
+
+#### `/stop`
+- POST
+- Stops a container by sending it a SIGKILL.
+  - Request Body: `{"pid": <pid>}`
+  - Response: `{"status": "success"}`
+  - Example: `curl -X POST -d '{"pid": 1234}' http://localhost:8080/stop`
+
+#### `/start`
+- POST
+- Starts a stopped container.
+  - Request Body: `{"pid": <pid>}`
+  - Response: `{"status": "success"}`
+  - Example: `curl -X POST -d '{"pid": 1234}' http://localhost:8080/start`
+
+#### `/eval`
+- POST
+- Allows you to attach to a container (by name or PID) and run commands as root inside it.
+  - Request Body: `{"pid": <pid>, "command": <command>}`
+  - Response: `{"output": <output>}`
+  - Example: `curl -X POST -d '{"pid": 1234, "command": "ls"}' http://localhost:8080/eval`
+
+#### `/info`
+- POST
+  - Shows detailed information about a container, such as its name, PID, working directory, command, timestamp, and uptime.
+    - Request Body: `{"pid": <pid>}`
+    - Response: `{"info": <info>}`
+    - Example: `curl -X POST -d '{"pid": 1234}' http://localhost:8080/info`
+
+#### `/delete`
+- POST
+- Deletes a container and its associated resources.
+  - Request Body: `{"pid": <pid>}`
+  - Response: `{"status": "success"}`
+  - Example: `curl -X POST -d '{"pid": 1234}' http://localhost:8080/delete`
+
 ### Roadmap
 - [ ] Resource Limiting: Add support for limiting CPU, memory, and disk usage. `sudo Qube run --image Ubuntu24_Multi --cpu 2 --memory 512M --cmd "npm i && node index.js"`
 - [ ] Restore: Allow users to save the state of a container and revert to it later. `sudo Qube snapshot restore <snapshot_id>` | `sudo Qube snapshot create <container_name|pid>`
