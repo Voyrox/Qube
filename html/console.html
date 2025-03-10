@@ -213,7 +213,7 @@
 
     const terminal = document.getElementById('terminal');
 
-    const ws = new WebSocket('ws://127.0.0.1:3030/eval/Qube-WaZuwD/command');
+    const ws = new WebSocket('ws://127.0.0.1:3030/eval/Qube-FmUxwG/command');
 
     ws.onopen = () => {
         console.log('WebSocket connection established');
@@ -224,8 +224,7 @@
     };
 
     ws.onmessage = (event) => {
-        console.log('Received:', event.data);
-        let output = event.data;
+        let output = "\n" + event.data;
         if (lastCommand && output.trim().startsWith(lastCommand)) {
             output = output.trim().substring(lastCommand.length);
             lastCommand = "";
@@ -249,14 +248,17 @@
     }
 
     function appendOutput(text) {
-        const lines = terminal.querySelectorAll("div");
-        if (lines.length > 0) {
-            const lastLine = lines[lines.length - 1];
-            lastLine.innerHTML += text;
-        } else {
-            appendLine(text);
-        }
-        terminal.scrollTop = terminal.scrollHeight;
+      if (text.includes("root@Qube:/#")) {
+        text = `<span class="prompt">${text}</span>`;
+      }
+      const lines = terminal.querySelectorAll("div");
+      if (lines.length > 0) {
+        const lastLine = lines[lines.length - 1];
+        lastLine.innerHTML += text;
+      } else {
+        appendLine(text);
+      }
+      terminal.scrollTop = terminal.scrollHeight;
     }
 
     function showPrompt() {
@@ -295,7 +297,6 @@
               lastCommand = command;
               ws.send(command + "\n");
           }
-          showPrompt();
           placeCaretAtEnd(terminal);
       } else if (e.ctrlKey && e.key.toLowerCase() === "c") {
           ws.send(String.fromCharCode(3));
