@@ -131,7 +131,12 @@ WARNING: Running commands as root inside a container may alter its configuration
   ```bash
   sudo Qube snapshot <container_name|pid>
   ```
+- Run a container based on a dockerfile
+  Creates a container based on a Dockerfile. The container is stored in the containers directory.
 
+  ```bash
+  sudo Qube docker
+  ```
 
 # Custom Images 📦
 - Create a custom image
@@ -158,20 +163,6 @@ Install the required dependencies:
 
 ```bash
 sudo apt-get install -y build-essential libseccomp-dev libssl-dev tar
-```
-### Setup
-To create a root filesystem for your container:
-
-```bash
-sudo apt-get install -y debootstrap
-
-sudo debootstrap \
-    --variant=minbase \
-    jammy \
-    /tmp/ubuntu24rootfs \
-    http://archive.ubuntu.com/ubuntu/
-
-sudo tar -C /tmp/ubuntu24rootfs -cf ubuntu24rootfs.tar .
 ```
 
 ### Dev Notes

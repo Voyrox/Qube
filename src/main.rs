@@ -34,7 +34,7 @@ fn main() {
     if args.len() < 2 {
         eprintln!(
             "{}",
-            "Usage: qube <daemon|run|list|stop|start|delete|eval|info|snapshot> [args...]"
+            "Usage: qube <daemon|run|list|stop|start|delete|eval|info|snapshot|docker> [args...]"
                 .bright_red()
         );
         exit(1);
@@ -404,6 +404,14 @@ fn main() {
                 eprintln!("Container with identifier {} not found in tracking.", identifier);
                 exit(1);
             }
+        }
+        "docker" => {
+            let dockerfile_path = if args.len() >= 3 {
+                args[2].as_str()
+            } else {
+                "Dockerfile"
+            };
+            crate::container::docker::convert_and_run(dockerfile_path);
         }
         _ => {
             eprintln!("{}", format!("Unknown subcommand: {}", args[1]).bright_red());
