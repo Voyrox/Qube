@@ -154,29 +154,9 @@ WARNING: Running commands as root inside a container may alter its configuration
   - `INSTALL_GOLANG=true` Install Go.
   - `INSTALL_JAVA=true` Install Java.
 
-  ```bash
-  INSTALL_<NAME> ./buildIMG/install_and_pack.sh
-  ```
-
-# Dependencies
-Install the required dependencies:
-
-```bash
-sudo apt-get install -y build-essential libseccomp-dev libssl-dev tar
-```
-
-### Dev Notes
-
-#### Building the Docs Site
-```bash
-bundle install
-bundle exec jekyll serve
-```
-
-#### Reset testing environment
-```bash
-rm -rf /var/lib/Qube/containers.txt && rm -rf /var/tmp/Qube_containers/Qube-
-```
+ ```bash
+ INSTALL_<NAME> ./buildIMG/install_and_pack.sh
+ ```
 
 ### API
 
@@ -214,6 +194,26 @@ rm -rf /var/lib/Qube/containers.txt && rm -rf /var/tmp/Qube_containers/Qube-
   - Request Body: `{"pid": <pid>}`
   - Response: `{"status": "success"}`
   - Example: `curl -X POST -d '{"pid": 1234}' http://localhost:8080/delete`
+
+# Dependencies
+Install the required dependencies:
+
+```bash
+sudo apt-get install -y build-essential libseccomp-dev libssl-dev tar
+```
+
+### Dev Notes
+
+#### Building the Docs Site
+```bash
+bundle install
+bundle exec jekyll serve
+```
+
+#### Reset testing environment
+```bash
+rm -rf /var/lib/Qube/containers.txt && rm -rf /var/tmp/Qube_containers/Qube-
+```
 
 ### Roadmap
 - [ ] Resource Limiting: Add support for limiting CPU, memory, and disk usage. `sudo Qube run --image Ubuntu24_Multi --cpu 2 --memory 512M --cmd "npm i && node index.js"`
