@@ -206,7 +206,6 @@
       </div>
     </div>
   </div>
-
   <script>
     const promptText = "root@Qube:/# ";
     let lastCommand = "";
@@ -215,6 +214,7 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const containerName = urlParams.get('name');
+    const uptime = urlParams.get('uptime');
     const ws = new WebSocket(`ws://127.0.0.1:3030/eval/${containerName}/command`);
     ws.onopen = () => {
         console.log('WebSocket connection established');
@@ -305,6 +305,9 @@
           ws.send(String.fromCharCode(24));
       }
     });
+
+    document.querySelector('.container-info span').innerText = containerName;
+    document.querySelector('.container-info span:nth-child(2)').innerText = uptime;
   </script>
 </body>
 </html>
