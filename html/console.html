@@ -213,8 +213,9 @@
 
     const terminal = document.getElementById('terminal');
 
-    const ws = new WebSocket('ws://127.0.0.1:3030/eval/Qube-FmUxwG/command');
-
+    const urlParams = new URLSearchParams(window.location.search);
+    const containerName = urlParams.get('name');
+    const ws = new WebSocket(`ws://127.0.0.1:3030/eval/${containerName}/command`);
     ws.onopen = () => {
         console.log('WebSocket connection established');
         appendLine("Connected to container console.");

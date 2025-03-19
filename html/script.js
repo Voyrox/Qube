@@ -1,21 +1,16 @@
-const data = [
-    {
-        "name": "Qube-8SbtFD",
-        "pid": -1,
-        "directory": "/mnt/e/Github/Qube/tools/wasm-sample",
-        "command": [
-            "npm install && node index.js"
-        ],
-        "image": "Ubuntu24_NODE",
-        "timestamp": 1740884055,
-        "ports": "3000",
-        "isolated": false,
-        "volumes": [],
-        "enviroment": []
+async function getRunningContainers() {
+    try {
+        const response = await fetch('http://127.0.0.1:3030/list');
+        const data = await response.json();
+        return data.containers;
+    } catch (error) {
+        console.error('Error:', error);
+        return [];
     }
-];
+}
+async function displayContainers() {
+    const data = await getRunningContainers();
 
-function displayContainers() {
     const runningContainers = document.querySelector('.running-containers');
     if (data.length > 0) {
         const table = document.createElement('table');
@@ -32,6 +27,8 @@ function displayContainers() {
 
         data.forEach(container => {
             const row = document.createElement('tr');
+            row.onclick = () => window.location.href = `/console?name=${container.name}`;
+
             const nameCell = document.createElement('td');
             nameCell.textContent = container.name;
             row.appendChild(nameCell);
@@ -82,13 +79,19 @@ function displayContainers() {
             const stopButton = document.createElement('button');
             stopButton.textContent = "Stop";
             stopButton.className = "action-button";
-            stopButton.onclick = () => alert(`Stopping ${container.name}`);
+            stopButton.onclick = (event) => {
+                event.stopPropagation();
+                alert(`Stopping ${container.name}`);
+            };
             actionsCell.appendChild(stopButton);
 
             const deleteButton = document.createElement('button');
             deleteButton.textContent = "Delete";
             deleteButton.className = "action-button";
-            deleteButton.onclick = () => alert(`Deleting ${container.name}`);
+            deleteButton.onclick = (event) => {
+                event.stopPropagation();
+                alert(`Deleting ${container.name}`);
+            };
             actionsCell.appendChild(deleteButton);
 
             row.appendChild(actionsCell);
@@ -105,4 +108,4 @@ function displayContainers() {
     }
 }
 
-window.onload = displayContainers;
+window.onload = () => displayContainers();

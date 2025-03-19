@@ -160,6 +160,12 @@ WARNING: Running commands as root inside a container may alter its configuration
 
 ### API
 
+#### `/list
+- GET
+- Lists all running containers, along with their PIDs, uptime, and status.
+  - Response: `{"containers": <containers>}`
+  - Example: `curl http://localhost:8080/list`
+
 #### `/stop`
 - POST
 - Stops a container by sending it a SIGKILL.
