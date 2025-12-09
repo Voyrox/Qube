@@ -2,182 +2,186 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Qube Desktop (Beta)</title>
+  <title>Qube Console</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap">
   <style>
-    * {
-      box-sizing: border-box;
+    :root {
+      --bg: rgb(0, 0, 0);
+      --panel: rgba(14, 18, 26, 0.72);
+      --border: rgba(255, 255, 255, 0.06);
+      --text: #e9f0ff;
+      --muted: #9fb2c8;
+      --accent: #32e0ff;
+      --accent-2: #7c5dff;
+      --glow: 0 10px 30px rgba(50, 224, 255, 0.25);
+      --radius: 14px;
     }
-    body, html {
+    * { box-sizing: border-box; }
+    html, body {
       margin: 0;
       padding: 0;
-      font-family: 'Arial', sans-serif;
-      background-color: #10151b;
-      color: #fff;
+      font-family: 'Space Grotesk', Arial, sans-serif;
+      background: radial-gradient(circle at 15% 20%, rgba(124, 93, 255, 0.09), transparent 32%),
+                  radial-gradient(circle at 85% 10%, rgba(50, 224, 255, 0.08), transparent 35%),
+                  radial-gradient(circle at 50% 80%, rgba(38, 153, 255, 0.10), transparent 40%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
     }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(50, 224, 255, 0.06), rgba(124, 93, 255, 0.06));
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
     .topbar {
-      background-color: #032167;
-      padding: 8px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      width: 100%;
+      gap: 16px;
+      padding: 14px 20px;
+      background: rgba(10, 10, 11, 0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
     }
-    .topbar .title {
-      font-weight: bold;
-      font-size: 24px;
-      color: #fff;
-      display: flex;
-      align-items: center;
+    .title { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 700; letter-spacing: 0.3px; }
+    .title img { width: 2.6rem; height: 2.6rem; }
+    .search { flex: 1; max-width: 480px; position: relative; }
+    .search input {
+      width: 100%; padding: 12px 14px 12px 42px; border-radius: 999px; border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04); color: var(--text); font-size: 15px; outline: none; transition: border 0.2s, box-shadow 0.2s;
     }
-    .topbar .title img {
-      margin-right: 10px;
+    .search input:focus { border-color: rgba(50, 224, 255, 0.5); box-shadow: var(--glow); }
+    .search i { position: absolute; top: 50%; left: 14px; transform: translateY(-50%); color: var(--muted); font-size: 14px; }
+
+    .icons { display: flex; align-items: center; gap: 14px; font-size: 16px; color: var(--muted); }
+    .pill-button {
+      padding: 10px 14px; border-radius: 999px; border: 1px solid var(--border); background: rgba(255, 255, 255, 0.05);
+      color: var(--text); cursor: pointer; transition: transform 0.1s, box-shadow 0.2s, border 0.2s;
     }
-    .topbar .search {
-      margin: 0 20px;
-      flex: 1;
-      max-width: 400px;
-    }
-    .topbar .search input {
-      width: 100%;
-      padding: 10px 15px;
-      font-size: 16px;
-      border: none;
-      border-radius: 25px;
-      background-color: #1a2a3a;
-      color: #fff;
-      outline: none;
-    }
-    .topbar .search input::placeholder {
-      color: #a0a0a0;
-    }
-    .icons {
-      padding-right: 1rem;
-    }
-    .topbar .icons {
-      display: flex;
-      gap: 20px;
-      font-size: 20px;
-      align-items: center;
-    }
-    .topbar .icons div {
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .topbar .icons div:hover {
-      opacity: 0.7;
-    }
-    .container {
-      display: flex;
-      height: calc(100vh - 70px);
-    }
+    .pill-button:hover { transform: translateY(-1px); border-color: rgba(50, 224, 255, 0.6); box-shadow: var(--glow); }
+
+    .container { display: grid; grid-template-columns: 230px 1fr; gap: 18px; padding: 18px; }
     .sidebar {
-      width: 220px;
-      background-color: #080b0e;
-      color: #fff;
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28); height: fit-content;
+    }
+    .sidebar ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+    .sidebar li {
+      display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px; color: var(--muted);
+      cursor: pointer; transition: background 0.15s, color 0.15s, border 0.15s; border: 1px solid transparent;
+    }
+    .sidebar li.active {
+      background: linear-gradient(90deg, rgba(50, 224, 255, 0.1), rgba(124, 93, 255, 0.08));
+      color: var(--text); border-color: rgba(50, 224, 255, 0.4); box-shadow: var(--glow);
+    }
+    .sidebar li:hover { color: var(--text); background: rgba(255, 255, 255, 0.04); }
+
+    .main-content { display: flex; flex-direction: column; gap: 16px; }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(50, 224, 255, 0.12), rgba(124, 93, 255, 0.10));
+      border: 1px solid rgba(50, 224, 255, 0.25);
+      border-radius: var(--radius);
       padding: 20px;
-      border-radius: 15px;
-    }
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
-    }
-    .sidebar ul li {
-      margin: 10px 0;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 16px;
-      transition: color 0.2s;
-      padding: 10px;
-      border-radius: 4px;
-    }
-    .sidebar ul li.active {
-      background-color: #1e2831;
-    }
-    .sidebar ul li:hover {
-      color: #4dabf7;
-    }
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-    }
-    .main {
-      width: 100%;
-      max-width: 1200px;
-      padding: 20px;
-      overflow-y: auto;
-    }
-    .main h2 {
-      margin-top: 0;
-      font-size: 24px;
-      color: #fff;
-    }
-    .main p {
-      margin: 10px 0;
-      color: #a0a0a0;
-    }
-    .command-box {
-      width: 100%;
-      margin-top: 20px;
+      box-shadow: var(--glow);
       position: relative;
+      overflow: hidden;
     }
-    .command-box .cmd-header {
-      background-color: #0e1114;
-      border-top-left-radius: 15px;
-      border-top-right-radius: 15px;
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.12), transparent 45%);
+      pointer-events: none;
     }
-    .command-box .cmd-header .container-info {
-      font-size: 18px;
-      color: #fff;
+    .hero h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -0.4px; }
+    .hero p { margin: 0 0 12px; color: var(--muted); }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 10px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.05); color: var(--muted); font-size: 12px; }
+    .status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; }
+    .status.running { background: rgba(50, 224, 255, 0.12); color: #9cefff; }
+    .status.stopped { background: rgba(255, 121, 121, 0.1); color: #ff8b8b; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .dot.running { background: #32e0ff; box-shadow: 0 0 10px rgba(50, 224, 255, 0.8); }
+    .dot.stopped { background: #ff6b6b; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .stat-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
     }
-    .command-box .cmd-header .container-info span {
-      color: #4dabf7;
+    .stat-card h4 { margin: 0 0 6px; color: var(--muted); font-size: 12px; letter-spacing: 0.2px; text-transform: uppercase; }
+    .stat-card .value { font-size: 20px; font-weight: 700; }
+    .stat-card small { color: var(--muted); }
+
+    .panel {
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
     }
-    .command-box .cmd-header .action-buttons {
-      display: flex;
-      gap: 10px;
-    }
-    .command-box .cmd-output {
-      width: 100%;
-      height: 400px;
-      background-color: #0e1114;
-      border: 1px solid #1a2a3a;
-      border-bottom-left-radius: 15px;
-      border-bottom-right-radius: 15px;
-      padding: 10px;
+    .panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .panel-header h3 { margin: 0; letter-spacing: 0.2px; }
+
+    .terminal {
+      background: #050608;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      height: 420px;
+      padding: 12px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      color: var(--text);
       overflow-y: auto;
-      color: #fff;
-      font-family: monospace;
       white-space: pre-wrap;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
     }
-    .prompt {
-      color: #4dabf7;
+    .terminal-line { margin: 0; line-height: 1.45; }
+    .prompt { color: var(--accent); }
+    .caret {
+      display: inline-block;
+      width: 8px;
+      height: 1em;
+      background: var(--accent);
+      margin-left: 2px;
+      animation: blink 1s steps(2) infinite;
+    }
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    @media (max-width: 960px) {
+      .container { grid-template-columns: 1fr; }
+      .sidebar { position: relative; top: 0; }
+      .topbar { flex-wrap: wrap; }
+      .search { order: 3; width: 100%; max-width: none; }
     }
   </style>
 </head>
 <body>
   <div class="topbar">
-    <div class="title"><img src="./logo.png" style="width:3rem;"> Qube Desktop</div>
+    <div class="title"><img src="./logo.png" alt="Qube logo"> Qube Console</div>
     <div class="search">
-      <input type="text" placeholder="Search...">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search containers..." id="search-input">
     </div>
     <div class="icons">
-      <div class="notifications"><i class="fa-solid fa-bell"></i></div>
-      <div class="settings"><i class="fa-solid fa-gear"></i></div>
+      <a class="pill-button" href="https://voyrox.github.io/Qube/" target="_blank" rel="noopener">Docs</a>
+      <a class="pill-button" href="https://github.com/Voyrox/Qube" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i></a>
+      <button class="pill-button" title="Notifications"><i class="fa-solid fa-bell"></i></button>
+      <button class="pill-button" title="Settings"><i class="fa-solid fa-gear"></i></button>
     </div>
   </div>
 
   <div class="container">
-    <div class="sidebar">
+    <aside class="sidebar">
       <ul>
         <li class="active"><i class="fa-solid fa-server"></i> Containers</li>
         <li><i class="fa-solid fa-sd-card"></i> Images</li>
@@ -185,129 +189,236 @@
         <li><i class="fa-solid fa-wrench"></i> Builds</li>
         <li><i class="fa-brands fa-github"></i> Github</li>
       </ul>
-    </div>
+    </aside>
 
     <div class="main-content">
-      <div class="main">
-        <div class="command-box">
-          <div class="cmd-header">
-            <div class="container-info">
-              Container: <span>Qube-243h3</span> | Uptime: <span>2h 30m</span>
-            </div>
-            <div class="action-buttons">
-              <button class="action-button start" title="Start"><i class="fa-solid fa-play"></i></button>
-              <button class="action-button stop" title="Stop"><i class="fa-solid fa-stop"></i></button>
-              <button class="action-button restart" title="Restart"><i class="fa-solid fa-rotate"></i></button>
-              <button class="action-button delete" title="Delete"><i class="fa-solid fa-trash"></i></button>
-            </div>
-          </div>
-          <div class="cmd-output" id="terminal" contenteditable="true"></div>
+      <section class="hero">
+        <h1 id="hero-title">Container console</h1>
+        <p id="hero-desc">Live attach to your container with cgroup limits enforced and network isolation toggles.</p>
+        <div class="hero-meta">
+          <span id="status-pill" class="status running"><span class="dot running"></span> running</span>
+          <span class="pill" id="image-pill">image: —</span>
+          <span class="pill" id="ports-pill">ports: —</span>
+          <span class="pill" id="net-pill">net: —</span>
         </div>
-      </div>
+      </section>
+
+      <section class="stats-grid">
+        <div class="stat-card"><h4>PID</h4><div class="value" id="pid-val">—</div><small>process id</small></div>
+        <div class="stat-card"><h4>Uptime</h4><div class="value" id="uptime-val">—</div><small>since container start</small></div>
+        <div class="stat-card"><h4>Memory</h4><div class="value" id="mem-val">—</div><small>from cgroup</small></div>
+        <div class="stat-card"><h4>Command</h4><div class="value" id="cmd-val">—</div><small>entrypoint</small></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h3>Interactive console</h3>
+          <div class="toolbar">
+            <button class="pill-button" id="btn-reload"><i class="fa-solid fa-arrow-rotate-right"></i> Reload data</button>
+            <button class="pill-button" id="btn-clear"><i class="fa-solid fa-eraser"></i> Clear</button>
+          </div>
+        </div>
+        <div class="terminal" id="terminal" tabindex="0" aria-label="Interactive console"></div>
+        <textarea id="terminal-input" aria-hidden="true" style="position:absolute; left:-9999px; width:0; height:0; opacity:0;" spellcheck="false"></textarea>
+      </section>
     </div>
   </div>
+
   <script>
     const promptText = "root@Qube:/# ";
     let lastCommand = "";
-
+    let currentInput = "";
+    let inputLine = null;
+    let inputTextSpan = null;
+    let caretSpan = null;
     const terminal = document.getElementById('terminal');
+    const terminalInput = document.getElementById('terminal-input');
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const containerName = urlParams.get('name');
-    const uptime = urlParams.get('uptime');
-    const ws = new WebSocket(`ws://127.0.0.1:3030/eval/${containerName}/command`);
-    ws.onopen = () => {
-        console.log('WebSocket connection established');
-        appendLine("Connected to container console.");
-        showPrompt();
-        terminal.focus();
-        placeCaretAtEnd(terminal);
-    };
+    const params = new URLSearchParams(window.location.search);
+    const containerName = params.get('name');
+    const apiBase = 'http://127.0.0.1:3030';
+    const listEndpoint = `${apiBase}/list`;
 
-    ws.onmessage = (event) => {
-        let output = "\n" + event.data;
-        if (lastCommand && output.trim().startsWith(lastCommand)) {
-            output = output.trim().substring(lastCommand.length);
-            lastCommand = "";
-        }
-        appendOutput(output);
-    };
+    let ws;
 
-    ws.onclose = () => {
-        console.log('WebSocket connection closed');
-        appendLine("Connection closed.");
-    };
-
-    ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        appendLine("Error: " + error.message);
-    };
-
-    function appendLine(text) {
-        terminal.innerHTML += `<div>${text}</div>`;
-        terminal.scrollTop = terminal.scrollHeight;
+    function fmtUptime(ts) {
+      if (!ts) return '—';
+      const now = Math.floor(Date.now() / 1000);
+      const d = Math.max(0, now - ts);
+      const days = Math.floor(d / 86400);
+      const hours = Math.floor((d % 86400) / 3600);
+      const minutes = Math.floor((d % 3600) / 60);
+      if (days > 0) return `${days}d ${hours}h`;
+      if (hours > 0) return `${hours}h ${minutes}m`;
+      return `${minutes}m`;
     }
 
-    function appendOutput(text) {
-      if (text.includes("root@Qube:/#")) {
-        text = `<span class="prompt">${text}</span>`;
+    function fmtMem(val) {
+      if (val === undefined || val === null) return '—';
+      if (val >= 1024) return `${(val / 1024).toFixed(1)}G`;
+      return `${val.toFixed(1)}M`;
+    }
+
+    function setStatus(isRunning) {
+      const pill = document.getElementById('status-pill');
+      pill.className = `status ${isRunning ? 'running' : 'stopped'}`;
+      pill.innerHTML = `<span class="dot ${isRunning ? 'running' : 'stopped'}"></span> ${isRunning ? 'running' : 'stopped'}`;
+    }
+
+    async function loadContainer() {
+      if (!containerName) {
+        document.getElementById('hero-title').innerText = 'No container selected';
+        return;
       }
-      const lines = terminal.querySelectorAll("div");
-      if (lines.length > 0) {
-        const lastLine = lines[lines.length - 1];
-        lastLine.innerHTML += text;
-      } else {
-        appendLine(text);
+      try {
+        const res = await fetch(listEndpoint);
+        const data = await res.json();
+        const containers = data.containers || [];
+        const info = containers.find(c => c.name === containerName);
+        if (!info) {
+          document.getElementById('hero-title').innerText = `${containerName} (not found)`;
+          return;
+        }
+
+        document.getElementById('hero-title').innerText = info.name;
+        document.getElementById('hero-desc').innerText = info.command ? info.command.join(' ') : 'Attached console';
+        document.getElementById('image-pill').innerText = `image: ${info.image || '—'}`;
+        document.getElementById('ports-pill').innerText = `ports: ${info.ports || 'none'}`;
+        document.getElementById('net-pill').innerText = `net: ${info.isolated ? 'isolated' : 'shared'}`;
+
+        setStatus(info.pid && info.pid > 0);
+        document.getElementById('pid-val').innerText = info.pid > 0 ? info.pid : '—';
+        document.getElementById('uptime-val').innerText = fmtUptime(info.timestamp);
+        document.getElementById('mem-val').innerText = info.memory_mb ? fmtMem(info.memory_mb) : '—';
+        document.getElementById('cmd-val').innerText = info.command && info.command.length ? info.command.join(' ') : '—';
+
+        ensureWebSocket();
+      } catch (e) {
+        console.error('load error', e);
       }
+    }
+
+    function ensureWebSocket() {
+      if (ws || !containerName) return;
+      ws = new WebSocket(`${apiBase.replace('http', 'ws')}/eval/${containerName}/command`);
+      ws.onopen = () => {
+        appendLine('Connected to container console.');
+        showPrompt();
+      };
+      ws.onmessage = (event) => {
+        let output = event.data.trim();
+        // Filter out command echo (the command we just sent)
+        if (lastCommand) {
+          const lines = output.split('\n');
+          const filtered = lines.filter(line => !line.includes(lastCommand)).join('\n').trim();
+          output = filtered;
+          lastCommand = "";
+        }
+        // Show all output including server prompts
+        if (output) {
+          appendOutput(output);
+        }
+      };
+      ws.onclose = () => appendLine('Connection closed.');
+      ws.onerror = (error) => appendLine(`Error: ${error.message}`);
+    }
+
+    function scrollToBottom() {
       terminal.scrollTop = terminal.scrollHeight;
     }
 
-    function showPrompt() {
-        appendLine(`<span class="prompt">${promptText}</span>`);
+    function appendLine(text) {
+      const div = document.createElement('div');
+      div.className = 'terminal-line';
+      div.innerHTML = text;
+      terminal.appendChild(div);
+      scrollToBottom();
     }
 
-    function placeCaretAtEnd(el) {
-      el.focus();
-      if (typeof window.getSelection != "undefined"
-          && typeof document.createRange != "undefined") {
-          const range = document.createRange();
-          range.selectNodeContents(el);
-          range.collapse(false);
-          const sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
+    function appendOutput(text) {
+      const div = document.createElement('div');
+      div.className = 'terminal-line';
+      div.textContent = text;
+      if (inputLine) {
+        terminal.insertBefore(div, inputLine);
+      } else {
+        terminal.appendChild(div);
       }
+      scrollToBottom();
     }
 
-    terminal.addEventListener('keydown', function(e) {
-      if (e.key === "Enter") {
-          e.preventDefault();
-          const content = terminal.innerText;
-          const lines = content.split('\n');
-          const lastLine = lines[lines.length - 1];
-          let command = lastLine.replace(promptText, "").trim();
+    function focusInput() {
+      terminalInput.focus();
+    }
 
-          if (command.toLowerCase() === "clear") {
-              terminal.innerHTML = "";
-              showPrompt();
-              placeCaretAtEnd(terminal);
-              return;
-          }
+    function showPrompt() {
+      // Don't render a custom prompt; just ensure input line is ready
+      if (inputLine && inputLine.parentNode) {
+        inputLine.parentNode.removeChild(inputLine);
+      }
+      inputLine = document.createElement('div');
+      inputLine.className = 'terminal-line';
+      inputTextSpan = document.createElement('span');
+      inputTextSpan.textContent = currentInput;
+      caretSpan = document.createElement('span');
+      caretSpan.className = 'caret';
+      inputLine.appendChild(inputTextSpan);
+      inputLine.appendChild(caretSpan);
+      terminal.appendChild(inputLine);
+      scrollToBottom();
+      focusInput();
+    }
 
-          if (command) {
-              lastCommand = command;
-              ws.send(command + "\n");
-          }
-          placeCaretAtEnd(terminal);
-      } else if (e.ctrlKey && e.key.toLowerCase() === "c") {
-          ws.send(String.fromCharCode(3));
-      } else if (e.ctrlKey && e.key.toLowerCase() === "x") {
-          ws.send(String.fromCharCode(24));
+    terminalInput.addEventListener('input', () => {
+      currentInput = terminalInput.value;
+      if (inputTextSpan) {
+        inputTextSpan.textContent = currentInput;
+        scrollToBottom();
       }
     });
 
-    document.querySelector('.container-info span').innerText = containerName;
-    document.querySelector('.container-info span:nth-child(2)').innerText = uptime;
+    terminalInput.addEventListener('keydown', (e) => {
+      if (!ws) return;
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const command = currentInput.trim();
+        if (command.toLowerCase() === 'clear') {
+          terminal.innerHTML = '';
+          currentInput = '';
+          terminalInput.value = '';
+          showPrompt();
+          return;
+        }
+        if (command) {
+          lastCommand = command;
+          ws.send(command + '\n');
+        }
+        currentInput = '';
+        terminalInput.value = '';
+        showPrompt();
+      } else if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        ws.send(String.fromCharCode(3));
+      } else if (e.ctrlKey && e.key.toLowerCase() === 'x') {
+        e.preventDefault();
+        ws.send(String.fromCharCode(24));
+      }
+    });
+
+    terminal.addEventListener('click', focusInput);
+    terminal.addEventListener('focus', focusInput);
+
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      terminal.innerHTML = '';
+      currentInput = '';
+      terminalInput.value = '';
+      showPrompt();
+    });
+    document.getElementById('btn-reload').addEventListener('click', loadContainer);
+
+    loadContainer().then(() => {
+      focusInput();
+    });
   </script>
 </body>
 </html>

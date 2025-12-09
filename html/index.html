@@ -5,275 +5,370 @@
   <title>Qube Desktop (Beta)</title>
   <script src="script.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap">
   <style>
-    * {
-      box-sizing: border-box;
+    :root {
+      --bg: rgb(0, 0, 0);
+      --panel: rgba(14, 18, 26, 0.72);
+      --border: rgba(255, 255, 255, 0.06);
+      --text: #e9f0ff;
+      --muted: #9fb2c8;
+      --accent: #32e0ff;
+      --accent-2: #7c5dff;
+      --glow: 0 10px 30px rgba(50, 224, 255, 0.25);
+      --radius: 14px;
     }
-    body, html {
+    * { box-sizing: border-box; }
+    html, body {
       margin: 0;
       padding: 0;
-      font-family: 'Arial', sans-serif;
-      background-color: #10151b;
-      color: #fff;
+      font-family: 'Space Grotesk', Arial, sans-serif;
+      background: radial-gradient(circle at 15% 20%, rgba(124, 93, 255, 0.09), transparent 32%),
+          radial-gradient(circle at 85% 10%, rgba(50, 224, 255, 0.08), transparent 35%),
+          radial-gradient(circle at 50% 80%, rgba(38, 153, 255, 0.10), transparent 40%),
+          var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(50, 224, 255, 0.06), rgba(124, 93, 255, 0.06));
+      pointer-events: none;
+      mix-blend-mode: screen;
     }
 
     .topbar {
-      background-color: #032167;
-      padding: 8px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      width: 100%;
+      gap: 16px;
+      padding: 14px 20px;
+      background: rgba(10, 10, 11, 0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
     }
-    .topbar .title {
-      font-weight: bold;
-      font-size: 24px;
-      color: #fff;
-      display: flex;
-      align-items: center;
-    }
-    .topbar .title img {
-      margin-right: 10px;
-    }
-    .topbar .search {
-      margin: 0 20px;
-      flex: 1;
-      max-width: 400px;
-    }
-    .topbar .search input {
-      width: 100%;
-      padding: 10px 15px;
-      font-size: 16px;
-      border: none;
-      border-radius: 25px;
-      background-color: #1a2a3a;
-      color: #fff;
-      outline: none;
-    }
-    .topbar .search input::placeholder {
-      color: #a0a0a0;
-    }
-    .icons {
-      padding-right: 1rem;
-    }
-    .topbar .icons {
-      display: flex;
-      gap: 20px;
-      font-size: 20px;
-      align-items: center;
-    }
-    .topbar .icons div {
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .topbar .icons div:hover {
-      opacity: 0.7;
-    }
-
-    .container {
-      display: flex;
-      height: calc(100vh - 70px);
-    }
-    .sidebar {
-      width: 220px;
-      background-color: #080b0e;
-      color: #fff;
-      padding: 20px;
-      border-radius: 15px;
-    }
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
-    }
-    .sidebar ul li {
-      margin: 10px 0;
-      cursor: pointer;
+    .title {
       display: flex;
       align-items: center;
       gap: 10px;
-      font-size: 16px;
-      transition: color 0.2s;
-      padding: 10px;
-      border-radius: 4px;
+      font-size: 22px;
+      letter-spacing: 0.3px;
+      font-weight: 700;
     }
-    .sidebar ul li.active {
-      background-color: #1e2831;
-    }
+    .title img { width: 2.6rem; height: 2.6rem; }
 
-    .sidebar ul li:hover {
-      color: #4dabf7;
-    }
-
-    .main-content {
+    .search {
       flex: 1;
+      max-width: 480px;
+      position: relative;
+    }
+    .search input {
+      width: 100%;
+      padding: 12px 14px 12px 42px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+    .search input:focus {
+      border-color: rgba(50, 224, 255, 0.5);
+      box-shadow: var(--glow);
+    }
+    .search i {
+      position: absolute;
+      top: 50%;
+      left: 14px;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .icons {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      padding: 20px;
+      gap: 14px;
+      font-size: 16px;
+      color: var(--muted);
     }
-
-    .main {
-      width: 100%;
-      max-width: 1200px;
-      padding: 20px;
-      overflow-y: auto;
-    }
-    .main h2 {
-      margin-top: 0;
-      font-size: 24px;
-      color: #fff;
-    }
-    .main p {
-      margin: 10px 0;
-      color: #a0a0a0;
-    }
-
-    .running-containers {
-      padding: 20px;
-      margin: 20px 0;
-      text-align: center;
-      background-color: #0e1114;
-      border-radius: 15px;
-    }
-    .running-containers p.running-text {
-      font-weight: bold;
-      font-size: 1.2em;
-      color: #fff;
-    }
-    .running-containers p {
-      color: #a0a0a0;
-    }
-
-    .curved-boxes {
-      display: flex;
-      gap: 20px;
-      max-width: 1200px;
-      width: 100%;
-      justify-content: center;
-    }
-    .curved-box {
-      flex: 1;
-      background-color: #0e1114;
-      border: 1px solid #1a2a3a;
-      border-radius: 15px;
-      padding: 20px;
-      max-width: 400px;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .curved-box:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    }
-    .curved-box h3 {
-      margin-top: 0;
-      font-size: 20px;
-      color: #fff;
-    }
-    .curved-box p {
-      color: #a0a0a0;
-    }
-
-    @media (max-width: 768px) {
-      .container {
-        flex-direction: column;
-      }
-      .sidebar {
-        width: 100%;
-        text-align: center;
-      }
-      .topbar {
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-      }
-      .topbar .search {
-        width: 100%;
-        margin: 10px 0;
-      }
-      .curved-boxes {
-        flex-direction: column;
-        align-items: center;
-      }
-    }
-    .containers-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    .containers-table th, .containers-table td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #1a2a3a;
-    }
-    .containers-table th {
-      background-color: #1a2a3a;
-      color: #fff;
-    }
-    .containers-table tr:hover {
-      background-color: #1a2a3a;
-    }
-
-    .action-button {
-      background-color: #4dabf7;
-      border: none;
-      color: #fff;
-      padding: 8px 12px;
-      border-radius: 5px;
+    .pill-button {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
       cursor: pointer;
-      margin-right: 5px;
-      transition: background-color 0.2s;
+      transition: transform 0.1s, box-shadow 0.2s, border 0.2s;
     }
-    .action-button:hover {
-      background-color: #3b8ec6;
+    .pill-button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(50, 224, 255, 0.6);
+      box-shadow: var(--glow);
     }
-    .action-button:active {
-      background-color: #2a6a9c;
+
+    .container {
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      gap: 18px;
+      padding: 18px;
+    }
+    .sidebar {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+      height: fit-content;
+    }
+    .sidebar ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+    .sidebar li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 12px;
+      border-radius: 10px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border 0.15s;
+      border: 1px solid transparent;
+    }
+    .sidebar li.active {
+      background: linear-gradient(90deg, rgba(50, 224, 255, 0.1), rgba(124, 93, 255, 0.08));
+      color: var(--text);
+      border-color: rgba(50, 224, 255, 0.4);
+      box-shadow: var(--glow);
+    }
+    .sidebar li:hover { color: var(--text); background: rgba(255, 255, 255, 0.04); }
+
+    .main-content { display: flex; flex-direction: column; gap: 16px; }
+    .section { display: none; flex-direction: column; gap: 16px; }
+    .section.active { display: flex; }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(50, 224, 255, 0.12), rgba(124, 93, 255, 0.10));
+      border: 1px solid rgba(50, 224, 255, 0.25);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--glow);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.12), transparent 45%);
+      pointer-events: none;
+    }
+    .hero h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: -0.5px; }
+    .hero p { margin: 0 0 14px; color: var(--muted); max-width: 820px; }
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-primary {
+      background: linear-gradient(120deg, #32e0ff, #7c5dff);
+      color: #041321;
+      border: none;
+      padding: 11px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 12px 32px rgba(50, 224, 255, 0.35);
+      transition: transform 0.12s, box-shadow 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 16px 36px rgba(50, 224, 255, 0.45); }
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 11px 16px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border 0.2s, transform 0.12s;
+    }
+    .btn-ghost:hover { border-color: rgba(50, 224, 255, 0.5); transform: translateY(-1px); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+    }
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card h4 { margin: 0 0 6px; color: var(--muted); font-size: 13px; letter-spacing: 0.2px; }
+    .stat-card .value { font-size: 28px; font-weight: 700; }
+    .stat-card small { color: var(--muted); }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.05); color: var(--muted); font-size: 12px; }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+    }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .panel-header h3 { margin: 0; letter-spacing: 0.2px; }
+    .badge { padding: 6px 10px; border-radius: 10px; background: rgba(50, 224, 255, 0.12); color: #9cefff; font-weight: 600; font-size: 12px; border: 1px solid rgba(50, 224, 255, 0.35); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+    th { color: var(--muted); font-size: 12px; letter-spacing: 0.4px; text-transform: uppercase; }
+    tr:hover td { background: rgba(255, 255, 255, 0.03); }
+    .status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; }
+    .status.running { background: rgba(50, 224, 255, 0.12); color: #9cefff; }
+    .status.stopped { background: rgba(255, 121, 121, 0.1); color: #ff8b8b; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .dot.running { background: #32e0ff; box-shadow: 0 0 10px rgba(50, 224, 255, 0.8); }
+    .dot.stopped { background: #ff6b6b; }
+
+    .quick-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .tag { padding: 6px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.05); color: var(--muted); font-size: 12px; }
+
+    @media (max-width: 960px) {
+      .container { grid-template-columns: 1fr; }
+      .sidebar { position: relative; top: 0; }
+      .topbar { flex-wrap: wrap; }
+      .search { order: 3; width: 100%; max-width: none; }
+    }
+    @media (max-width: 640px) {
+      .panel-header { flex-direction: column; align-items: flex-start; }
+      th, td { font-size: 14px; }
     }
   </style>
 </head>
 <body>
   <div class="topbar">
-    <div class="title"><img src="./logo.png" style="width:3rem;"> Qube Desktop</div>
+    <div class="title"><img src="./logo.png" alt="Qube logo"> Qube Desktop</div>
     <div class="search">
-      <input type="text" placeholder="Search...">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search containers, images, volumes...">
     </div>
     <div class="icons">
-      <div class="notifications"><i class="fa-solid fa-bell"></i></div>
-      <div class="settings"><i class="fa-solid fa-gear"></i></div>
+      <a class="pill-button" href="https://voyrox.github.io/Qube/" target="_blank" rel="noopener">Docs</a>
+      <a class="pill-button" href="https://github.com/Voyrox/Qube" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i></a>
+      <button class="pill-button"><i class="fa-solid fa-bell"></i></button>
+      <button class="pill-button"><i class="fa-solid fa-gear"></i></button>
     </div>
   </div>
 
   <div class="container">
-    <!-- Sidebar -->
-    <div class="sidebar">
+    <aside class="sidebar">
       <ul>
-        <li class="active"><i class="fa-solid fa-server"></i> Containers</li>
-        <li><i class="fa-solid fa-sd-card"></i> Images</li>
-        <li><i class="fa-solid fa-hard-drive"></i> Volumes</li>
-        <li><i class="fa-solid fa-wrench"></i> Builds</li>
-        <li><i class="fa-brands fa-github"></i> Github</li>
+        <li class="active" data-target="section-containers"><i class="fa-solid fa-server"></i> Containers</li>
+        <li data-target="section-images"><i class="fa-solid fa-sd-card"></i> Images</li>
+        <li data-target="section-volumes"><i class="fa-solid fa-hard-drive"></i> Volumes</li>
+        <li data-target="section-builds"><i class="fa-solid fa-wrench"></i> Builds</li>
+        <li data-link="https://github.com/Voyrox/Qube"><i class="fa-brands fa-github"></i> Github</li>
       </ul>
-    </div>
+    </aside>
 
     <div class="main-content">
-      <div class="main">
-        <h2>Containers:</h2>
-        <p>View all your running containers and applications</p>
-        <div class="running-containers">
-          <p class="running-text">Your running containers show up here</p>
-          <p>(A container is an isolated environment for your code)</p>
+      <section id="section-containers" class="section active">
+      <section class="hero">
+        <h1>Watcher-grade visibility for your Qube fleet</h1>
+        <p>Track containers, ports, memory ceilings, and isolation at a glance. Launch, stop, and inspect with the same confidence as your terminal—now with a neon dashboard edge.</p>
+        <div class="hero-actions">
+          <button class="btn-primary"><i class="fa-solid fa-rocket"></i> Launch new container</button>
+          <button class="btn-ghost"><i class="fa-solid fa-book"></i> Open docs</button>
+          <span class="pill"><i class="fa-solid fa-shield-halved"></i> cgroup v2 enforced</span>
         </div>
-        <div class="curved-boxes">
-          <div class="curved-box">
-            <h3>What is a container?</h3>
-            <p>A container is a lightweight, standalone, executable package that includes everything needed to run a piece of software.</p>
+      </section>
+
+      <section class="stats-grid">
+        <div class="stat-card">
+          <h4>Running containers</h4>
+          <div class="value" id="stat-running">—</div>
+          <small id="stat-running-delta">live</small>
+        </div>
+        <div class="stat-card">
+          <h4>Memory ceiling</h4>
+          <div class="value" id="stat-mem">2.0 GB</div>
+          <small>per container (cgroup v2)</small>
+        </div>
+        <div class="stat-card">
+          <h4>Network policy</h4>
+          <div class="value" id="stat-net">—</div>
+          <small>from container metadata</small>
+        </div>
+        <div class="stat-card">
+          <h4>Images cached</h4>
+          <div class="value" id="stat-images">—</div>
+          <small>from list endpoint</small>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <h3 style="margin:0;">Containers</h3>
+            <span class="badge">Live feed</span>
           </div>
-          <div class="curved-box">
-            <h3>How do I run a container?</h3>
-            <p>You can run a container using command-line tools or through a graphical interface by selecting the container and clicking 'run'.</p>
+          <div class="quick-actions">
+            <button class="pill-button"><i class="fa-solid fa-plus"></i> New</button>
+            <button class="pill-button"><i class="fa-solid fa-arrow-rotate-right"></i> Refresh</button>
           </div>
         </div>
-      </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Image</th>
+              <th>PID</th>
+              <th>Mem</th>
+              <th>Uptime</th>
+              <th>Ports</th>
+              <th>Net</th>
+              <th>Command</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="containers-body">
+          </tbody>
+        </table>
+      </section>
+      </section>
+
+      <section id="section-images" class="section">
+        <section class="hero">
+          <h1>Images</h1>
+          <p>Local images cached for quick starts.</p>
+          <div class="hero-actions"><span class="pill">Coming soon</span></div>
+        </section>
+        <section class="panel"><p style="color: var(--muted); margin: 0;">Images listing not yet wired.</p></section>
+      </section>
+
+      <section id="section-volumes" class="section">
+        <section class="hero">
+          <h1>Volumes</h1>
+          <p>Persistent data mounts and bindings.</p>
+          <div class="hero-actions"><span class="pill">Coming soon</span></div>
+        </section>
+        <section class="panel"><p style="color: var(--muted); margin: 0;">Volumes listing not yet wired.</p></section>
+      </section>
+
+      <section id="section-builds" class="section">
+        <section class="hero">
+          <h1>Builds</h1>
+          <p>Track build tasks and artifacts.</p>
+          <div class="hero-actions"><span class="pill">Coming soon</span></div>
+        </section>
+        <section class="panel"><p style="color: var(--muted); margin: 0;">Builds view not yet wired.</p></section>
+      </section>
     </div>
   </div>
 </body>
