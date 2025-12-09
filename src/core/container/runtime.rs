@@ -1,5 +1,5 @@
-use crate::container::lifecycle;
-use crate::tracking;
+use crate::core::container::lifecycle;
+use crate::core::tracking;
 use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
 use nix::unistd::{close, fork, pipe, read, write, dup2, ForkResult};
@@ -33,7 +33,7 @@ pub fn run_container(
         Some(name) => name.to_string(),
         None => lifecycle::generate_container_id(),
     };
-    let rootfs = crate::container::fs::get_rootfs(&container_id);
+    let rootfs = crate::core::container::fs::get_rootfs(&container_id);
     if !Path::new(&rootfs).exists() {
         let pb = ProgressBar::new(4);
         pb.set_style(
@@ -42,10 +42,10 @@ pub fn run_container(
                 .unwrap()
         );
         pb.set_message("Preparing container filesystem...");
-        crate::container::fs::prepare_rootfs_dir(&container_id);
+        crate::core::container::fs::prepare_rootfs_dir(&container_id);
         pb.inc(1);
         pb.set_message("Extracting container image...");
-        if let Err(e) = crate::container::image::extract_rootfs_tar(&container_id, image) {
+        if let Err(e) = crate::core::container::image::extract_rootfs_tar(&container_id, image) {
             pb.finish_with_message("Extraction failed!");
             eprintln!(
                 "{}",
@@ -53,12 +53,12 @@ pub fn run_container(
                     .bright_red()
                     .bold()
             );
-            crate::tracking::remove_container_from_tracking_by_name(&container_id);
+            crate::core::tracking::remove_container_from_tracking_by_name(&container_id);
             return;
         }
         pb.inc(1);
         pb.set_message("Copying working directory...");
-        crate::container::fs::copy_directory_into_home(&container_id, work_dir);
+        crate::core::container::fs::copy_directory_into_home(&container_id, work_dir);
         pb.inc(1);
         pb.set_message("Launching container...");
         pb.inc(1);
@@ -66,6 +66,21 @@ pub fn run_container(
     } else {
         println!("Container filesystem already exists. Skipping build.");
     }
+    
+    // Setup cgroup for this container BEFORE forking (must be done as root)
+    let cgroup_path = match crate::core::cgroup::setup_cgroup_for_container(&container_id) {
+        Ok(path) => {
+            if debug {
+                println!("Cgroup created at: {}", path);
+            }
+            path
+        }
+        Err(e) => {
+            eprintln!("Warning: Failed to setup cgroup: {}. Container will run without resource limits.", e);
+            String::new()
+        }
+    };
+    
     let (r, w) = pipe().expect("Failed to create pipe");
     match unsafe { fork() } {
         Ok(ForkResult::Parent { child: _child, .. }) => {
@@ -78,6 +93,16 @@ pub fn run_container(
                 return;
             }
             let cpid = i32::from_le_bytes(buf);
+            
+            // Add the container process to the cgroup
+            if !cgroup_path.is_empty() {
+                if let Err(e) = crate::core::cgroup::add_process_to_cgroup(&cgroup_path, cpid) {
+                    eprintln!("Warning: Failed to add process {} to cgroup: {}", cpid, e);
+                } else if debug {
+                    println!("Process {} added to cgroup", cpid);
+                }
+            }
+            
             println!("\nContainer launched with ID: {} (PID: {})", container_id, cpid);
             println!("Use 'qube stop {}' or 'qube delete {}' to stop/delete it.\n", cpid, cpid);
             tracking::update_container_pid(&container_id, cpid, work_dir, user_cmd, image, ports, isolated, volumes, env_vars);
@@ -99,13 +124,16 @@ fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _im
     }
     unshare(flags).unwrap();
     nix::unistd::sethostname("Qube").unwrap();
-    crate::cgroup::setup_cgroup2();
-    crate::container::fs::mount_proc(cid).unwrap();
+    
+    // Cgroups are now set up by the parent process before forking
+    // No need to call setup_cgroup2() here anymore
+    
+    crate::core::container::fs::mount_proc(cid).unwrap();
     
     for (host_path, container_path) in volumes {
         println!("DEBUG: Attempting to mount {} -> {}", host_path, container_path);
         
-        if let Err(e) = crate::container::fs::mount_volume(cid, host_path, container_path) {
+        if let Err(e) = crate::core::container::fs::mount_volume(cid, host_path, container_path) {
             eprintln!("ERROR: Mount failed for {} -> {}: {:?}", host_path, container_path, e);
             std::process::exit(1);
         } else {
@@ -119,7 +147,7 @@ fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _im
         println!("DEBUG: Container Mounts: \n{}", String::from_utf8_lossy(&output.stdout));
     }    
     
-    std::env::set_current_dir(&crate::container::fs::get_rootfs(cid)).unwrap();
+    std::env::set_current_dir(&crate::core::container::fs::get_rootfs(cid)).unwrap();
     nix::unistd::chroot(".").unwrap();
     nix::unistd::chdir("/home").unwrap();
 

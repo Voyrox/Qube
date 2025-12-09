@@ -1,4 +1,4 @@
-use crate::{api, tracking};
+use crate::{api, core::tracking};
 use colored::Colorize;
 use nix::sys::signal::{self, Signal};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -23,6 +23,14 @@ pub fn start_daemon(debug: bool) -> ! {
     unsafe {
         let _ = signal::signal(Signal::SIGTERM, signal::SigHandler::Handler(handle_signal));
         let _ = signal::signal(Signal::SIGINT, signal::SigHandler::Handler(handle_signal));
+    }
+
+    // Initialize cgroup root directory at daemon startup
+    if let Err(e) = crate::core::cgroup::init_cgroup_root() {
+        eprintln!("{}", format!("Warning: Failed to initialize cgroup root: {}", e).yellow());
+        eprintln!("{}", "Containers will run without resource limits.".yellow());
+    } else if debug {
+        println!("{}", "Cgroup root initialized successfully.".green());
     }
 
     thread::spawn(|| {
@@ -59,7 +67,7 @@ pub fn start_daemon(debug: bool) -> ! {
                         format!("Attempting to restart container: {}...", entry.name).blue().bold()
                     );
 
-                    crate::container::run_container(
+                    crate::core::container::run_container(
                         Some(&entry.name),
                         &entry.dir,
                         &entry.command,

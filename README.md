@@ -40,9 +40,9 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
 
   Registers a container (with a placeholder PID) and starts it automatically via the daemon. | Add `--isolation` to disable the network namespace.
   ```bash
-  sudo Qube run --image Ubuntu24_Multi -cmd "<cmd>"
+  sudo qube run --image Ubuntu24_Multi -cmd "<cmd>"
   # e.g.
-  sudo Qube run --image Ubuntu24_NODE --ports 3000 --cmd "npm i && node index.js"
+  sudo qube run --image Ubuntu24_NODE --ports 3000 --cmd "npm i && node index.js"
   ```
 
   ### QML File
@@ -89,21 +89,21 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
 
   Displays all tracked containers, along with their PIDs, uptime, and status.
   ```bash
-  sudo Qube list
+  sudo qube list
   ```
   
 - Stop a container
   Immediately Stops a container by sending it a SIGKILL.
 
   ```bash
-  sudo Qube stop <pid|container_name>
+  sudo qube stop <pid|container_name>
   ```
 
 - Start a container
   Starts a stopped container.
 
   ```bash
-  sudo Qube start <pid|container_name>
+  sudo qube start <pid|container_name>
   ```
 
 - Eval a container
@@ -113,29 +113,29 @@ WARNING: Running commands as root inside a container may alter its configuration
 
   ```bash
   # Launch an interactive shell in the container:
-  sudo Qube eval <container_name|pid>
+  sudo qube eval <container_name|pid>
 
   # Execute a specific command as root in the container:
-  sudo Qube eval <container_name|pid> [command]
+  sudo qube eval <container_name|pid> [command]
   ```
 
 - View container info
   Shows detailed information about a container, such as its name, PID, working directory, command, timestamp, and uptime.
 
   ```bash
-  sudo Qube info <container_name|pid>
+  sudo qube info <container_name|pid>
   ```
 - Snapshot a container
   Creates a snapshot (a compressed tarball) of the container’s filesystem. The snapshot is stored in the container's working directory.
 
   ```bash
-  sudo Qube snapshot <container_name|pid>
+  sudo qube snapshot <container_name|pid>
   ```
 - Run a container based on a dockerfile
   Creates a container based on a Dockerfile. The container is stored in the containers directory.
 
   ```bash
-  sudo Qube docker
+  sudo qube docker
   ```
 
 # Custom Images 📦
@@ -222,8 +222,8 @@ rm -rf /var/lib/Qube/containers.txt && rm -rf /var/tmp/Qube_containers/Qube-
 ```
 
 ### Roadmap
-- [ ] Resource Limiting: Add support for limiting CPU, memory, and disk usage. `sudo Qube run --image Ubuntu24_Multi --cpu 2 --memory 512M --cmd "npm i && node index.js"`
-- [ ] Restore: Allow users to save the state of a container and revert to it later. `sudo Qube snapshot restore <snapshot_id>` | `sudo Qube snapshot create <container_name|pid>`
+- [ ] Resource Limiting: Add support for limiting CPU, memory, and disk usage. `sudo qube run --image Ubuntu24_Multi --cpu 2 --memory 512M --cmd "npm i && node index.js"`
+- [ ] Restore: Allow users to save the state of a container and revert to it later. `sudo qube snapshot restore <snapshot_id>` | `sudo qube snapshot create <container_name|pid>`
 - [ ] Rootless Containers: Add CLONE_NEWUSER and map UID/GIDs to avoid requiring sudo.
 - [ ] Security: Integrate seccomp, capabilities, and AppArmor/SELinux for enhanced security.
 

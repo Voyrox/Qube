@@ -1,7 +1,7 @@
 use std::fs;
 use std::env;
 use serde_yaml::{Mapping, Value};
-use crate::container::custom::{read_qube_yaml, CommandValue, ENVValue};
+use crate::core::container::custom::{read_qube_yaml, CommandValue, ENVValue};
 use serde_json;
 
 pub fn convert_and_run(dockerfile_path: &str) {
@@ -104,9 +104,9 @@ pub fn convert_and_run(dockerfile_path: &str) {
         .collect();
     let image = config.system.trim().to_string();
 
-    crate::container::validate_image(&image).expect("Invalid image provided");
+    crate::core::container::validate_image(&image).expect("Invalid image provided");
 
-    let container_id = crate::container::lifecycle::build_container(None, &cwd, &image);
+    let container_id = crate::core::container::lifecycle::build_container(None, &cwd, &image);
     let command_str = match config.cmd {
         CommandValue::Single(s) => s,
         CommandValue::List(l) => l.join(" && "),
@@ -118,7 +118,7 @@ pub fn convert_and_run(dockerfile_path: &str) {
         None => vec![],
     };
 
-    crate::tracking::track_container_named(
+    crate::core::tracking::track_container_named(
         &container_id,
         -1,
         &cwd,

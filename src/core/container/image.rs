@@ -54,7 +54,7 @@ pub fn validate_image(image: &str) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn extract_rootfs_tar(cid: &str, image: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let rootfs = crate::container::fs::get_rootfs(cid);
+    let rootfs = crate::core::container::fs::get_rootfs(cid);
     let image_path = ensure_image_exists(image)?;
     
     let status = Command::new("tar")
