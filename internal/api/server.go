@@ -53,12 +53,14 @@ func StartServer() {
 
 	r.HandleFunc("/list", listContainersHandler).Methods("GET")
 	r.HandleFunc("/stop", stopContainerHandler).Methods("POST")
+	r.HandleFunc("/stop/{name}", stopContainerByNameHandler).Methods("POST")
 	r.HandleFunc("/start", startContainerHandler).Methods("POST")
+	r.HandleFunc("/start/{name}", startContainerByNameHandler).Methods("POST")
 	r.HandleFunc("/delete", deleteContainerHandler).Methods("POST")
 	r.HandleFunc("/info", containerInfoHandler).Methods("POST")
 	r.HandleFunc("/images", listImagesHandler).Methods("GET")
 	r.HandleFunc("/volumes", listVolumesHandler).Methods("GET")
-	r.HandleFunc("/eval", evalWebSocketHandler)
+	r.HandleFunc("/eval/{container}/{action}", evalWebSocketHandler)
 
 	color.Green("API server is running at http://127.0.0.1:3030")
 
@@ -110,8 +112,12 @@ func listContainersHandler(w http.ResponseWriter, r *http.Request) {
 				info.MemoryMB = &mb
 			}
 
-			if cpu, err := cgroup.GetCPUFromProc(entry.PID); err == nil {
+			cpu, err := cgroup.GetCPUFromProc(entry.PID)
+			if err == nil {
 				info.CPUPercent = &cpu
+			} else {
+				zero := 0.0
+				info.CPUPercent = &zero
 			}
 		}
 
@@ -152,6 +158,27 @@ func stopContainerHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+func stopContainerByNameHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["name"]
+
+	entries := tracking.GetAllTrackedEntries()
+	for _, entry := range entries {
+		if entry.Name == name {
+			if err := container.StopContainer(entry.PID); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+			return
+		}
+	}
+
+	http.Error(w, "Container not found", http.StatusNotFound)
+}
+
 func startContainerHandler(w http.ResponseWriter, r *http.Request) {
 	var params CommandParams
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
@@ -160,6 +187,19 @@ func startContainerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := container.StartContainer(params.ContainerID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
+func startContainerByNameHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["name"]
+
+	if err := container.StartContainer(name); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -231,7 +271,7 @@ type ImageInfo struct {
 }
 
 func listImagesHandler(w http.ResponseWriter, r *http.Request) {
-	imagesDir := "/var/lib/qube/images"
+	imagesDir := "/var/tmp/Qube_containers/images"
 	var images []ImageInfo
 
 	if entries, err := os.ReadDir(imagesDir); err == nil {
@@ -283,6 +323,9 @@ func listVolumesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func evalWebSocketHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	containerName := vars["container"]
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		color.Red("Failed to upgrade to WebSocket: %v", err)
@@ -290,16 +333,36 @@ func evalWebSocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
+	entries := tracking.GetAllTrackedEntries()
+	var targetPID int
+	for _, entry := range entries {
+		if entry.Name == containerName {
+			targetPID = entry.PID
+			break
+		}
+	}
+
+	if targetPID == 0 {
+		conn.WriteMessage(websocket.TextMessage, []byte("Container not found or not running"))
+		return
+	}
+
 	for {
-		var params CommandParams
-		if err := conn.ReadJSON(&params); err != nil {
+		_, message, err := conn.ReadMessage()
+		if err != nil {
 			break
 		}
 
-		output := fmt.Sprintf("Executed command in container %s: %s", params.ContainerID, params.Command)
+		cmd := string(message)
+		if cmd == "" {
+			continue
+		}
 
-		if err := conn.WriteJSON(map[string]string{"output": output}); err != nil {
-			break
+		output, err := container.EvalCommand(targetPID, cmd)
+		if err != nil {
+			conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Error: %v", err)))
+		} else {
+			conn.WriteMessage(websocket.TextMessage, []byte(output))
 		}
 	}
 }

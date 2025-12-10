@@ -11,16 +11,25 @@
       background: #0c0c0c;
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      height: 500px;
+      min-height: 320px;
+      height: auto;
+      max-height: calc(100vh - 260px);
       padding: 12px;
       font-family: "Consolas", "Courier New", monospace;
       color: #cccccc;
       overflow-y: auto;
+      overflow-x: hidden;
       white-space: pre-wrap;
+      word-break: break-word;
+      max-width: 100%;
       font-size: 13px;
       line-height: 1.4;
     }
-    .terminal-line { margin: 0; }
+    .terminal-line { 
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
     .caret {
       display: inline-block;
       width: 8px;
@@ -47,7 +56,7 @@
       <input type="text" placeholder="Search..." id="search-input">
     </div>
     <div class="icons">
-      <button class="pill-button" onclick="window.location.href='index.html'" title="Back"><i class="fa-solid fa-arrow-left"></i></button>
+      <button class="pill-button" id="btn-back" title="Back"><i class="fa-solid fa-arrow-left"></i></button>
       <button class="pill-button" title="Settings"><i class="fa-solid fa-gear"></i></button>
     </div>
   </div>
@@ -56,7 +65,7 @@
     <aside class="sidebar">
       <ul>
         <li class="active"><i class="fa-solid fa-terminal"></i> Console</li>
-        <li style="cursor: pointer;" onclick="window.location.href='index.html'"><i class="fa-solid fa-grid-2"></i> Dashboard</li>
+        <li id="nav-dashboard" style="cursor: pointer;"><i class="fa-solid fa-grid-2"></i> Dashboard</li>
       </ul>
     </aside>
 

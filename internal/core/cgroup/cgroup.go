@@ -7,10 +7,18 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Voyrox/Qube/internal/config"
 	"github.com/fatih/color"
 )
+
+type cpuCache struct {
+	totalTime uint64
+	timestamp time.Time
+}
+
+var cpuCacheMap = make(map[int]*cpuCache)
 
 const (
 	MemoryMax     = config.MemoryMaxMB * 1024 * 1024
@@ -129,6 +137,7 @@ func GetCPUFromProc(pid int) (float64, error) {
 	statPath := fmt.Sprintf("/proc/%d/stat", pid)
 	content, err := ioutil.ReadFile(statPath)
 	if err != nil {
+		delete(cpuCacheMap, pid)
 		return 0, err
 	}
 
@@ -141,7 +150,31 @@ func GetCPUFromProc(pid int) (float64, error) {
 	stime, _ := strconv.ParseUint(fields[14], 10, 64)
 	totalTime := utime + stime
 
-	return float64(totalTime) / 100.0, nil
+	now := time.Now()
+
+	cached, exists := cpuCacheMap[pid]
+	if !exists {
+		cpuCacheMap[pid] = &cpuCache{
+			totalTime: totalTime,
+			timestamp: now,
+		}
+		return 0.0, nil
+	}
+
+	timeDelta := now.Sub(cached.timestamp).Seconds()
+	if timeDelta < 0.1 {
+		return 0.0, nil
+	}
+
+	cpuDelta := totalTime - cached.totalTime
+	cpuPercent := (float64(cpuDelta) / 100.0 / timeDelta) * 100.0
+
+	cpuCacheMap[pid] = &cpuCache{
+		totalTime: totalTime,
+		timestamp: now,
+	}
+
+	return cpuPercent, nil
 }
 
 func RemoveCgroup(containerName string) error {

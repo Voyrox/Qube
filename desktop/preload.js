@@ -9,6 +9,10 @@ contextBridge.exposeInMainWorld('electron', {
   getApiBase: () => ipcRenderer.invoke('get-api-base'),
   setApiBase: (apiBase) => ipcRenderer.invoke('set-api-base', apiBase),
   
+  // Eval process control
+  startEvalProcess: (containerName) => ipcRenderer.invoke('start-eval-process', containerName),
+  sendEvalCommand: (command) => ipcRenderer.invoke('send-eval-command', command),
+  
   // Platform info
   platform: process.platform,
   version: process.versions.electron

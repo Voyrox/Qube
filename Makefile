@@ -25,6 +25,8 @@ install: build
 	@sudo rm -f $(INSTALL_PATH)/$(BINARY_NAME)
 	@sudo cp $(BINARY_NAME) $(INSTALL_PATH)/$(BINARY_NAME)
 	@sudo chmod +x $(INSTALL_PATH)/$(BINARY_NAME)
+	@sudo chmod u+s $(INSTALL_PATH)/$(BINARY_NAME)
+	@ls -la $(INSTALL_PATH)/$(BINARY_NAME)
 	@echo "✓ Installed to $(INSTALL_PATH)/$(BINARY_NAME)"
 	@if [ -f $(SERVICE_FILE) ]; then \
 		sudo cp $(SERVICE_FILE) $(SERVICE_PATH)/$(SERVICE_FILE); \

@@ -218,3 +218,12 @@ func StartContainer(nameOrPID string) error {
 
 	return fmt.Errorf("container %s not found", nameOrPID)
 }
+
+func EvalCommand(pid int, command string) (string, error) {
+	cmd := exec.Command("nsenter", "-t", fmt.Sprintf("%d", pid), "-m", "-u", "-i", "-n", "-p", "--", "/bin/sh", "-c", command)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("command failed: %v", err)
+	}
+	return string(output), nil
+}

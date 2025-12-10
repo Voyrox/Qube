@@ -107,7 +107,7 @@ function renderStats(containers, imageCount = 0) {
     
     // Calculate total CPU usage from running containers
     const totalCpu = containers
-        .filter(c => c.pid && c.pid > 0 && c.cpu_percent)
+        .filter(c => c.pid && c.pid > 0 && c.cpu_percent !== null && c.cpu_percent !== undefined)
         .reduce((sum, c) => sum + c.cpu_percent, 0);
     
     const memoryCards = document.querySelectorAll('.stat-card');
@@ -116,7 +116,8 @@ function renderStats(containers, imageCount = 0) {
     if (memoryCards[2]) {
         const cpuValue = memoryCards[2].querySelector('.value');
         if (cpuValue) {
-            if (totalCpu > 0) {
+            const hasRunningContainers = containers.some(c => c.pid && c.pid > 0);
+            if (hasRunningContainers) {
                 cpuValue.innerText = `${totalCpu.toFixed(1)}%`;
             } else {
                 cpuValue.innerText = '—';

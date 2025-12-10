@@ -1,10 +1,12 @@
 const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
+const { spawn } = require('child_process');
 
 const store = new Store();
 
 let mainWindow;
+let evalProcesses = {}; // { containerName: { proc, inputLines } }
 
 // Fixed window size like Docker Desktop
 const WINDOW_WIDTH = 1380;
@@ -28,7 +30,8 @@ function createWindow() {
     },
     frame: true,
     titleBarStyle: 'default',
-    show: false
+    show: false,
+    autoHideMenuBar: true
   });
 
   // Restore window position if saved
@@ -55,8 +58,8 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   }
 
-  // Create application menu
-  createMenu();
+  // Hide application menu
+  Menu.setApplicationMenu(null);
 }
 
 function createMenu() {
@@ -153,6 +156,95 @@ ipcMain.handle('set-settings', (event, settings) => {
     store.set(key, value);
   });
   return true;
+});
+
+ipcMain.handle('start-eval-process', async (event, containerName) => {
+  if (evalProcesses[containerName]) {
+    return containerName; // Already running
+  }
+
+  return new Promise((resolve, reject) => {
+    // Use 'qube' directly without sudo - assumes qube binary has setuid or is in sudoers
+    const proc = spawn('qube', ['eval', containerName], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      shell: true
+    });
+
+    let outputBuffer = '';
+    
+    proc.stdout.on('data', (data) => {
+      outputBuffer += data.toString();
+    });
+
+    proc.stderr.on('data', (data) => {
+      outputBuffer += data.toString();
+    });
+
+    proc.on('error', (error) => {
+      reject(error.message);
+    });
+
+    evalProcesses[containerName] = {
+      proc,
+      outputBuffer,
+      waiters: []
+    };
+
+    resolve(containerName);
+  });
+});
+
+ipcMain.handle('send-eval-command', async (event, command) => {
+  // Get the container name from the renderer window's current URL
+  const containerName = event.sender.getURL().match(/name=([^&]+)/)?.[1];
+  
+  if (!containerName || !evalProcesses[containerName]) {
+    throw new Error('No active eval process');
+  }
+
+  const { proc } = evalProcesses[containerName];
+  
+  if (!proc || proc.killed) {
+    throw new Error('Eval process is dead');
+  }
+  
+  return new Promise((resolve, reject) => {
+    let commandOutput = '';
+      let timeoutId;
+    
+    const onData = (data) => {
+      commandOutput += data.toString();
+    };
+    
+    // Listen for output from this command
+    proc.stdout.on('data', onData);
+    proc.stderr.on('data', onData);
+    
+    // Send command with newline
+    try {
+      proc.stdin.write(command + '\n', (err) => {
+      if (err) {
+          proc.stdout.removeListener('data', onData);
+          proc.stderr.removeListener('data', onData);
+          clearTimeout(timeoutId);
+          reject(new Error('Failed to write command: ' + err.message));
+          return;
+        }
+        
+        // Wait a bit for output then resolve
+        timeoutId = setTimeout(() => {
+          proc.stdout.removeListener('data', onData);
+          proc.stderr.removeListener('data', onData);
+          resolve(commandOutput.trim());
+        }, 150);
+      });
+    } catch (err) {
+      proc.stdout.removeListener('data', onData);
+      proc.stderr.removeListener('data', onData);
+      clearTimeout(timeoutId);
+      reject(new Error('Error sending command: ' + err.message));
+    }
+  });
 });
 
 // App lifecycle

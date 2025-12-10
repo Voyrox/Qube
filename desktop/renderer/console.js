@@ -7,20 +7,20 @@ if (window.electron) {
   });
 }
 
-const promptText = "root@Qube:/# ";
-let lastCommand = "";
-let currentInput = "";
-let inputLine = null;
-let inputTextSpan = null;
-let caretSpan = null;
 const terminal = document.getElementById('terminal');
 const terminalInput = document.getElementById('terminal-input');
+const backButton = document.getElementById('btn-back');
+const dashboardLink = document.getElementById('nav-dashboard');
 
 const params = new URLSearchParams(window.location.search);
 const containerName = params.get('name');
 const listEndpoint = `${apiBase}/list`;
 
-let ws;
+let currentInput = "";
+let inputLine = null;
+let inputTextSpan = null;
+let caretSpan = null;
+let evalProcess = null;
 
 function fmtUptime(ts) {
   if (!ts) return '—';
@@ -94,28 +94,22 @@ async function loadContainer() {
 }
 
 function ensureWebSocket() {
-  if (ws || !containerName) return;
-  ws = new WebSocket(`${apiBase.replace('http', 'ws')}/eval/${containerName}/command`);
-  ws.onopen = () => {
-    appendLine('Connected to container console.');
-    showPrompt();
-  };
-  ws.onmessage = (event) => {
-    let output = event.data.trim();
-    // Filter out command echo (the command we just sent)
-    if (lastCommand) {
-      const lines = output.split('\n');
-      const filtered = lines.filter(line => !line.includes(lastCommand)).join('\n').trim();
-      output = filtered;
-      lastCommand = "";
-    }
-    // Show all output including server prompts
-    if (output) {
-      appendOutput(output);
-    }
-  };
-  ws.onclose = () => appendLine('Connection closed.');
-  ws.onerror = (error) => appendLine(`Error: ${error.message || 'WebSocket error'}`);
+  // Start eval process and keep it running
+  if (evalProcess || !containerName) return;
+  
+  appendLine(`Starting eval session for ${containerName}...`);
+  
+  if (window.electron && window.electron.startEvalProcess) {
+    window.electron.startEvalProcess(containerName).then((processId) => {
+      evalProcess = processId;
+      appendLine('✓ Connected to container. Type commands below:');
+      showPrompt();
+    }).catch((err) => {
+      appendLine(`✗ Error starting eval: ${err}`);
+    });
+  } else {
+    appendLine('Electron API not available');
+  }
 }
 
 function scrollToBottom() {
@@ -131,13 +125,18 @@ function appendLine(text) {
 }
 
 function appendOutput(text) {
-  const div = document.createElement('div');
-  div.className = 'terminal-line';
-  div.textContent = text;
-  if (inputLine) {
-    terminal.insertBefore(div, inputLine);
-  } else {
-    terminal.appendChild(div);
+  const lines = text.split('\n');
+  for (const line of lines) {
+    if (line || line === '') {
+      const div = document.createElement('div');
+      div.className = 'terminal-line';
+      div.textContent = line;
+      if (inputLine) {
+        terminal.insertBefore(div, inputLine);
+      } else {
+        terminal.appendChild(div);
+      }
+    }
   }
   scrollToBottom();
 }
@@ -147,18 +146,27 @@ function focusInput() {
 }
 
 function showPrompt() {
-  // Don't render a custom prompt; just ensure input line is ready
+  // Remove old input line if exists
   if (inputLine && inputLine.parentNode) {
     inputLine.parentNode.removeChild(inputLine);
   }
   inputLine = document.createElement('div');
   inputLine.className = 'terminal-line';
+  
+  // Add prompt text
+  const promptSpan = document.createElement('span');
+  promptSpan.style.color = '#00aa00';
+  promptSpan.textContent = '$ ';
+  inputLine.appendChild(promptSpan);
+  
   inputTextSpan = document.createElement('span');
   inputTextSpan.textContent = currentInput;
+  inputLine.appendChild(inputTextSpan);
+  
   caretSpan = document.createElement('span');
   caretSpan.className = 'caret';
-  inputLine.appendChild(inputTextSpan);
   inputLine.appendChild(caretSpan);
+  
   terminal.appendChild(inputLine);
   scrollToBottom();
   focusInput();
@@ -173,7 +181,6 @@ terminalInput.addEventListener('input', () => {
 });
 
 terminalInput.addEventListener('keydown', (e) => {
-  if (!ws) return;
   if (e.key === 'Enter') {
     e.preventDefault();
     const command = currentInput.trim();
@@ -185,18 +192,43 @@ terminalInput.addEventListener('keydown', (e) => {
       return;
     }
     if (command) {
-      lastCommand = command;
-      ws.send(command + '\n');
+      // Append command to output
+      const promptLine = document.createElement('div');
+      promptLine.className = 'terminal-line';
+      promptLine.textContent = '$ ' + command;
+      terminal.appendChild(promptLine);
+      
+      // Send command to eval process via IPC
+      if (window.electron && window.electron.sendEvalCommand) {
+        window.electron.sendEvalCommand(command).then((output) => {
+          if (output) {
+            const lines = output.split('\n');
+            for (const line of lines) {
+              if (line !== '') {
+                const div = document.createElement('div');
+                div.className = 'terminal-line';
+                div.textContent = line;
+                terminal.appendChild(div);
+              }
+            }
+          }
+          scrollToBottom();
+          showPrompt();
+        }).catch((err) => {
+          const errLine = document.createElement('div');
+          errLine.className = 'terminal-line';
+          errLine.textContent = 'Error: ' + err;
+          terminal.appendChild(errLine);
+          scrollToBottom();
+          showPrompt();
+        });
+      }
     }
     currentInput = '';
     terminalInput.value = '';
-    showPrompt();
   } else if (e.ctrlKey && e.key.toLowerCase() === 'c') {
     e.preventDefault();
-    ws.send(String.fromCharCode(3));
-  } else if (e.ctrlKey && e.key.toLowerCase() === 'x') {
-    e.preventDefault();
-    ws.send(String.fromCharCode(24));
+    appendLine('^C');
   }
 });
 
@@ -210,6 +242,18 @@ document.getElementById('btn-clear').addEventListener('click', () => {
   showPrompt();
 });
 document.getElementById('btn-reload').addEventListener('click', loadContainer);
+
+// Navigation handlers (CSP-safe; no inline handlers)
+if (backButton) {
+  backButton.addEventListener('click', () => {
+    window.location.href = './index.html';
+  });
+}
+if (dashboardLink) {
+  dashboardLink.addEventListener('click', () => {
+    window.location.href = './index.html';
+  });
+}
 
 loadContainer().then(() => {
   focusInput();

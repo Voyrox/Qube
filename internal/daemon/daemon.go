@@ -127,9 +127,9 @@ func monitorAndRestartContainers(debug bool) {
 
 				go restartContainer(&entry, debug)
 			} else if debug {
-				if stats, err := cgroup.GetMemoryStats(entry.Name); err == nil {
-					fmt.Printf("[Monitor] %s: Memory=%.1fMB\n", entry.Name, stats.CurrentMB())
-				}
+				//if stats, err := cgroup.GetMemoryStats(entry.Name); err == nil {
+				//	fmt.Printf("[Monitor] %s: Memory=%.1fMB\n", entry.Name, stats.CurrentMB())
+				//}
 			}
 		} else if entry.PID == -1 {
 			lastRestart, exists := restartTimestamps[entry.Name]
