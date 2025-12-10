@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; connect-src 'self' http://127.0.0.1:3030 ws://127.0.0.1:3030;">
+  <title>Qube Console</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .terminal {
+      background: #0c0c0c;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      height: 500px;
+      padding: 12px;
+      font-family: "Consolas", "Courier New", monospace;
+      color: #cccccc;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .terminal-line { margin: 0; }
+    .caret {
+      display: inline-block;
+      width: 8px;
+      height: 1em;
+      background: var(--accent);
+      margin-left: 2px;
+      animation: blink 1s steps(2) infinite;
+    }
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+  </style>
+  <script src="console.js" defer></script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="title">
+      <img src="logo.png" alt="Qube" onerror="this.style.display='none'">
+      Qube Console
+    </div>
+    <div class="search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search..." id="search-input">
+    </div>
+    <div class="icons">
+      <button class="pill-button" onclick="window.location.href='index.html'" title="Back"><i class="fa-solid fa-arrow-left"></i></button>
+      <button class="pill-button" title="Settings"><i class="fa-solid fa-gear"></i></button>
+    </div>
+  </div>
+
+  <div class="container">
+    <aside class="sidebar">
+      <ul>
+        <li class="active"><i class="fa-solid fa-terminal"></i> Console</li>
+        <li style="cursor: pointer;" onclick="window.location.href='index.html'"><i class="fa-solid fa-grid-2"></i> Dashboard</li>
+      </ul>
+    </aside>
+
+    <div class="main-content">
+      <div class="hero">
+        <h1 id="hero-title">Container Console</h1>
+        <p id="hero-desc">Interactive terminal for container management</p>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
+          <span id="status-pill" class="status running"><span class="dot running"></span> Running</span>
+          <span class="pill" id="image-pill">Image: —</span>
+          <span class="pill" id="ports-pill">Ports: —</span>
+          <span class="pill" id="net-pill">Net: —</span>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h4>PID</h4>
+          <div class="value" id="pid-val">—</div>
+          <small>Process ID</small>
+        </div>
+        <div class="stat-card">
+          <h4>Uptime</h4>
+          <div class="value" id="uptime-val">—</div>
+          <small>Running time</small>
+        </div>
+        <div class="stat-card">
+          <h4>Memory</h4>
+          <div class="value" id="mem-val">—</div>
+          <small>Usage</small>
+        </div>
+        <div class="stat-card">
+          <h4>Command</h4>
+          <div class="value" style="font-size: 14px; overflow: hidden; text-overflow: ellipsis;" id="cmd-val">—</div>
+          <small>Entrypoint</small>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Terminal</h3>
+          <div class="quick-actions">
+            <button class="pill-button" id="btn-reload" title="Reload"><i class="fa-solid fa-rotate"></i></button>
+            <button class="pill-button" id="btn-clear" title="Clear"><i class="fa-solid fa-eraser"></i></button>
+          </div>
+        </div>
+        <div class="terminal" id="terminal" tabindex="0"></div>
+        <textarea id="terminal-input" style="position:absolute; left:-9999px; width:0; height:0; opacity:0;" spellcheck="false"></textarea>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

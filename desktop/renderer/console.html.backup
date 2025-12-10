@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; connect-src 'self' http://127.0.0.1:3030 ws://127.0.0.1:3030;">
   <title>Qube Console</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap">
@@ -50,6 +51,10 @@
       backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+      -webkit-app-region: drag;
+    }
+    .topbar * {
+      -webkit-app-region: no-drag;
     }
     .title { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 700; letter-spacing: 0.3px; }
     .title img { width: 2.6rem; height: 2.6rem; }
@@ -167,7 +172,7 @@
 </head>
 <body>
   <div class="topbar">
-    <div class="title"><img src="./logo.png" alt="Qube logo"> Qube Console</div>
+    <div class="title"><img src="./logo.png" alt="Qube logo" onerror="this.style.display='none'"> Qube Console</div>
     <div class="search">
       <i class="fa-solid fa-magnifying-glass"></i>
       <input type="text" placeholder="Search containers..." id="search-input">
@@ -175,7 +180,7 @@
     <div class="icons">
       <a class="pill-button" href="https://voyrox.github.io/Qube/" target="_blank" rel="noopener">Docs</a>
       <a class="pill-button" href="https://github.com/Voyrox/Qube" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i></a>
-      <button class="pill-button" title="Notifications"><i class="fa-solid fa-bell"></i></button>
+      <button class="pill-button" onclick="window.location.href='index.html'" title="Back to dashboard"><i class="fa-solid fa-arrow-left"></i></button>
       <button class="pill-button" title="Settings"><i class="fa-solid fa-gear"></i></button>
     </div>
   </div>
@@ -183,11 +188,8 @@
   <div class="container">
     <aside class="sidebar">
       <ul>
-        <li class="active"><i class="fa-solid fa-server"></i> Containers</li>
-        <li><i class="fa-solid fa-sd-card"></i> Images</li>
-        <li><i class="fa-solid fa-hard-drive"></i> Volumes</li>
-        <li><i class="fa-solid fa-wrench"></i> Builds</li>
-        <li><i class="fa-brands fa-github"></i> Github</li>
+        <li class="active"><i class="fa-solid fa-server"></i> Console</li>
+        <li onclick="window.location.href='index.html'"><i class="fa-solid fa-th-large"></i> Dashboard</li>
       </ul>
     </aside>
 
@@ -224,201 +226,6 @@
     </div>
   </div>
 
-  <script>
-    const promptText = "root@Qube:/# ";
-    let lastCommand = "";
-    let currentInput = "";
-    let inputLine = null;
-    let inputTextSpan = null;
-    let caretSpan = null;
-    const terminal = document.getElementById('terminal');
-    const terminalInput = document.getElementById('terminal-input');
-
-    const params = new URLSearchParams(window.location.search);
-    const containerName = params.get('name');
-    const apiBase = 'http://127.0.0.1:3030';
-    const listEndpoint = `${apiBase}/list`;
-
-    let ws;
-
-    function fmtUptime(ts) {
-      if (!ts) return '—';
-      const now = Math.floor(Date.now() / 1000);
-      const d = Math.max(0, now - ts);
-      const days = Math.floor(d / 86400);
-      const hours = Math.floor((d % 86400) / 3600);
-      const minutes = Math.floor((d % 3600) / 60);
-      if (days > 0) return `${days}d ${hours}h`;
-      if (hours > 0) return `${hours}h ${minutes}m`;
-      return `${minutes}m`;
-    }
-
-    function fmtMem(val) {
-      if (val === undefined || val === null) return '—';
-      if (val >= 1024) return `${(val / 1024).toFixed(1)}G`;
-      return `${val.toFixed(1)}M`;
-    }
-
-    function setStatus(isRunning) {
-      const pill = document.getElementById('status-pill');
-      pill.className = `status ${isRunning ? 'running' : 'stopped'}`;
-      pill.innerHTML = `<span class="dot ${isRunning ? 'running' : 'stopped'}"></span> ${isRunning ? 'running' : 'stopped'}`;
-    }
-
-    async function loadContainer() {
-      if (!containerName) {
-        document.getElementById('hero-title').innerText = 'No container selected';
-        return;
-      }
-      try {
-        const res = await fetch(listEndpoint);
-        const data = await res.json();
-        const containers = data.containers || [];
-        const info = containers.find(c => c.name === containerName);
-        if (!info) {
-          document.getElementById('hero-title').innerText = `${containerName} (not found)`;
-          return;
-        }
-
-        document.getElementById('hero-title').innerText = info.name;
-        document.getElementById('hero-desc').innerText = info.command ? info.command.join(' ') : 'Attached console';
-        document.getElementById('image-pill').innerText = `image: ${info.image || '—'}`;
-        document.getElementById('ports-pill').innerText = `ports: ${info.ports || 'none'}`;
-        document.getElementById('net-pill').innerText = `net: ${info.isolated ? 'isolated' : 'shared'}`;
-
-        setStatus(info.pid && info.pid > 0);
-        document.getElementById('pid-val').innerText = info.pid > 0 ? info.pid : '—';
-        document.getElementById('uptime-val').innerText = fmtUptime(info.timestamp);
-        document.getElementById('mem-val').innerText = info.memory_mb ? fmtMem(info.memory_mb) : '—';
-        document.getElementById('cmd-val').innerText = info.command && info.command.length ? info.command.join(' ') : '—';
-
-        ensureWebSocket();
-      } catch (e) {
-        console.error('load error', e);
-      }
-    }
-
-    function ensureWebSocket() {
-      if (ws || !containerName) return;
-      ws = new WebSocket(`${apiBase.replace('http', 'ws')}/eval/${containerName}/command`);
-      ws.onopen = () => {
-        appendLine('Connected to container console.');
-        showPrompt();
-      };
-      ws.onmessage = (event) => {
-        let output = event.data.trim();
-        // Filter out command echo (the command we just sent)
-        if (lastCommand) {
-          const lines = output.split('\n');
-          const filtered = lines.filter(line => !line.includes(lastCommand)).join('\n').trim();
-          output = filtered;
-          lastCommand = "";
-        }
-        // Show all output including server prompts
-        if (output) {
-          appendOutput(output);
-        }
-      };
-      ws.onclose = () => appendLine('Connection closed.');
-      ws.onerror = (error) => appendLine(`Error: ${error.message}`);
-    }
-
-    function scrollToBottom() {
-      terminal.scrollTop = terminal.scrollHeight;
-    }
-
-    function appendLine(text) {
-      const div = document.createElement('div');
-      div.className = 'terminal-line';
-      div.innerHTML = text;
-      terminal.appendChild(div);
-      scrollToBottom();
-    }
-
-    function appendOutput(text) {
-      const div = document.createElement('div');
-      div.className = 'terminal-line';
-      div.textContent = text;
-      if (inputLine) {
-        terminal.insertBefore(div, inputLine);
-      } else {
-        terminal.appendChild(div);
-      }
-      scrollToBottom();
-    }
-
-    function focusInput() {
-      terminalInput.focus();
-    }
-
-    function showPrompt() {
-      // Don't render a custom prompt; just ensure input line is ready
-      if (inputLine && inputLine.parentNode) {
-        inputLine.parentNode.removeChild(inputLine);
-      }
-      inputLine = document.createElement('div');
-      inputLine.className = 'terminal-line';
-      inputTextSpan = document.createElement('span');
-      inputTextSpan.textContent = currentInput;
-      caretSpan = document.createElement('span');
-      caretSpan.className = 'caret';
-      inputLine.appendChild(inputTextSpan);
-      inputLine.appendChild(caretSpan);
-      terminal.appendChild(inputLine);
-      scrollToBottom();
-      focusInput();
-    }
-
-    terminalInput.addEventListener('input', () => {
-      currentInput = terminalInput.value;
-      if (inputTextSpan) {
-        inputTextSpan.textContent = currentInput;
-        scrollToBottom();
-      }
-    });
-
-    terminalInput.addEventListener('keydown', (e) => {
-      if (!ws) return;
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const command = currentInput.trim();
-        if (command.toLowerCase() === 'clear') {
-          terminal.innerHTML = '';
-          currentInput = '';
-          terminalInput.value = '';
-          showPrompt();
-          return;
-        }
-        if (command) {
-          lastCommand = command;
-          ws.send(command + '\n');
-        }
-        currentInput = '';
-        terminalInput.value = '';
-        showPrompt();
-      } else if (e.ctrlKey && e.key.toLowerCase() === 'c') {
-        e.preventDefault();
-        ws.send(String.fromCharCode(3));
-      } else if (e.ctrlKey && e.key.toLowerCase() === 'x') {
-        e.preventDefault();
-        ws.send(String.fromCharCode(24));
-      }
-    });
-
-    terminal.addEventListener('click', focusInput);
-    terminal.addEventListener('focus', focusInput);
-
-    document.getElementById('btn-clear').addEventListener('click', () => {
-      terminal.innerHTML = '';
-      currentInput = '';
-      terminalInput.value = '';
-      showPrompt();
-    });
-    document.getElementById('btn-reload').addEventListener('click', loadContainer);
-
-    loadContainer().then(() => {
-      focusInput();
-    });
-  </script>
+  <script src="console.js"></script>
 </body>
 </html>

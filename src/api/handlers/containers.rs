@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use crate::core::container::lifecycle;
 use crate::core::tracking;
+use crate::core::cgroup;
 use std::path::Path;
 
 #[derive(Deserialize)]
@@ -25,6 +26,8 @@ pub struct ContainerInfo {
     pub isolated: bool,
     pub volumes: Vec<(String, String)>,
     pub enviroment: Vec<String>,
+    pub memory_mb: Option<f64>,
+    pub cpu_percent: Option<f64>,
 }
 
 #[derive(Debug)]
@@ -41,6 +44,34 @@ pub async fn list_containers() -> Result<impl warp::Reply, warp::Rejection> {
         Vec::new()
     } else {
         let containers: Vec<ContainerInfo> = entries.into_iter().map(|entry| {
+            // Get memory stats from cgroup if container is running
+            let memory_mb = if entry.pid > 0 {
+                // Try cgroup first
+                let mem_bytes = cgroup::get_memory_stats(&entry.name)
+                    .ok()
+                    .map(|stats| stats.current_bytes)
+                    .unwrap_or(0);
+                
+                // If cgroup returns 0, fall back to /proc
+                if mem_bytes > 0 {
+                    Some(mem_bytes as f64 / (1024.0 * 1024.0))
+                } else {
+                    cgroup::get_memory_from_proc(entry.pid)
+                        .ok()
+                        .filter(|&bytes| bytes > 0)
+                        .map(|bytes| bytes as f64 / (1024.0 * 1024.0))
+                }
+            } else {
+                None
+            };
+            
+            // Get CPU usage percentage
+            let cpu_percent = if entry.pid > 0 {
+                cgroup::get_cpu_from_proc(entry.pid).ok()
+            } else {
+                None
+            };
+            
             ContainerInfo {
                 name: entry.name.clone(),
                 pid: entry.pid,
@@ -52,6 +83,8 @@ pub async fn list_containers() -> Result<impl warp::Reply, warp::Rejection> {
                 isolated: entry.isolated,
                 volumes: entry.volumes.clone(),
                 enviroment: entry.env_vars.clone(),
+                memory_mb,
+                cpu_percent,
             }
         }).collect();
         containers
@@ -77,6 +110,8 @@ pub async fn stop_container(params: CommandParams) -> Result<impl warp::Reply, w
                 isolated: false,
                 volumes: Vec::new(),
                 enviroment: Vec::new(),
+                memory_mb: None,
+                cpu_percent: None,
             }],
         }))
     } else {
@@ -109,6 +144,8 @@ pub async fn start_container(params: CommandParams) -> Result<impl warp::Reply, 
                     isolated: entry.isolated,
                     volumes: entry.volumes.clone(),
                     enviroment: entry.env_vars.clone(),
+                    memory_mb: cgroup::get_memory_stats(&entry.name).ok().map(|s| s.current_mb()),
+                    cpu_percent: cgroup::get_cpu_from_proc(entry.pid).ok(),
                 }],
             }));
         } else if entry.pid == -1 {
@@ -124,6 +161,8 @@ pub async fn start_container(params: CommandParams) -> Result<impl warp::Reply, 
                     isolated: entry.isolated,
                     volumes: entry.volumes.clone(),
                     enviroment: entry.env_vars.clone(),
+                    memory_mb: None,
+                cpu_percent: None,
                 }],
             }));
         } else {
@@ -150,6 +189,8 @@ pub async fn start_container(params: CommandParams) -> Result<impl warp::Reply, 
                     isolated: entry.isolated,
                     volumes: entry.volumes.clone(),
                     enviroment: entry.env_vars.clone(),
+                    memory_mb: None,
+                cpu_percent: None,
                 }],
             }));
         }
@@ -167,6 +208,8 @@ pub async fn start_container(params: CommandParams) -> Result<impl warp::Reply, 
             isolated: false,
             volumes: Vec::new(),
             enviroment: Vec::new(),
+            memory_mb: None,
+                cpu_percent: None,
         }],
     }))
 }
@@ -189,6 +232,8 @@ pub async fn delete_container(params: CommandParams) -> Result<impl warp::Reply,
             isolated: false,
             volumes: Vec::new(),
             enviroment: Vec::new(),
+            memory_mb: None,
+                cpu_percent: None,
         }],
     }))
 }
@@ -210,6 +255,8 @@ pub async fn container_info(params: CommandParams) -> Result<impl warp::Reply, w
                 isolated: entry.isolated,
                 volumes: entry.volumes.clone(),
                 enviroment: entry.env_vars.clone(),
+                memory_mb: if entry.pid > 0 { cgroup::get_memory_stats(&entry.name).ok().map(|s| s.current_mb()) } else { None },
+                cpu_percent: if entry.pid > 0 { cgroup::get_cpu_from_proc(entry.pid).ok() } else { None },
             }],
         }))
     } else {

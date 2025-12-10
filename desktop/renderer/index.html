@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; connect-src 'self' http://127.0.0.1:3030 ws://127.0.0.1:3030;">
+  <title>Qube Desktop</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="title">
+      <img src="logo.png" alt="Qube" onerror="this.style.display='none'">
+      Qube Desktop
+    </div>
+    <div class="search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search containers...">
+    </div>
+    <div class="icons">
+      <button class="pill-button" title="Settings"><i class="fa-solid fa-gear"></i></button>
+    </div>
+  </div>
+
+  <div class="container">
+    <aside class="sidebar">
+      <ul>
+        <li class="active" data-target="section-containers">
+          <i class="fa-solid fa-box"></i> Containers
+        </li>
+        <li data-target="section-images">
+          <i class="fa-solid fa-layer-group"></i> Images
+        </li>
+        <li data-target="section-volumes">
+          <i class="fa-solid fa-database"></i> Volumes
+        </li>
+        <li data-target="section-dev">
+          <i class="fa-solid fa-code"></i> Dev Environments
+        </li>
+      </ul>
+    </aside>
+
+    <div class="main-content">
+      <!-- Containers Section -->
+      <section id="section-containers" class="section active">
+        <div class="hero">
+          <h1>Containers</h1>
+          <p>View and manage your container instances</p>
+          <div class="hero-actions">
+            <button class="btn-primary"><i class="fa-solid fa-plus"></i> Create</button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h4>Running</h4>
+            <div class="value" id="stat-running">—</div>
+            <small>Active containers</small>
+          </div>
+          <div class="stat-card">
+            <h4>Images</h4>
+            <div class="value" id="stat-images">—</div>
+            <small>Available images</small>
+          </div>
+          <div class="stat-card">
+            <h4>CPU Usage</h4>
+            <div class="value">—</div>
+            <small>Across all containers</small>
+          </div>
+          <div class="stat-card">
+            <h4>Memory</h4>
+            <div class="value">—</div>
+            <small>Total used</small>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h3>Containers</h3>
+              <span class="badge">Live</span>
+            </div>
+            <div class="quick-actions">
+              <button class="pill-button" title="Refresh"><i class="fa-solid fa-rotate"></i></button>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Image</th>
+                <th>PID</th>
+                <th>Uptime</th>
+                <th>Ports</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="containers-body">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Images Section -->
+      <section id="section-images" class="section">
+        <div class="hero">
+          <h1>Images</h1>
+          <p>Manage container images</p>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Available Images</h3>
+          </div>
+          <table class="container-table">
+            <thead>
+              <tr>
+                <th>Image Name</th>
+                <th>Size</th>
+                <th>Path</th>
+              </tr>
+            </thead>
+            <tbody id="images-table-body">
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Volumes Section -->
+      <section id="section-volumes" class="section">
+        <div class="hero">
+          <h1>Volumes</h1>
+          <p>Manage persistent storage volumes</p>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Volumes</h3>
+          </div>
+          <table class="container-table">
+            <thead>
+              <tr>
+                <th>Volume Name</th>
+                <th>Container</th>
+                <th>Host Path</th>
+                <th>Container Path</th>
+              </tr>
+            </thead>
+            <tbody id="volumes-table-body">
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Dev Environments Section -->
+      <section id="section-dev" class="section">
+        <div class="hero">
+          <h1>Dev Environments</h1>
+          <p>Quick development environment setups</p>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Environments</h3>
+          </div>
+          <div style="padding: 40px; text-align: center; color: var(--text-secondary);">
+            <i class="fa-solid fa-code" style="font-size: 48px; opacity: 0.3; margin-bottom: 16px;"></i>
+            <p>Dev environments coming soon</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

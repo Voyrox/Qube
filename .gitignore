@@ -19,5 +19,6 @@ Cargo.lock
 /target
 ubuntu24default.tar.xz
 /tools/wasm-sample/node_modules
+/desktop/node_modules
 /docs/_site
 /docs/.jekyll-cache

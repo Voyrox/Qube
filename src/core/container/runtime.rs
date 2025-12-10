@@ -149,7 +149,12 @@ fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _im
     
     std::env::set_current_dir(&crate::core::container::fs::get_rootfs(cid)).unwrap();
     nix::unistd::chroot(".").unwrap();
-    nix::unistd::chdir("/home").unwrap();
+    
+    // Try to change to /workspace, fallback to / if it doesn't exist
+    if let Err(e) = nix::unistd::chdir("/workspace") {
+        eprintln!("Warning: Failed to chdir to /workspace: {:?}. Using / instead.", e);
+        nix::unistd::chdir("/").unwrap();
+    }
 
     unsafe {
         signal::signal(Signal::SIGTERM, signal::SigHandler::Handler(signal_handler)).unwrap();

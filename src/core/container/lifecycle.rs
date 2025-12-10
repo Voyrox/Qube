@@ -159,20 +159,11 @@ pub fn list_containers() {
 
 pub fn stop_container(pid: i32) {
     if let Some(entry) = crate::core::tracking::get_all_tracked_entries().iter().find(|e| e.pid == pid) {
+        let container_name = entry.name.clone();
         kill_container(pid);
-        crate::core::tracking::update_container_pid(
-            &entry.name,
-            -2,
-            &entry.dir,
-            &entry.command,
-            &entry.image,
-            &entry.ports,
-            entry.isolated,
-            &entry.volumes,
-            &entry.env_vars,
-        );
-        crate::core::tracking::remove_container_from_tracking(pid);
-        println!("Container {} has been fully removed and marked as stopped.", pid);
+        // Remove from tracking instead of updating to -2
+        crate::core::tracking::remove_container_from_tracking_by_name(&container_name);
+        println!("Container {} (PID: {}) has been stopped and removed from tracking.", container_name, pid);
     } else {
         eprintln!("No container found with PID: {}", pid);
     }

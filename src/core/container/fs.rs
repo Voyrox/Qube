@@ -46,16 +46,31 @@ pub fn prepare_rootfs_dir(cid: &str) {
 }
 
 pub fn copy_directory_into_home(cid: &str, work_dir: &str) {
-    let home_path = format!("{}/home", get_rootfs(cid));
-    if !Path::new(&home_path).exists() {
-        fs::create_dir_all(&home_path).ok();
+    let workspace_path = format!("{}/workspace", get_rootfs(cid));
+    if !Path::new(&workspace_path).exists() {
+        fs::create_dir_all(&workspace_path).ok();
     }
-    let status = Command::new("cp")
-        .args(["-r", &format!("{}/.", work_dir), &home_path])
+    
+    // Use rsync or find to copy only the contents, not the parent directory structure
+    // First, try with rsync (more reliable)
+    let rsync_status = Command::new("rsync")
+        .args(["-a", "--exclude=.git", &format!("{}/", work_dir), &format!("{}/", workspace_path)])
+        .status();
+    
+    if let Ok(status) = rsync_status {
+        if status.success() {
+            return;
+        }
+    }
+    
+    // Fallback to cp with a different approach - copy contents only
+    let status = Command::new("sh")
+        .arg("-c")
+        .arg(format!("cp -rT {} {}", work_dir, workspace_path))
         .status()
         .unwrap();
     if !status.success() {
-        eprintln!("Warning: copying {} -> {} failed.", work_dir, home_path);
+        eprintln!("Warning: copying {} -> {} failed.", work_dir, workspace_path);
     }
 }
 

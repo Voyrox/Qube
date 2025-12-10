@@ -20,7 +20,7 @@ Qube aims to provide a lightweight, secure, and efficient container runtime. Rus
 > [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/containers/Qube?quickstart=1)
 > ```console
 > $ cargo build --release
-> $ sudo ln -s /mnt/e/Github/Qube/target/release/Qube /usr/local/bin/Qube
+> $ sudo rm /usr/local/bin/Qube && sudo ln -s /media/ewen/games-github/Linux/Github/Qube/target/release/Qube /usr/local/bin/Qube
 > $ cp qubed.service /etc/systemd/system/qubed.service
 > $ systemctl daemon-reload
 > ```

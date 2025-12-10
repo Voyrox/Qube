@@ -26,6 +26,14 @@ pub fn start_server() {
         .and(warp::body::json())
         .and_then(handlers::container_info);
 
+    let images = warp::path("images")
+        .and(warp::get())
+        .and_then(handlers::list_images);
+
+    let volumes = warp::path("volumes")
+        .and(warp::get())
+        .and_then(handlers::list_volumes);
+
     let eval_ws_route = handlers::eval_ws_filter();
 
     let routes = eval_ws_route
@@ -34,6 +42,8 @@ pub fn start_server() {
         .or(start)
         .or(delete)
         .or(info)
+        .or(images)
+        .or(volumes)
         .with(warp::cors().allow_any_origin());
 
     tokio::runtime::Runtime::new().unwrap().block_on(async {

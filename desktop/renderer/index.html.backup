@@ -2,41 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Qube Desktop (Beta)</title>
-  <script src="script.js"></script>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; connect-src 'self' http://127.0.0.1:3030 ws://127.0.0.1:3030;">
+  <title>Qube Desktop</title>
+  <script src="script.js" defer></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap">
   <style>
     :root {
-      --bg: rgb(0, 0, 0);
-      --panel: rgba(14, 18, 26, 0.72);
-      --border: rgba(255, 255, 255, 0.06);
-      --text: #e9f0ff;
-      --muted: #9fb2c8;
-      --accent: #32e0ff;
-      --accent-2: #7c5dff;
-      --glow: 0 10px 30px rgba(50, 224, 255, 0.25);
-      --radius: 14px;
+      --bg: #1e1e1e;
+      --bg-light: #252526;
+      --bg-lighter: #2d2d30;
+      --panel: #252526;
+      --border: #3e3e42;
+      --text: #cccccc;
+      --text-secondary: #999999;
+      --accent: #0066ff;
+      --accent-hover: #0052cc;
+      --success: #107c10;
+      --danger: #c50f1f;
+      --warning: #ca5010;
+      --radius: 4px;
     }
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
       padding: 0;
-      font-family: 'Space Grotesk', Arial, sans-serif;
-      background: radial-gradient(circle at 15% 20%, rgba(124, 93, 255, 0.09), transparent 32%),
-          radial-gradient(circle at 85% 10%, rgba(50, 224, 255, 0.08), transparent 35%),
-          radial-gradient(circle at 50% 80%, rgba(38, 153, 255, 0.10), transparent 40%),
-          var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-    }
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(50, 224, 255, 0.06), rgba(124, 93, 255, 0.06));
-      pointer-events: none;
-      mix-blend-mode: screen;
+      font-size: 13px;
+      line-height: 1.5;
     }
 
     .topbar {
@@ -51,6 +46,10 @@
       backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+      -webkit-app-region: drag;
+    }
+    .topbar * {
+      -webkit-app-region: no-drag;
     }
     .title {
       display: flex;
@@ -252,7 +251,7 @@
 </head>
 <body>
   <div class="topbar">
-    <div class="title"><img src="./logo.png" alt="Qube logo"> Qube Desktop</div>
+    <div class="title"><img src="./logo.png" alt="Qube logo" onerror="this.style.display='none'"> Qube Desktop</div>
     <div class="search">
       <i class="fa-solid fa-magnifying-glass"></i>
       <input type="text" placeholder="Search containers, images, volumes...">

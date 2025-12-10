@@ -1,4 +1,11 @@
-const apiBase = 'http://127.0.0.1:3030';
+let apiBase = 'http://127.0.0.1:3030';
+
+// Load API base from Electron settings if available
+if (window.electron) {
+  window.electron.getApiBase().then(base => {
+    if (base) apiBase = base;
+  });
+}
 
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
@@ -85,12 +92,51 @@ function fmtUptime(ts) {
     return `${minutes}m`;
 }
 
-function renderStats(containers) {
+function renderStats(containers, imageCount = 0) {
     const running = containers.filter(c => c.pid && c.pid > 0).length;
-    document.getElementById('stat-running').innerText = running;
-    document.getElementById('stat-running-delta').innerText = 'live';
-    document.getElementById('stat-net').innerText = containers.find(c => c.isolated !== undefined)?.isolated ? 'isolated' : 'shared';
-    document.getElementById('stat-images').innerText = containers.length || '—';
+    const runningEl = document.getElementById('stat-running');
+    const totalEl = document.getElementById('stat-images');
+    
+    if (runningEl) runningEl.innerText = running;
+    if (totalEl) totalEl.innerText = imageCount || '0';
+    
+    // Calculate total memory from running containers
+    const totalMemory = containers
+        .filter(c => c.pid && c.pid > 0 && c.memory_mb)
+        .reduce((sum, c) => sum + c.memory_mb, 0);
+    
+    // Calculate total CPU usage from running containers
+    const totalCpu = containers
+        .filter(c => c.pid && c.pid > 0 && c.cpu_percent)
+        .reduce((sum, c) => sum + c.cpu_percent, 0);
+    
+    const memoryCards = document.querySelectorAll('.stat-card');
+    
+    // Update CPU Usage (card index 2)
+    if (memoryCards[2]) {
+        const cpuValue = memoryCards[2].querySelector('.value');
+        if (cpuValue) {
+            if (totalCpu > 0) {
+                cpuValue.innerText = `${totalCpu.toFixed(1)}%`;
+            } else {
+                cpuValue.innerText = '—';
+            }
+        }
+    }
+    
+    // Update Memory (card index 3)
+    if (memoryCards[3]) {
+        const memValue = memoryCards[3].querySelector('.value');
+        if (memValue) {
+            if (totalMemory > 0) {
+                memValue.innerText = totalMemory >= 1024 
+                    ? `${(totalMemory / 1024).toFixed(1)} GB` 
+                    : `${totalMemory.toFixed(0)} MB`;
+            } else {
+                memValue.innerText = '—';
+            }
+        }
+    }
 }
 
 function renderTable(containers) {
@@ -104,18 +150,14 @@ function renderTable(containers) {
         const statusRunning = c.pid && c.pid > 0;
         const statusSpan = document.createElement('span');
         statusSpan.className = `status ${statusRunning ? 'running' : 'stopped'}`;
-        statusSpan.innerHTML = `<span class="dot ${statusRunning ? 'running' : 'stopped'}"></span> ${statusRunning ? 'running' : 'stopped'}`;
-
+        statusSpan.innerHTML = `<span class="dot ${statusRunning ? 'running' : 'stopped'}"></span> ${statusRunning ? 'Running' : 'Stopped'}`;  
         const cells = [
             c.name,
             statusSpan,
             c.image || '—',
             c.pid && c.pid > 0 ? c.pid : '—',
-            '—',
             fmtUptime(c.timestamp),
-            c.ports || 'none',
-            c.isolated ? 'isolated' : 'shared',
-            c.command && c.command.length ? c.command.join(' ') : '—'
+            c.ports || 'none'
         ];
 
         cells.forEach((val, idx) => {
@@ -131,7 +173,7 @@ function renderTable(containers) {
         termBtn.className = 'pill-button';
         termBtn.innerHTML = '<i class="fa-solid fa-terminal"></i>';
         termBtn.title = 'Open console';
-        termBtn.onclick = (e) => { e.stopPropagation(); window.location.href = `/console.html?name=${encodeURIComponent(c.name)}`; };
+        termBtn.onclick = (e) => { e.stopPropagation(); window.location.href = `console.html?name=${encodeURIComponent(c.name)}`; };
         actions.appendChild(termBtn);
         
         const ctrlBtn = document.createElement('button');
@@ -157,10 +199,101 @@ async function loadDashboard() {
         const res = await fetch(`${apiBase}/list`);
         const data = await res.json();
         const containers = data.containers || [];
-        renderStats(containers);
+        
+        // Also fetch images count for stats
+        const imagesRes = await fetch(`${apiBase}/images`);
+        const images = await imagesRes.json();
+        
+        renderStats(containers, images.length);
         renderTable(containers);
     } catch (e) {
         console.error('dashboard load failed', e);
+    }
+}
+
+async function loadImages() {
+    try {
+        const res = await fetch(`${apiBase}/images`);
+        const images = await res.json();
+        const tbody = document.getElementById('images-table-body');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (images.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="3" style="text-align: center; color: var(--text-secondary); padding: 40px;">No images found</td>';
+            tbody.appendChild(tr);
+            return;
+        }
+        
+        images.forEach(img => {
+            const tr = document.createElement('tr');
+            
+            const nameCell = document.createElement('td');
+            nameCell.textContent = img.name;
+            tr.appendChild(nameCell);
+            
+            const sizeCell = document.createElement('td');
+            sizeCell.textContent = `${img.size_mb.toFixed(2)} MB`;
+            tr.appendChild(sizeCell);
+            
+            const pathCell = document.createElement('td');
+            pathCell.textContent = img.path;
+            pathCell.style.fontSize = '12px';
+            pathCell.style.color = 'var(--text-secondary)';
+            tr.appendChild(pathCell);
+            
+            tbody.appendChild(tr);
+        });
+    } catch (e) {
+        console.error('images load failed', e);
+    }
+}
+
+async function loadVolumes() {
+    try {
+        const res = await fetch(`${apiBase}/volumes`);
+        const volumes = await res.json();
+        const tbody = document.getElementById('volumes-table-body');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (volumes.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 40px;">No volumes found</td>';
+            tbody.appendChild(tr);
+            return;
+        }
+        
+        volumes.forEach(vol => {
+            const tr = document.createElement('tr');
+            
+            const nameCell = document.createElement('td');
+            nameCell.textContent = vol.name;
+            tr.appendChild(nameCell);
+            
+            const containerCell = document.createElement('td');
+            containerCell.textContent = vol.container;
+            tr.appendChild(containerCell);
+            
+            const hostCell = document.createElement('td');
+            hostCell.textContent = vol.host_path;
+            hostCell.style.fontSize = '12px';
+            hostCell.style.color = 'var(--text-secondary)';
+            tr.appendChild(hostCell);
+            
+            const containerPathCell = document.createElement('td');
+            containerPathCell.textContent = vol.container_path;
+            containerPathCell.style.fontSize = '12px';
+            containerPathCell.style.color = 'var(--text-secondary)';
+            tr.appendChild(containerPathCell);
+            
+            tbody.appendChild(tr);
+        });
+    } catch (e) {
+        console.error('volumes load failed', e);
     }
 }
 
@@ -181,6 +314,13 @@ function setupSidebar() {
             sections.forEach(sec => {
                 if (sec.id === target) sec.classList.add('active'); else sec.classList.remove('active');
             });
+            
+            // Load data for the active section
+            if (target === 'section-images') {
+                loadImages();
+            } else if (target === 'section-volumes') {
+                loadVolumes();
+            }
         });
     });
 }
