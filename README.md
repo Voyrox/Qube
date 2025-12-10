@@ -1,231 +1,255 @@
+# Qube
 [![GitHub contributors](https://img.shields.io/github/contributors/Voyrox/Qube)](https://github.com/Voyrox/Qube/graphs/contributors)
-[![Github CI](https://github.com/Voyrox/Qube/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/Voyrox/Qube/actions)
+[![Github CI](https://github.com/Voyrox/Qube/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/Voyrox/Qube/actions)
 
 <p align="center">
   <img src="./docs/assets/images/logo.png" width="450">
 </p>
 
 ## Features
-- Lightweight and fast container runtime.
-- Written in Rust for memory safety and performance.
-- Supports basic container isolation using Linux namespaces.
+- ✨ Lightweight and fast container runtime
+- 🔒 Linux namespace isolation (PID, Mount, Network, IPC, UTS)
+- 📊 CGroups v2 resource management (memory, CPU)
+- 🚀 Simple CLI interface
+- 🌐 REST API with WebSocket support
+- 🐳 Docker-like workflow
+- 📦 Prebuilt container images
+- 🔧 QML configuration file support
 
-## Motivation
-Qube aims to provide a lightweight, secure, and efficient container runtime. Rust's memory safety and performance make it an ideal choice for implementing container runtimes. Qube is designed to be simple yet powerful, with a focus on extensibility and security.
+## Quick Start
 
-# 🚀 Quick Start
-> [!TIP]
-> You can immediately set up your environment with youki on GitHub Codespaces and try it out.  
->
-> [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/containers/Qube?quickstart=1)
-> ```console
-> $ cargo build --release
-> $ sudo rm /usr/local/bin/Qube && sudo ln -s /media/ewen/games-github/Linux/Github/Qube/target/release/Qube /usr/local/bin/Qube
-> $ cp qubed.service /etc/systemd/system/qubed.service
-> $ systemctl daemon-reload
-> ```
-
-# 📍 Status of Qube
-
-### Manage Containers
-- Run a container
-
-  ### Prebuilt Images
-  - `Ubuntu24_Multi`: A multi-purpose Ubuntu 24.04 container with Node.js, Rust, and Python3 pre-installed.
-  - `Ubuntu24_NODE`: A Node.js container based on Ubuntu 24.04.
-  - `Ubuntu24_RUST`: A Rust container based on Ubuntu 24.04.
-  - `Ubuntu24_PYTHON`: A Python3 container based on Ubuntu 24.04.
-  - `Ubuntu24_GOLANG`: A Go container based on Ubuntu 24.04.
-  - `Ubuntu24_JAVA`: A Java container based on Ubuntu 24.04.
-
-  Registers a container (with a placeholder PID) and starts it automatically via the daemon. | Add `--isolation` to disable the network namespace.
-  ```bash
-  sudo qube run --image Ubuntu24_Multi -cmd "<cmd>"
-  # e.g.
-  sudo qube run --image Ubuntu24_NODE --ports 3000 --cmd "npm i && node index.js"
-  ```
-
-  ### QML File
-  The QML file is used to define the configuration and behavior of your containers. It allows you to specify various settings such as the container's name, image, command, ports, and more. Here is an example of a QML file:
-
-  ```yaml
-  container:
-    # The base system image to use for the container.
-    system: Ubuntu24_NODE
-
-    # Ports to be exposed by the container.
-    ports:
-      - "3000"
-
-    # Command to run inside the container.
-    cmd:
-      - npm install
-      - node index.js
-
-    # Optional: Enable network isolation for the container.
-    isolated: false
-
-    # Optopnal: Add Enviromental variables to the container.
-    enviroment:
-      - SUPER_TOKEN = "1234567890abcdefghijklmnopqrstuvwxyz"
-
-    # Optional: Volumes to mount into the container.
-    volumes:
-      - host_path: "/path/on/host"
-        container_path: "/path/in/container"
-
-    # Optional: Enable debug mode for more verbose output.
-    debug: false
-  ```
-
-  To use the QML file, you need to run the `run` command in the same directory as the QML file. The `run` command will automatically detect the QML file and use it to create the container.
-  ```bash
-  sudo Qube run
-  ```
-  <image src="./images/download.png" style="display: block;margin-left: auto;margin-right: auto;">
-  <image src="./images/image.png" style="display: block;margin-left: auto;margin-right: auto;">
-
-- List running containers
-
-  Displays all tracked containers, along with their PIDs, uptime, and status.
-  ```bash
-  sudo qube list
-  ```
-  
-- Stop a container
-  Immediately Stops a container by sending it a SIGKILL.
-
-  ```bash
-  sudo qube stop <pid|container_name>
-  ```
-
-- Start a container
-  Starts a stopped container.
-
-  ```bash
-  sudo qube start <pid|container_name>
-  ```
-
-- Eval a container
-  
-  Allows you to attach to a container (by name or PID) and run commands as root inside it.
-WARNING: Running commands as root inside a container may alter its configuration and pose security risks. Use with caution!
-
-  ```bash
-  # Launch an interactive shell in the container:
-  sudo qube eval <container_name|pid>
-
-  # Execute a specific command as root in the container:
-  sudo qube eval <container_name|pid> [command]
-  ```
-
-- View container info
-  Shows detailed information about a container, such as its name, PID, working directory, command, timestamp, and uptime.
-
-  ```bash
-  sudo qube info <container_name|pid>
-  ```
-- Snapshot a container
-  Creates a snapshot (a compressed tarball) of the container’s filesystem. The snapshot is stored in the container's working directory.
-
-  ```bash
-  sudo qube snapshot <container_name|pid>
-  ```
-- Run a container based on a dockerfile
-  Creates a container based on a Dockerfile. The container is stored in the containers directory.
-
-  ```bash
-  sudo qube docker
-  ```
-
-# Custom Images 📦
-- Create a custom image
-  Creates a custom image from a container. The image is stored in the images directory.
-
-  ### Default Image
-  - Node.js
-  - Rust
-  - Python3
-
-  #### Options
-  - `INSTALL_NODE=true` Install Node.js and npm.
-  - `INSTALL_RUST=true` Install Rust.
-  - `INSTALL_PYTHON=true` Install Python.
-  - `INSTALL_GOLANG=true` Install Go.
-  - `INSTALL_JAVA=true` Install Java.
-
- ```bash
- INSTALL_<NAME> ./buildIMG/install_and_pack.sh
- ```
-
-### API
-
-#### `/list
-- GET
-- Lists all running containers, along with their PIDs, uptime, and status.
-  - Response: `{"containers": <containers>}`
-  - Example: `curl http://localhost:8080/list`
-
-#### `/stop`
-- POST
-- Stops a container by sending it a SIGKILL.
-  - Request Body: `{"pid": <pid>}`
-  - Response: `{"status": "success"}`
-  - Example: `curl -X POST -d '{"pid": 1234}' http://localhost:8080/stop`
-
-#### `/start`
-- POST
-- Starts a stopped container.
-  - Request Body: `{"pid": <pid>}`
-  - Response: `{"status": "success"}`
-  - Example: `curl -X POST -d '{"pid": 1234}' http://localhost:8080/start`
-
-#### `/eval`
-- POST
-- Allows you to attach to a container (by name or PID) and run commands as root inside it.
-  - Request Body: `{"pid": <pid>, "command": <command>}`
-  - Response: `{"output": <output>}`
-  - Example: `curl -X POST -d '{"pid": 1234, "command": "ls"}' http://localhost:8080/eval`
-
-#### `/info`
-- POST
-  - Shows detailed information about a container, such as its name, PID, working directory, command, timestamp, and uptime.
-    - Request Body: `{"pid": <pid>}`
-    - Response: `{"info": <info>}`
-    - Example: `curl -X POST -d '{"pid": 1234}' http://localhost:8080/info`
-
-#### `/delete`
-- POST
-- Deletes a container and its associated resources.
-  - Request Body: `{"pid": <pid>}`
-  - Response: `{"status": "success"}`
-  - Example: `curl -X POST -d '{"pid": 1234}' http://localhost:8080/delete`
-
-# Dependencies
-Install the required dependencies:
+### Prerequisites
 
 ```bash
-sudo apt-get install -y build-essential libseccomp-dev libssl-dev tar
+# Install Go 1.21+
+sudo apt-get install golang-1.21  # Ubuntu/Debian
+sudo pacman -S go                   # Arch/CachyOS
+
+# Install dependencies
+sudo apt-get install -y build-essential tar rsync
 ```
 
-### Dev Notes
+### Build & Install
 
-#### Building the Docs Site
 ```bash
-bundle install
-bundle exec jekyll serve
+# Clone repository
+git clone https://github.com/Voyrox/Qube
+cd Qube
+
+# Build and install
+make install
+
+# Or use build scripts
+./scripts/build-go.fish --install  # Fish shell
+./scripts/build-go.sh --install    # Bash
 ```
 
-#### Reset testing environment
+### Quick Example
+
 ```bash
-rm -rf /var/lib/Qube/containers.txt && rm -rf /var/tmp/Qube_containers/Qube-
+# Start the daemon
+sudo systemctl start qubed
+
+# Run a Node.js container
+sudo qube run --image Ubuntu24_NODE --ports 3000 --cmd "npm install && npm start"
+
+# List running containers
+sudo qube list
+
+# View container info
+sudo qube info <container_name>
+
+# Stop a container
+sudo qube stop <container_name>
 ```
 
-### Roadmap
-- [ ] Resource Limiting: Add support for limiting CPU, memory, and disk usage. `sudo qube run --image Ubuntu24_Multi --cpu 2 --memory 512M --cmd "npm i && node index.js"`
-- [ ] Restore: Allow users to save the state of a container and revert to it later. `sudo qube snapshot restore <snapshot_id>` | `sudo qube snapshot create <container_name|pid>`
-- [ ] Rootless Containers: Add CLONE_NEWUSER and map UID/GIDs to avoid requiring sudo.
-- [ ] Security: Integrate seccomp, capabilities, and AppArmor/SELinux for enhanced security.
+## Build Commands
 
-### Contributing
-Your ideas and contributions are welcome! Feel free to open issues or submit pull requests.
+```bash
+make build    # Build binary
+make install  # Build and install
+make clean    # Clean build artifacts
+make test     # Run tests
+make daemon   # Run daemon in debug mode
+make deps     # Download dependencies
+make fmt      # Format code
+make lint     # Lint code
+make release  # Build for multiple platforms
+```
+
+## Usage
+
+### Run Container
+
+```bash
+# Basic usage
+sudo qube run --image <image> --cmd "<command>"
+
+# With ports and network isolation
+sudo qube run --image Ubuntu24_NODE --ports 3000 --isolated --cmd "node server.js"
+
+# With environment variables
+sudo qube run --image Ubuntu24_PYTHON --env "DEBUG=true" --cmd "python app.py"
+
+# With volume mounts
+sudo qube run --image Ubuntu24_RUST --volume /host/path:/container/path --cmd "cargo run"
+```
+
+### Using QML Configuration
+
+Create `qube.yml`:
+
+```yaml
+container:
+  system: Ubuntu24_NODE
+  ports:
+    - "3000"
+  cmd:
+    - npm install
+    - node index.js
+  isolated: false
+  environment:
+    API_KEY: "your-key-here"
+  volumes:
+    - host_path: "/data"
+      container_path: "/app/data"
+```
+
+Run with:
+
+```bash
+sudo qube run
+```
+
+### Available Commands
+
+```bash
+qube daemon         # Start daemon
+qube run           # Run container
+qube list          # List containers
+qube stop <id>     # Stop container
+qube start <id>    # Start container
+qube delete <id>   # Delete container
+qube eval <id>     # Execute command in container
+qube info <id>     # Show container info
+qube snapshot <id> # Create snapshot
+```
+
+### Prebuilt Images
+
+- `Ubuntu24_Multi` - Node.js, Rust, Python3
+- `Ubuntu24_NODE` - Node.js
+- `Ubuntu24_RUST` - Rust
+- `Ubuntu24_PYTHON` - Python3
+- `Ubuntu24_GOLANG` - Go
+- `Ubuntu24_JAVA` - Java
+
+## API Endpoints
+
+```bash
+GET  /list              # List containers
+POST /stop              # Stop container
+POST /start             # Start container
+POST /delete            # Delete container
+POST /info              # Container info
+GET  /images            # List images
+GET  /volumes           # List volumes
+WS   /eval              # WebSocket execution
+```
+
+## Project Structure
+
+```
+qube/
+├── cmd/qube/           # Main entry point
+├── internal/
+│   ├── api/            # REST API server
+│   ├── cli/            # CLI commands
+│   ├── config/         # Configuration
+│   ├── core/           # Core functionality
+│   │   ├── cgroup/     # CGroup management
+│   │   ├── tracking/   # State tracking
+│   │   └── container/  # Container ops
+│   └── daemon/         # Daemon
+├── scripts/            # Build scripts
+├── go.mod              # Go dependencies
+└── Makefile            # Build automation
+```
+
+## Development
+
+```bash
+# Format code
+make fmt
+
+# Run linter
+make lint
+
+# Run tests
+make test
+
+# Build with race detector
+make dev
+
+# Start daemon in debug mode
+sudo qube daemon --debug
+```
+
+## System Requirements
+
+- Linux kernel 3.10+
+- CGroups v2 support
+- Root privileges
+- Go 1.21+ (for building)
+
+## Troubleshooting
+
+### Permission Denied
+
+```bash
+# Qube requires root
+sudo qube <command>
+```
+
+### CGroup Errors
+
+```bash
+# Check cgroup version
+mount | grep cgroup
+
+# Should show cgroup2
+```
+
+### Build Errors
+
+```bash
+# Clean and rebuild
+make clean
+make deps
+make build
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Format code (`make fmt`)
+4. Run tests (`make test`)
+5. Commit changes (`git commit -m 'Add amazing feature'`)
+6. Push to branch (`git push origin feature/amazing-feature`)
+7. Open Pull Request
+
+## License
+
+See LICENSE file
+
+## Credits
+
+- Qube team (Voyrox and contributors)
+- Originally written in Rust, rewritten in Go for improved development experience
+
+## Links
+
+- [Documentation](docs/)
+- [Issues](https://github.com/Voyrox/Qube/issues)
+- [Discussions](https://github.com/Voyrox/Qube/discussions)
