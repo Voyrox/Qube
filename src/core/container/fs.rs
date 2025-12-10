@@ -51,8 +51,6 @@ pub fn copy_directory_into_home(cid: &str, work_dir: &str) {
         fs::create_dir_all(&workspace_path).ok();
     }
     
-    // Use rsync or find to copy only the contents, not the parent directory structure
-    // First, try with rsync (more reliable)
     let rsync_status = Command::new("rsync")
         .args(["-a", "--exclude=.git", &format!("{}/", work_dir), &format!("{}/", workspace_path)])
         .status();
@@ -63,7 +61,6 @@ pub fn copy_directory_into_home(cid: &str, work_dir: &str) {
         }
     }
     
-    // Fallback to cp with a different approach - copy contents only
     let status = Command::new("sh")
         .arg("-c")
         .arg(format!("cp -rT {} {}", work_dir, workspace_path))

@@ -67,7 +67,6 @@ pub fn run_container(
         println!("Container filesystem already exists. Skipping build.");
     }
     
-    // Setup cgroup for this container BEFORE forking (must be done as root)
     let cgroup_path = match crate::core::cgroup::setup_cgroup_for_container(&container_id) {
         Ok(path) => {
             if debug {
@@ -94,7 +93,6 @@ pub fn run_container(
             }
             let cpid = i32::from_le_bytes(buf);
             
-            // Add the container process to the cgroup
             if !cgroup_path.is_empty() {
                 if let Err(e) = crate::core::cgroup::add_process_to_cgroup(&cgroup_path, cpid) {
                     eprintln!("Warning: Failed to add process {} to cgroup: {}", cpid, e);
@@ -125,8 +123,6 @@ fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _im
     unshare(flags).unwrap();
     nix::unistd::sethostname("Qube").unwrap();
     
-    // Cgroups are now set up by the parent process before forking
-    // No need to call setup_cgroup2() here anymore
     
     crate::core::container::fs::mount_proc(cid).unwrap();
     
@@ -150,7 +146,6 @@ fn child_container_process(w: RawFd, cid: &str, cmd: &[String], debug: bool, _im
     std::env::set_current_dir(&crate::core::container::fs::get_rootfs(cid)).unwrap();
     nix::unistd::chroot(".").unwrap();
     
-    // Try to change to /workspace, fallback to / if it doesn't exist
     if let Err(e) = nix::unistd::chdir("/workspace") {
         eprintln!("Warning: Failed to chdir to /workspace: {:?}. Using / instead.", e);
         nix::unistd::chdir("/").unwrap();

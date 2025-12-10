@@ -44,15 +44,12 @@ pub async fn list_containers() -> Result<impl warp::Reply, warp::Rejection> {
         Vec::new()
     } else {
         let containers: Vec<ContainerInfo> = entries.into_iter().map(|entry| {
-            // Get memory stats from cgroup if container is running
             let memory_mb = if entry.pid > 0 {
-                // Try cgroup first
                 let mem_bytes = cgroup::get_memory_stats(&entry.name)
                     .ok()
                     .map(|stats| stats.current_bytes)
                     .unwrap_or(0);
                 
-                // If cgroup returns 0, fall back to /proc
                 if mem_bytes > 0 {
                     Some(mem_bytes as f64 / (1024.0 * 1024.0))
                 } else {
@@ -65,7 +62,6 @@ pub async fn list_containers() -> Result<impl warp::Reply, warp::Rejection> {
                 None
             };
             
-            // Get CPU usage percentage
             let cpu_percent = if entry.pid > 0 {
                 cgroup::get_cpu_from_proc(entry.pid).ok()
             } else {

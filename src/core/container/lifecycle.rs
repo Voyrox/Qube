@@ -88,7 +88,6 @@ pub fn list_containers() {
             "exited".yellow()
         };
         
-        // Memory
         let mem = match crate::core::cgroup::get_memory_stats(&entry.name) {
             Ok(s) => {
                 let mb = s.current_mb();
@@ -103,7 +102,6 @@ pub fn list_containers() {
             Err(_) => "─".bright_black(),
         };
         
-        // Uptime
         let uptime = match tracking::get_process_uptime(entry.pid) {
             Ok(u) => {
                 let d = u / 86400;
@@ -123,14 +121,12 @@ pub fn list_containers() {
         let cmd = entry.command.join(" ");
         let truncated = if cmd.len() > 70 { format!("{}...", &cmd[..67]) } else { cmd };
         
-        // Ports
         let ports_str = if entry.ports.is_empty() {
             "none".bright_black()
         } else {
             entry.ports.bright_magenta()
         };
         
-        // Isolation
         let isolation_str = if entry.isolated {
             "isolated".bright_yellow()
         } else {
@@ -161,7 +157,6 @@ pub fn stop_container(pid: i32) {
     if let Some(entry) = crate::core::tracking::get_all_tracked_entries().iter().find(|e| e.pid == pid) {
         let container_name = entry.name.clone();
         kill_container(pid);
-        // Remove from tracking instead of updating to -2
         crate::core::tracking::remove_container_from_tracking_by_name(&container_name);
         println!("Container {} (PID: {}) has been stopped and removed from tracking.", container_name, pid);
     } else {
@@ -176,7 +171,6 @@ pub fn kill_container(pid: i32) {
         return;
     }
     
-    // Get container name before killing for cgroup cleanup
     let container_name = tracking::get_all_tracked_entries()
         .iter()
         .find(|e| e.pid == pid)
@@ -186,7 +180,6 @@ pub fn kill_container(pid: i32) {
         println!("Killed container with PID: {}", pid);
         tracking::remove_container_from_tracking(pid);
         
-        // Clean up cgroup
         if let Some(name) = container_name {
             if let Err(e) = crate::core::cgroup::cleanup_cgroup(&name) {
                 eprintln!("Warning: Failed to cleanup cgroup for {}: {}", name, e);

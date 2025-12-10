@@ -48,7 +48,6 @@ pub fn info_command(args: &[String]) {
             }
             Err(e) => {
                 println!("Memory:      Unable to read cgroup stats ({})", e);
-                // Show manual check hint
                 println!("             Try: cat /sys/fs/cgroup/QubeContainers/{}/memory.current", entry.name);
             }
         }

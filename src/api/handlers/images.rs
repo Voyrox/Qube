@@ -50,7 +50,6 @@ pub struct VolumeInfo {
 }
 
 pub async fn list_volumes() -> Result<impl Reply, Rejection> {
-    // Get volumes from tracked containers
     let containers = tracking::get_all_tracked_entries();
     let mut volumes = Vec::new();
     

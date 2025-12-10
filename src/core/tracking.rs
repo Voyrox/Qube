@@ -25,7 +25,6 @@ fn current_timestamp() -> u64 {
         .as_secs()
 }
 
-/// New format: name|pid|dir|command|timestamp|image|ports|isolated
 pub fn track_container_named(n: &str, p: i32, d: &str, c: Vec<String>, image: &str, ports: &str, isolated: bool, _volumes: &[(String, String)], _env_vars: &[String],) {
     fs::create_dir_all(TRACKING_DIR).ok();
     let timestamp = current_timestamp();
