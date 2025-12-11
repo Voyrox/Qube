@@ -36,7 +36,7 @@ sudo apt-get install -y build-essential tar rsync
 git clone https://github.com/Voyrox/Qube
 cd Qube
 
-# Build and install
+# Build and install (Recommended for all users)
 make install
 
 # Or use build scripts
@@ -45,7 +45,7 @@ make install
 ```
 
 ### Quick Example
-
+![Help cmd](./images/image.png)
 ```bash
 # Start the daemon
 sudo systemctl start qubed
@@ -155,25 +155,6 @@ POST /info              # Container info
 GET  /images            # List images
 GET  /volumes           # List volumes
 WS   /eval              # WebSocket execution
-```
-
-## Project Structure
-
-```
-qube/
-├── cmd/qube/           # Main entry point
-├── internal/
-│   ├── api/            # REST API server
-│   ├── cli/            # CLI commands
-│   ├── config/         # Configuration
-│   ├── core/           # Core functionality
-│   │   ├── cgroup/     # CGroup management
-│   │   ├── tracking/   # State tracking
-│   │   └── container/  # Container ops
-│   └── daemon/         # Daemon
-├── scripts/            # Build scripts
-├── go.mod              # Go dependencies
-└── Makefile            # Build automation
 ```
 
 ## Development

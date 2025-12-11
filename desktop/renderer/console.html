@@ -11,9 +11,9 @@
       background: #0c0c0c;
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      min-height: 320px;
-      height: auto;
-      max-height: calc(100vh - 260px);
+      flex: 1;
+      min-height: 0;
+      height: 100%;
       padding: 12px;
       font-family: "Consolas", "Courier New", monospace;
       color: #cccccc;
@@ -45,7 +45,7 @@
   </style>
   <script src="console.js" defer></script>
 </head>
-<body>
+<body class="console-page">
   <div class="topbar">
     <div class="title">
       <img src="logo.png" alt="Qube" onerror="this.style.display='none'">

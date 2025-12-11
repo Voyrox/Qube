@@ -186,7 +186,8 @@ html, body {
 .main-content { 
   display: flex; 
   flex-direction: column; 
-  gap: 0;
+  gap: 12px;
+  padding: 16px;
   overflow-y: auto;
   background: var(--bg);
 }
@@ -200,12 +201,12 @@ html, body {
 
 .section.active { display: flex; }
 
-.hero {
+.console-page .hero {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px;
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 
 .hero h1 { 
@@ -223,6 +224,13 @@ html, body {
 }
 
 .hero-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
 
 .btn-primary {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-red) 100%);
@@ -259,12 +267,12 @@ html, body {
   border-color: var(--text-secondary);
 }
 
-.stats-grid {
+.console-page .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
-  margin-bottom: 16px;
-}
+  margin-bottom: 0;
+  }
 
 .stat-card {
   background: var(--panel);
@@ -314,6 +322,28 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Terminal scrollbar styling */
+.terminal::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.terminal::-webkit-scrollbar-track {
+  background: #0c0c0c;
+}
+.terminal::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-red) 100%);
+  border-radius: 10px;
+}
+.terminal::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #1f66d0 0%, #c51c1c 100%);
+}
+.terminal {
+  scrollbar-color: var(--accent) #0c0c0c;
+  scrollbar-width: thin;
 }
 
 .panel-header { 
