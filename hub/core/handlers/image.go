@@ -844,7 +844,7 @@ func formatSize(bytes int64) string {
 
 func (h *ImageHandler) List(c *gin.Context) {
 	query := c.Query("query")
-	limit := 20
+	limit := 200
 
 	var images []models.Image
 

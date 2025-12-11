@@ -21,7 +21,7 @@ function updateNavbar() {
     const navAuth = document.getElementById('navAuth');
     const navUser = document.getElementById('navUser');
 
-    if (navAuth || !navUser) {
+    if (!navAuth || !navUser) {
         return; // Page without navbar; skip
     }
 
@@ -216,7 +216,7 @@ async function loadMostPulled() {
         if (response.ok && data.images) {
             const topImages = data.images
                 .sort((a, b) => (b.pulls || 0) - (a.pulls || 0))
-                .slice(0, 4);
+                .slice(0, 6);
             displayImages(topImages, false, 'mostPulledList');
         } else {
             container.innerHTML = '<div class="loading">No images found</div>';
@@ -237,7 +237,7 @@ async function loadTrending() {
         if (response.ok && data.images) {
             const trending = data.images
                 .sort((a, b) => ((b.stars || 0) + (b.downloads || 0)) - ((a.stars || 0) + (a.downloads || 0)))
-                .slice(0, 4);
+                .slice(0, 6);
             displayImages(trending, false, 'trendingList');
         } else {
             container.innerHTML = '<div class="loading">No images found</div>';
