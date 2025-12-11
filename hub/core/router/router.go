@@ -13,7 +13,6 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
 
-	// CORS middleware
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -22,27 +21,20 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 		AllowCredentials: true,
 	}))
 
-	// Serve static files
 	r.Static("/static", "./static")
 	r.LoadHTMLGlob("templates/*")
 
-	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(db, cfg)
 	imageHandler := handlers.NewImageHandler(db, cfg)
 
-	// Home page
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(200, "index.html", gin.H{
 			"title": "Qube Hub",
 		})
 	})
 
-	// Image detail pages (optional auth so owners see Edit)
 	r.GET("/images/:name", middleware.OptionalAuthMiddleware(cfg), imageHandler.DetailLatest)
 	r.GET("/images/:name/:tag", middleware.OptionalAuthMiddleware(cfg), imageHandler.Detail)
-
-	// Image edit (owner only)
-	r.GET("/images/:name/:tag/edit", middleware.AuthMiddleware(cfg), imageHandler.EditForm)
 
 	// Auth page
 	r.GET("/auth", func(c *gin.Context) {
@@ -74,6 +66,7 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 		api.GET("/images", imageHandler.List)
 		api.GET("/images/:name", imageHandler.GetByName)
 		api.GET("/images/:name/:tag/download", imageHandler.Download)
+		api.GET("/images/:name/:tag/logo", imageHandler.Logo)
 		api.GET("/download/:name", imageHandler.DownloadLatest)
 		api.GET("/files/:filename", imageHandler.DownloadFile)
 
@@ -90,7 +83,8 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 			protected.DELETE("/images/:id", imageHandler.Delete)
 			protected.POST("/images/:id/star", imageHandler.Star)
 			protected.DELETE("/images/:id/star", imageHandler.Unstar)
-			protected.POST("/images/:name/:tag", imageHandler.UpdateImage)
+			// Use distinct prefix to avoid conflict with existing :id route
+			protected.POST("/images/by-name/:name/:tag", imageHandler.UpdateImage)
 		}
 	}
 

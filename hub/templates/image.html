@@ -26,14 +26,17 @@
   <div class="container main-content">
     <section class="section image-detail">
       <div class="image-header">
-        {{ if .image.LogoPath }}
-          <img class="image-logo" src="{{ .image.LogoPath }}" alt="{{ .image.Name }} logo">
-        {{ else }}
-          <div class="image-logo-placeholder">🧊</div>
-        {{ end }}
+        <img class="image-logo" src="/api/images/{{ .image.Name }}/{{ .image.Tag }}/logo" alt="{{ .image.Name }} logo" onerror="this.outerHTML='\\u003cdiv class=\'image-logo-placeholder\'\\u003e🧊\\u003c/div\\u003e'">
         <div class="image-title">
           <h2>{{ .owner_username }}/{{ .image.Name }}</h2>
-          <span class="tag">{{ .image.Tag }}</span>
+          <div>
+            <span class="tag">{{ .image.Tag }}</span>
+            {{ if .aliases }}
+              {{ range .aliases }}
+                <span class="tag">{{ . }}</span>
+              {{ end }}
+            {{ end }}
+          </div>
         </div>
       </div>
       <br>
@@ -46,12 +49,38 @@
             <span>Size: {{ if .size_formatted }}{{ .size_formatted }}{{ else }}{{ .image.Size }}{{ end }}</span>
           </div>
           <div class="separator"></div>
-          <div>
-            <p>{{ .image.Description }}</p>
+          <div id="imageDescriptionView">
+            <div class="markdown">
+              {{ .description_html }}
+            </div>
           </div>
-          <div class="form-actions" style="margin-top: 20px;">
+          <div id="inlineEditPanel" style="display:none; margin-top:12px;">
+            <div class="form-group">
+              <label>Tags</label>
+              <input id="inlineEditTags" type="text" placeholder="e.g. latest, v1.0, stable" value="{{ .image.Tag }}{{ range $i, $v := .aliases }}, {{ $v }}{{ end }}" />
+              <div class="sidebar-note">Separate multiple tags with commas. First tag becomes primary.</div>
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea id="inlineEditDescription" rows="4" placeholder="Describe your image...">{{ .image.Description }}</textarea>
+            </div>
+            <div class="form-group">
+              <label class="checkbox-label"><input type="checkbox" id="inlineEditPublic" {{ if .image.IsPublic }}checked{{ end }}> <span>Public</span></label>
+            </div>
+            <div class="form-group">
+              <label>Logo (PNG)</label>
+              <div class="file-input-wrapper">
+                <input type="file" id="inlineEditLogo" accept=".png">
+                <div class="file-input-label">Click to select logo</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top: 20px; gap:8px;">
             <a class="btn-secondary" href="/api/images/{{ .image.Name }}/{{ .image.Tag }}/download">Download</a>
-            <a id="editButton" class="btn-primary" href="/images/{{ .image.Name }}/{{ .image.Tag }}/edit" style="border-radius:6px; display:none;">Edit</a>
+            <a id="editButton" class="btn-primary" href="#" style="border-radius:6px; display:none;">Edit</a>
+            <button id="saveEditBtn" class="btn-primary" style="display:none;" type="button">Save</button>
+            <button id="cancelEditBtn" class="btn-secondary" style="display:none;" type="button">Cancel</button>
+            <button id="deleteImageBtn" class="delete" style="display:none; margin-left:auto; background:#dc2626; color:#fff; border:0; border-radius:6px; padding:10px 14px;" type="button" data-image-id="{{ .image.ID }}">Delete</button>
           </div>
         </div>
         <aside class="image-sidebar">
@@ -68,7 +97,14 @@
             <div class="sidebar-item"><span>Last updated</span><strong><span id="lastUpdatedSidebar" data-date="{{ .image.LastUpdated }}">{{ .image.LastUpdated }}</span></strong></div>
           </div>
           <div class="sidebar-actions">
-            <a class="btn-primary" href="#" style="width:100%; border-radius:6px;">Run in Qube Desktop</a>
+            <a class="btn-primary" href="#" style="width:100%; border-radius:6px; position:relative; padding-left:36px;">
+              <span aria-hidden="true" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); display:inline-flex; align-items:center;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </span>
+              Run in Qube Desktop
+            </a>
             <p class="sidebar-note">Requires Qube Desktop 1.00.0 or later.</p>
           </div>
           <h4>Recent tags</h4>
@@ -134,18 +170,84 @@
       }).catch(()=>{});
     }
 
-    // Show Edit if owner_username == current user
+    // Inline Edit: show controls for owners, handle save
     (function(){
       try {
         const ownerEl = document.getElementById('ownerUsername');
         const editBtn = document.getElementById('editButton');
-        if (!ownerEl || !editBtn) return;
+        const saveBtn = document.getElementById('saveEditBtn');
+        const cancelBtn = document.getElementById('cancelEditBtn');
+        const deleteBtn = document.getElementById('deleteImageBtn');
+        const panel = document.getElementById('inlineEditPanel');
+        const descView = document.getElementById('imageDescriptionView');
+        if (!ownerEl || !editBtn || !panel || !descView) return;
         const owner = ownerEl.getAttribute('data-owner');
         const userStr = localStorage.getItem('user');
         if (!userStr) return;
         const user = JSON.parse(userStr);
         if (user && user.username && owner && user.username.toLowerCase() === owner.toLowerCase()) {
           editBtn.style.display = 'inline-block';
+          if (deleteBtn) deleteBtn.style.display = 'inline-block';
+          // toggle edit mode
+          function setEditMode(on){
+            panel.style.display = on ? 'block' : 'none';
+            saveBtn.style.display = on ? 'inline-block' : 'none';
+            cancelBtn.style.display = on ? 'inline-block' : 'none';
+            descView.style.display = on ? 'none' : 'block';
+          }
+          editBtn.addEventListener('click', function(e){ e.preventDefault(); setEditMode(true); });
+          cancelBtn.addEventListener('click', function(){ setEditMode(false); });
+
+          // save handler
+          saveBtn.addEventListener('click', async function(){
+            const token = localStorage.getItem('token');
+            if (!token) { alert('Please login to save changes.'); return; }
+            const description = document.getElementById('inlineEditDescription').value;
+            const tagsStr = (document.getElementById('inlineEditTags').value || '').trim();
+            const newTag = tagsStr.split(',')[0]?.trim() || '';
+            const isPublic = document.getElementById('inlineEditPublic').checked;
+            const logo = document.getElementById('inlineEditLogo').files[0];
+            const fd = new FormData();
+            if (description != null) fd.append('description', description);
+            fd.append('is_public', isPublic ? 'true' : 'false');
+            if (tagsStr) fd.append('tags', tagsStr);
+            if (newTag && newTag !== '{{ .image.Tag }}') fd.append('new_tag', newTag);
+            if (logo) fd.append('logo', logo);
+            const url = '/api/images/by-name/{{ .image.Name }}/{{ .image.Tag }}';
+            try {
+              const resp = await fetch(url, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd });
+              const data = await resp.json().catch(()=>({}));
+              if (resp.ok) {
+                const nextTag = (data && data.image && data.image.tag) || newTag || '{{ .image.Tag }}';
+                window.location.href = '/images/{{ .image.Name }}/' + encodeURIComponent(nextTag);
+              } else {
+                alert((data && data.error) || 'Failed to update image');
+              }
+            } catch (e) {
+              alert('Network error');
+            }
+          });
+
+          // delete handler
+          if (deleteBtn) {
+            deleteBtn.addEventListener('click', async function(){
+              if (!confirm('Delete this image? This cannot be undone.')) return;
+              const token = localStorage.getItem('token');
+              if (!token) { alert('Please login to delete.'); return; }
+              const imageId = deleteBtn.getAttribute('data-image-id');
+              try {
+                const resp = await fetch('/api/images/' + encodeURIComponent(imageId), { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+                if (resp.ok) {
+                  window.location.href = '/';
+                } else {
+                  const d = await resp.json().catch(()=>({}));
+                  alert((d && d.error) || 'Failed to delete image');
+                }
+              } catch (e) {
+                alert('Network error');
+              }
+            });
+          }
         }
       } catch {}
     })();

@@ -1,6 +1,6 @@
 module github.com/Voyrox/Qube/hub
 
-go 1.21.0
+go 1.22
 
 require (
 	github.com/gin-contrib/cors v1.7.2
@@ -8,10 +8,13 @@ require (
 	github.com/gocql/gocql v1.7.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/joho/godotenv v1.5.1
+	github.com/microcosm-cc/bluemonday v1.0.27
+	github.com/yuin/goldmark v1.7.13
 	golang.org/x/crypto v0.31.0
 )
 
 require (
+	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
@@ -23,6 +26,7 @@ require (
 	github.com/go-playground/validator/v10 v10.23.0 // indirect
 	github.com/goccy/go-json v0.10.4 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
+	github.com/gorilla/css v1.0.1 // indirect
 	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect

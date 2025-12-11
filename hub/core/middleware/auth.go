@@ -18,22 +18,32 @@ type Claims struct {
 
 func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Support Authorization header OR cookie "token"
+		tokenString := ""
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
+		if authHeader != "" {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && parts[0] == "Bearer" {
+				tokenString = parts[1]
+			}
+		}
+		if tokenString == "" {
+			// try cookie
+			if cookie, err := c.Cookie("token"); err == nil {
+				tokenString = cookie
+			}
+		}
+		if tokenString == "" {
+			// try query param
+			if qp := c.Query("token"); qp != "" {
+				tokenString = qp
+			}
+		}
+		if tokenString == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
 			c.Abort()
 			return
 		}
-
-		// Extract token from "Bearer <token>"
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
-			c.Abort()
-			return
-		}
-
-		tokenString := parts[1]
 
 		// Parse and validate token
 		token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
@@ -61,19 +71,30 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 
 func OptionalAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Try header then cookie
+		tokenString := ""
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.Next()
-			return
+		if authHeader != "" {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && parts[0] == "Bearer" {
+				tokenString = parts[1]
+			}
 		}
-
-		parts := strings.Split(authHeader, " ")
-		if len(parts) == 2 && parts[0] == "Bearer" {
-			tokenString := parts[1]
+		if tokenString == "" {
+			if cookie, err := c.Cookie("token"); err == nil {
+				tokenString = cookie
+			}
+		}
+		if tokenString == "" {
+			// try query param
+			if qp := c.Query("token"); qp != "" {
+				tokenString = qp
+			}
+		}
+		if tokenString != "" {
 			token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 				return []byte(cfg.JWTSecret), nil
 			})
-
 			if err == nil && token.Valid {
 				if claims, ok := token.Claims.(*Claims); ok {
 					c.Set("user_id", claims.UserID)

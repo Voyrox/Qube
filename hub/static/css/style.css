@@ -462,6 +462,8 @@ body {
 .image-logo-placeholder { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--bg-tertiary); color: var(--text-secondary); }
 .image-title { display: flex; flex-direction: column; }
 .stats-row { display: flex; gap: 12px; justify-content: flex-start; }
+/* Inline tag row in cards */
+.image-card .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 
 .tag {
     display: inline-flex;
@@ -816,24 +818,60 @@ body {
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
-    color: var(--text-color);
+    color: var(--text-primary);
 }
 
 .form-group input,
 .form-group textarea {
     width: 100%;
-    padding: 0.8rem;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    background: var(--dark-bg);
-    color: var(--text-color);
-    font-size: 1rem;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 15px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--text-tertiary);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--primary-light);
 }
 
 .form-group textarea {
     min-height: 100px;
     resize: vertical;
 }
+
+/* Markdown rendering styles */
+.markdown {
+    line-height: 1.7;
+    color: var(--text-primary);
+}
+.markdown h1, .markdown h2, .markdown h3, .markdown h4, .markdown h5, .markdown h6 {
+    margin: 0.8em 0 0.4em;
+    line-height: 1.25;
+}
+.markdown p { margin: 0.6em 0; color: var(--text-secondary); }
+.markdown strong { color: var(--text-primary); }
+.markdown code {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.95em;
+    color: var(--text-primary);
+}
+.markdown pre { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; padding: 12px; overflow: auto; }
+.markdown pre code { border: 0; padding: 0; }
 
 form button[type="submit"] {
     width: 100%;

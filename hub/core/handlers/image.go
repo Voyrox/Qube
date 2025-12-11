@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
 	"os"
@@ -16,6 +18,10 @@ import (
 	"github.com/Voyrox/Qube/hub/core/models"
 	"github.com/gin-gonic/gin"
 	"github.com/gocql/gocql"
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
+	mdhtml "github.com/yuin/goldmark/renderer/html"
 )
 
 type ImageHandler struct {
@@ -38,6 +44,21 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Sanitize tag: support comma-separated input; first token is primary
+	req.Tag = strings.TrimSpace(req.Tag)
+	var extraTags []string
+	if strings.Contains(req.Tag, ",") {
+		parts := strings.Split(req.Tag, ",")
+		primary := strings.TrimSpace(parts[0])
+		req.Tag = primary
+		for _, p := range parts[1:] {
+			t := strings.TrimSpace(p)
+			if t != "" && t != primary {
+				extraTags = append(extraTags, t)
+			}
+		}
 	}
 
 	{
@@ -146,6 +167,14 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 		fmt.Printf("Warning: Failed to add tag: %v\n", err)
 	}
 
+	// Insert any extra alias tags
+	for _, t := range extraTags {
+		_ = h.db.Session().Query(
+			`INSERT INTO image_tags (image_id, tag, created_at) VALUES (?, ?, ?)`,
+			image.ID, t, time.Now(),
+		).Exec()
+	}
+
 	c.JSON(http.StatusCreated, image)
 }
 
@@ -161,8 +190,45 @@ func (h *ImageHandler) Download(c *gin.Context) {
 	).Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
 		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
 		&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Image not found"})
-		return
+		// Fallback: resolve via legacy comma-separated tag or alias in image_tags
+		iter := h.db.Session().Query(
+			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+			 FROM images WHERE name = ? ALLOW FILTERING`,
+			name,
+		).Iter()
+		var cand models.Image
+		var found bool
+		for iter.Scan(&cand.ID, &cand.Name, &cand.Tag, &cand.OwnerID, &cand.Description, &cand.Digest,
+			&cand.Size, &cand.Downloads, &cand.Pulls, &cand.Stars, &cand.IsPublic, &cand.FilePath, &cand.LogoPath,
+			&cand.CreatedAt, &cand.UpdatedAt, &cand.LastUpdated) {
+			if strings.Contains(cand.Tag, ",") {
+				parts := strings.Split(cand.Tag, ",")
+				for _, p := range parts {
+					if strings.TrimSpace(p) == tag {
+						image = cand
+						found = true
+						break
+					}
+				}
+				if found {
+					break
+				}
+			}
+			var alias string
+			if err2 := h.db.Session().Query(
+				`SELECT tag FROM image_tags WHERE image_id = ? AND tag = ?`,
+				cand.ID, tag,
+			).Scan(&alias); err2 == nil {
+				image = cand
+				found = true
+				break
+			}
+		}
+		_ = iter.Close()
+		if !found {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Image not found"})
+			return
+		}
 	}
 
 	userID, authenticated := middleware.GetUserID(c)
@@ -190,6 +256,63 @@ func (h *ImageHandler) Download(c *gin.Context) {
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s_%s.tar", image.Name, image.Tag))
 	c.Header("Content-Type", "application/x-tar")
 	c.File(image.FilePath)
+}
+
+func (h *ImageHandler) Logo(c *gin.Context) {
+	name := c.Param("name")
+	tag := c.Param("tag")
+
+	var image models.Image
+	if err := h.db.Session().Query(
+		`SELECT id, tag, logo_path FROM images WHERE name = ? AND tag = ? LIMIT 1 ALLOW FILTERING`,
+		name, tag,
+	).Scan(&image.ID, &image.Tag, &image.LogoPath); err != nil {
+		iter := h.db.Session().Query(
+			`SELECT id, tag, logo_path FROM images WHERE name = ? ALLOW FILTERING`,
+			name,
+		).Iter()
+		var cand models.Image
+		var found bool
+		for iter.Scan(&cand.ID, &cand.Tag, &cand.LogoPath) {
+			if strings.Contains(cand.Tag, ",") {
+				parts := strings.Split(cand.Tag, ",")
+				for _, p := range parts {
+					if strings.TrimSpace(p) == tag {
+						image = cand
+						found = true
+						break
+					}
+				}
+				if found {
+					break
+				}
+			}
+			// Alias lookup in image_tags
+			var alias string
+			if err2 := h.db.Session().Query(
+				`SELECT tag FROM image_tags WHERE image_id = ? AND tag = ?`,
+				cand.ID, tag,
+			).Scan(&alias); err2 == nil {
+				image = cand
+				found = true
+				break
+			}
+		}
+		_ = iter.Close()
+		if !found {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Image not found"})
+			return
+		}
+	}
+
+	if image.LogoPath == "" {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Logo not set"})
+		return
+	}
+
+	// Hint content type for browsers
+	c.Header("Content-Type", "image/png")
+	c.File(image.LogoPath)
 }
 
 func (h *ImageHandler) DownloadLatest(c *gin.Context) {
@@ -261,8 +384,45 @@ func (h *ImageHandler) Detail(c *gin.Context) {
 	).Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
 		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
 		&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated); err != nil {
-		c.String(http.StatusNotFound, "Image not found")
-		return
+		// Fallback: resolve via legacy comma-separated tags or alias table
+		iter := h.db.Session().Query(
+			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+			 FROM images WHERE name = ? ALLOW FILTERING`,
+			name,
+		).Iter()
+		var cand models.Image
+		var found bool
+		for iter.Scan(&cand.ID, &cand.Name, &cand.Tag, &cand.OwnerID, &cand.Description, &cand.Digest,
+			&cand.Size, &cand.Downloads, &cand.Pulls, &cand.Stars, &cand.IsPublic, &cand.FilePath, &cand.LogoPath,
+			&cand.CreatedAt, &cand.UpdatedAt, &cand.LastUpdated) {
+			if strings.Contains(cand.Tag, ",") {
+				parts := strings.Split(cand.Tag, ",")
+				for _, p := range parts {
+					if strings.TrimSpace(p) == tag {
+						image = cand
+						found = true
+						break
+					}
+				}
+				if found {
+					break
+				}
+			}
+			var alias string
+			if err2 := h.db.Session().Query(
+				`SELECT tag FROM image_tags WHERE image_id = ? AND tag = ?`,
+				cand.ID, tag,
+			).Scan(&alias); err2 == nil {
+				image = cand
+				found = true
+				break
+			}
+		}
+		_ = iter.Close()
+		if !found {
+			c.String(http.StatusNotFound, "Image not found")
+			return
+		}
 	}
 
 	// Optional: get owner username
@@ -277,13 +437,50 @@ func (h *ImageHandler) Detail(c *gin.Context) {
 	userID, authenticated := middleware.GetUserID(c)
 	isOwner := authenticated && userID == image.OwnerID
 
+	// Fetch alias tags for this image id (excluding primary)
+	aliases := h.getAliases(image.ID, image.Tag)
+	// Normalize legacy comma-separated tag strings for display
+	if strings.Contains(image.Tag, ",") {
+		parts := strings.Split(image.Tag, ",")
+		primary := strings.TrimSpace(parts[0])
+		extras := []string{}
+		for _, p := range parts[1:] {
+			t := strings.TrimSpace(p)
+			if t != "" {
+				extras = append(extras, t)
+			}
+		}
+		// Merge extras into aliases without duplicates
+		seen := map[string]bool{primary: true}
+		merged := make([]string, 0, len(aliases)+len(extras))
+		for _, a := range aliases {
+			if a != "" && !seen[a] {
+				seen[a] = true
+				merged = append(merged, a)
+			}
+		}
+		for _, e := range extras {
+			if e != "" && !seen[e] {
+				seen[e] = true
+				merged = append(merged, e)
+			}
+		}
+		aliases = merged
+		image.Tag = primary
+	}
+
+	// Render description as sanitized Markdown HTML
+	descHTML := renderMarkdown(image.Description)
+
 	c.HTML(http.StatusOK, "image.html", gin.H{
-		"title":          fmt.Sprintf("%s/%s", ownerUsername, image.Name),
-		"image":          image,
-		"owner_username": ownerUsername,
-		"recent_tags":    h.getRecentTags(image.Name, 8),
-		"size_formatted": formatSize(image.Size),
-		"is_owner":       isOwner,
+		"title":            fmt.Sprintf("%s/%s", ownerUsername, image.Name),
+		"image":            image,
+		"owner_username":   ownerUsername,
+		"recent_tags":      h.getRecentTags(image.Name, 8),
+		"size_formatted":   formatSize(image.Size),
+		"is_owner":         isOwner,
+		"aliases":          aliases,
+		"description_html": descHTML,
 	})
 }
 
@@ -322,14 +519,70 @@ func (h *ImageHandler) DetailLatest(c *gin.Context) {
 	userID, authenticated := middleware.GetUserID(c)
 	isOwner := authenticated && userID == latest.OwnerID
 
+	// Fetch alias tags for this image id (excluding primary)
+	aliases := h.getAliases(latest.ID, latest.Tag)
+	// Normalize legacy comma-separated tag strings for display
+	if strings.Contains(latest.Tag, ",") {
+		parts := strings.Split(latest.Tag, ",")
+		primary := strings.TrimSpace(parts[0])
+		extras := []string{}
+		for _, p := range parts[1:] {
+			t := strings.TrimSpace(p)
+			if t != "" {
+				extras = append(extras, t)
+			}
+		}
+		seen := map[string]bool{primary: true}
+		merged := make([]string, 0, len(aliases)+len(extras))
+		for _, a := range aliases {
+			if a != "" && !seen[a] {
+				seen[a] = true
+				merged = append(merged, a)
+			}
+		}
+		for _, e := range extras {
+			if e != "" && !seen[e] {
+				seen[e] = true
+				merged = append(merged, e)
+			}
+		}
+		aliases = merged
+		latest.Tag = primary
+	}
+
+	// Render description as sanitized Markdown HTML
+	descHTML := renderMarkdown(latest.Description)
+
 	c.HTML(http.StatusOK, "image.html", gin.H{
-		"title":          fmt.Sprintf("%s/%s", ownerUsername, latest.Name),
-		"image":          latest,
-		"owner_username": ownerUsername,
-		"recent_tags":    h.getRecentTags(latest.Name, 8),
-		"size_formatted": formatSize(latest.Size),
-		"is_owner":       isOwner,
+		"title":            fmt.Sprintf("%s/%s", ownerUsername, latest.Name),
+		"image":            latest,
+		"owner_username":   ownerUsername,
+		"recent_tags":      h.getRecentTags(latest.Name, 8),
+		"size_formatted":   formatSize(latest.Size),
+		"is_owner":         isOwner,
+		"aliases":          aliases,
+		"description_html": descHTML,
 	})
+}
+
+// getAliases returns alias tags for an image id excluding the primary
+func (h *ImageHandler) getAliases(imageID gocql.UUID, primary string) []string {
+	iter := h.db.Session().Query(
+		`SELECT tag FROM image_tags WHERE image_id = ?`,
+		imageID,
+	).Iter()
+	var t string
+	var out []string
+	seen := map[string]bool{}
+	seen[primary] = true
+	for iter.Scan(&t) {
+		if t != "" && !seen[t] {
+			out = append(out, t)
+			seen[t] = true
+		}
+	}
+	_ = iter.Close()
+	return out
 }
 
 // EditForm renders the edit form for an image (owner only)
@@ -395,8 +648,47 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 	).Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
 		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
 		&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Image not found"})
-		return
+		// Fallback: resolve legacy comma-separated tags or alias tags
+		iter := h.db.Session().Query(
+			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+			 FROM images WHERE name = ? ALLOW FILTERING`,
+			name,
+		).Iter()
+		var cand models.Image
+		var found bool
+		for iter.Scan(&cand.ID, &cand.Name, &cand.Tag, &cand.OwnerID, &cand.Description, &cand.Digest,
+			&cand.Size, &cand.Downloads, &cand.Pulls, &cand.Stars, &cand.IsPublic, &cand.FilePath, &cand.LogoPath,
+			&cand.CreatedAt, &cand.UpdatedAt, &cand.LastUpdated) {
+			// legacy comma tag match
+			if strings.Contains(cand.Tag, ",") {
+				parts := strings.Split(cand.Tag, ",")
+				for _, p := range parts {
+					if strings.TrimSpace(p) == tag {
+						image = cand
+						found = true
+						break
+					}
+				}
+				if found {
+					break
+				}
+			}
+			// alias table match
+			var alias string
+			if err2 := h.db.Session().Query(
+				`SELECT tag FROM image_tags WHERE image_id = ? AND tag = ?`,
+				cand.ID, tag,
+			).Scan(&alias); err2 == nil {
+				image = cand
+				found = true
+				break
+			}
+		}
+		_ = iter.Close()
+		if !found {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Image not found"})
+			return
+		}
 	}
 
 	if image.OwnerID != userID {
@@ -408,6 +700,8 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 	var req struct {
 		Description string `form:"description" json:"description"`
 		IsPublic    *bool  `form:"is_public" json:"is_public"`
+		NewTag      string `form:"new_tag" json:"new_tag"`
+		Tags        string `form:"tags" json:"tags"`
 	}
 	// Accept multipart or JSON
 	if strings.HasPrefix(c.GetHeader("Content-Type"), "multipart/") {
@@ -424,6 +718,39 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 		image.IsPublic = *req.IsPublic
 	}
 
+	// Handle tag change
+	if req.NewTag != "" && req.NewTag != image.Tag {
+		// Check for conflict
+		var tmp models.Image
+		if err := h.db.Session().Query(
+			`SELECT id FROM images WHERE name = ? AND tag = ? LIMIT 1 ALLOW FILTERING`,
+			image.Name, req.NewTag,
+		).Scan(&tmp.ID); err == nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "Tag already exists for this image name"})
+			return
+		}
+		// Rename file on disk to reflect new tag if present
+		if image.FilePath != "" {
+			dir := filepath.Dir(image.FilePath)
+			newFile := filepath.Join(dir, fmt.Sprintf("%s_%s.tar", image.Name, req.NewTag))
+			if err := os.Rename(image.FilePath, newFile); err == nil {
+				image.FilePath = newFile
+			}
+		}
+		// Update tag
+		oldTag := image.Tag
+		image.Tag = req.NewTag
+		// Update tag table: add new, remove old (best-effort)
+		_ = h.db.Session().Query(
+			`INSERT INTO image_tags (image_id, tag, created_at) VALUES (?, ?, ?)`,
+			image.ID, image.Tag, time.Now(),
+		).Exec()
+		_ = h.db.Session().Query(
+			`DELETE FROM image_tags WHERE image_id = ? AND tag = ?`,
+			image.ID, oldTag,
+		).Exec()
+	}
+
 	// Handle optional logo upload
 	if logoFile, err := c.FormFile("logo"); err == nil {
 		logoFilename := fmt.Sprintf("logo_%s.png", image.ID.String())
@@ -433,12 +760,32 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 		}
 	}
 
+	// Add any additional tags provided (comma-separated)
+	if strings.TrimSpace(req.Tags) != "" {
+		parts := strings.Split(req.Tags, ",")
+		seen := map[string]bool{}
+		for _, p := range parts {
+			t := strings.TrimSpace(p)
+			if t == "" || seen[t] {
+				continue
+			}
+			seen[t] = true
+			if t == image.Tag {
+				continue
+			}
+			_ = h.db.Session().Query(
+				`INSERT INTO image_tags (image_id, tag, created_at) VALUES (?, ?, ?)`,
+				image.ID, t, time.Now(),
+			).Exec()
+		}
+	}
+
 	image.UpdatedAt = time.Now()
 	image.LastUpdated = image.UpdatedAt
 
 	if err := h.db.Session().Query(
-		`UPDATE images SET description = ?, is_public = ?, logo_path = ?, updated_at = ?, last_updated = ? WHERE id = ?`,
-		image.Description, image.IsPublic, image.LogoPath, image.UpdatedAt, image.LastUpdated, image.ID,
+		`UPDATE images SET description = ?, is_public = ?, logo_path = ?, file_path = ?, tag = ?, updated_at = ?, last_updated = ? WHERE id = ?`,
+		image.Description, image.IsPublic, image.LogoPath, image.FilePath, image.Tag, image.UpdatedAt, image.LastUpdated, image.ID,
 	).Exec(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update image"})
 		return
@@ -472,8 +819,32 @@ func (h *ImageHandler) getRecentTags(name string, limit int) []string {
 	sort.Slice(tags, func(i, j int) bool { return tags[i].Last.After(tags[j].Last) })
 
 	out := make([]string, 0, len(tags))
+	seen := map[string]bool{}
 	for _, t := range tags {
-		out = append(out, t.Tag)
+		ts := t.Tag
+		if strings.Contains(ts, ",") {
+			parts := strings.Split(ts, ",")
+			for _, p := range parts {
+				v := strings.TrimSpace(p)
+				if v == "" || seen[v] {
+					continue
+				}
+				seen[v] = true
+				out = append(out, v)
+				if limit > 0 && len(out) >= limit {
+					return out
+				}
+			}
+		} else {
+			v := strings.TrimSpace(ts)
+			if v != "" && !seen[v] {
+				seen[v] = true
+				out = append(out, v)
+				if limit > 0 && len(out) >= limit {
+					return out
+				}
+			}
+		}
 	}
 	return out
 }
@@ -556,6 +927,10 @@ func (h *ImageHandler) List(c *gin.Context) {
 		).Scan(&ownerUsername); err != nil {
 			ownerUsername = "user"
 		}
+		logoURL := ""
+		if img.LogoPath != "" {
+			logoURL = "/api/images/" + img.Name + "/" + img.Tag + "/logo"
+		}
 		enriched = append(enriched, gin.H{
 			"id":             img.ID,
 			"name":           img.Name,
@@ -569,7 +944,7 @@ func (h *ImageHandler) List(c *gin.Context) {
 			"pulls":          img.Pulls,
 			"stars":          img.Stars,
 			"is_public":      img.IsPublic,
-			"logo_path":      img.LogoPath,
+			"logo_path":      logoURL,
 			"created_at":     img.CreatedAt,
 			"updated_at":     img.UpdatedAt,
 			"last_updated":   img.LastUpdated,
@@ -612,6 +987,10 @@ func (h *ImageHandler) GetByName(c *gin.Context) {
 		).Scan(&ownerUsername); err != nil {
 			ownerUsername = "user"
 		}
+		logoURL := ""
+		if img.LogoPath != "" {
+			logoURL = "/api/images/" + img.Name + "/" + img.Tag + "/logo"
+		}
 		enriched = append(enriched, gin.H{
 			"id":             img.ID,
 			"name":           img.Name,
@@ -625,7 +1004,7 @@ func (h *ImageHandler) GetByName(c *gin.Context) {
 			"pulls":          img.Pulls,
 			"stars":          img.Stars,
 			"is_public":      img.IsPublic,
-			"logo_path":      img.LogoPath,
+			"logo_path":      logoURL,
 			"created_at":     img.CreatedAt,
 			"updated_at":     img.UpdatedAt,
 			"last_updated":   img.LastUpdated,
@@ -822,4 +1201,29 @@ func (h *ImageHandler) DownloadFile(c *gin.Context) {
 	c.Header("Content-Type", "application/x-tar")
 
 	io.Copy(c.Writer, file)
+}
+
+// renderMarkdown converts user-provided Markdown to sanitized HTML for safe display
+func renderMarkdown(s string) template.HTML {
+	if strings.TrimSpace(s) == "" {
+		return template.HTML("")
+	}
+	md := goldmark.New(
+		goldmark.WithExtensions(extension.GFM),
+		goldmark.WithRendererOptions(
+			mdhtml.WithHardWraps(),
+			mdhtml.WithUnsafe(), // needed to emit code/pre tags before sanitization
+		),
+	)
+	var buf bytes.Buffer
+	if err := md.Convert([]byte(s), &buf); err != nil {
+		// Fallback to escaped text if parsing fails
+		return template.HTML(template.HTMLEscapeString(s))
+	}
+	// Sanitize HTML output for UGC
+	policy := bluemonday.UGCPolicy()
+	// Allow common code-related tags
+	policy.AllowElements("pre", "code")
+	safe := policy.SanitizeBytes(buf.Bytes())
+	return template.HTML(safe)
 }

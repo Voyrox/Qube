@@ -23,6 +23,10 @@ function updateNavbar() {
     const navAuth = document.getElementById('navAuth');
     const navUser = document.getElementById('navUser');
 
+    if (!navAuth || !navUser) {
+        return; // Page without navbar; skip
+    }
+
     if (token && currentUser) {
         navAuth.style.display = 'none';
         navUser.style.display = 'flex';
@@ -196,6 +200,7 @@ async function handleUpload(e) {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    try { document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; } catch {}
     token = null;
     currentUser = null;
     updateNavbar();
@@ -253,13 +258,22 @@ function displayImages(images, showDelete = false, containerId = 'imagesList') {
         container.innerHTML = '<div class="loading">No images found</div>';
         return;
     }
-    container.innerHTML = images.map(image => `
-        <div class="image-card" onclick="viewImage('${escapeHtml(image.name)}', '${escapeHtml(image.tag)}')">
+    container.innerHTML = images.map(image => {
+        const tagStr = String(image.tag || '').trim();
+        let tagsHtml = '';
+        if (tagStr.includes(',')) {
+            tagsHtml = tagStr.split(',').map(t => t.trim()).filter(Boolean).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join(' ');
+        } else if (tagStr) {
+            tagsHtml = `<span class="tag">${escapeHtml(tagStr)}</span>`;
+        }
+        const firstTag = tagStr.includes(',') ? tagStr.split(',')[0].trim() : tagStr;
+        return `
+        <div class="image-card" onclick="viewImage('${escapeHtml(image.name)}', '${escapeHtml(firstTag)}')">
             <div class="image-header">
                 ${image.logo_path ? `<img src="${image.logo_path}" alt="${escapeHtml(image.name)} logo" class="image-logo">` : '<div class="image-logo-placeholder">🧊</div>'}
                 <div class="image-title">
                     <h3>${escapeHtml((image.owner_username || image.owner_username_fallback || image.owner || 'user'))}/${escapeHtml(image.name)}</h3>
-                    <span class="tag">${escapeHtml(image.tag)}</span>
+                    <div class="tags">${tagsHtml}</div>
                 </div>
             </div>
             <p>${escapeHtml((image.description || 'No description')).slice(0, 30)}</p>
@@ -270,8 +284,8 @@ function displayImages(images, showDelete = false, containerId = 'imagesList') {
                 <span>Last updated: ${formatDate(image.last_updated || image.updated_at)}</span>
             </div>
             ${showDelete ? `<button class="delete" onclick="event.stopPropagation(); deleteImage('${image.id}')">🗑️ Delete</button>` : ''}
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 function viewImage(name, tag) {
@@ -403,10 +417,13 @@ async function handleRegister(e) {
             token = data.token;
             currentUser = data.user;
             localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            try { document.cookie = `token=${token}; path=/; SameSite=Lax`; } catch {}
             document.getElementById('registerModal').style.display = 'none';
             updateNavbar();
             showNotification('Registration successful!', 'success');
-            loadImages();
+            loadMostPulled();
+            loadTrending();
         } else {
             showNotification(data.error || 'Registration failed', 'error');
         }
@@ -436,6 +453,10 @@ async function handleLogin(e) {
             currentUser = data.user;
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(data.user));
+            // Also set auth cookie so HTML routes can see it server-side
+            try {
+                document.cookie = `token=${token}; path=/; SameSite=Lax`;
+            } catch {}
             document.getElementById('loginModal').style.display = 'none';
             updateNavbar();
             showNotification('Login successful!', 'success');
