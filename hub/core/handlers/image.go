@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1039,6 +1040,19 @@ func (h *ImageHandler) GetMyImages(c *gin.Context) {
 		return
 	}
 
+	limit := 20
+	offset := 0
+	if v := strings.TrimSpace(c.Query("limit")); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 200 {
+			limit = n
+		}
+	}
+	if v := strings.TrimSpace(c.Query("offset")); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
+			offset = n
+		}
+	}
+
 	var images []models.Image
 	iter := h.db.Session().Query(
 		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
@@ -1052,13 +1066,42 @@ func (h *ImageHandler) GetMyImages(c *gin.Context) {
 		&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated) {
 		images = append(images, image)
 	}
-
 	if err := iter.Close(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch images"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"images": images})
+	start := offset
+	if start > len(images) {
+		start = len(images)
+	}
+	end := start + limit
+	if end > len(images) {
+		end = len(images)
+	}
+
+	page := images[start:end]
+
+	enriched := make([]gin.H, 0, len(page))
+	for _, img := range page {
+		logoURL := ""
+		if img.LogoPath != "" {
+			logoURL = "/api/images/" + img.Name + "/" + img.Tag + "/logo"
+		}
+		enriched = append(enriched, gin.H{
+			"id":           img.ID,
+			"name":         img.Name,
+			"tag":          img.Tag,
+			"description":  img.Description,
+			"is_public":    img.IsPublic,
+			"logo_path":    logoURL,
+			"created_at":   img.CreatedAt,
+			"updated_at":   img.UpdatedAt,
+			"last_updated": img.LastUpdated,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"images": enriched, "total": len(images), "limit": limit, "offset": offset})
 }
 
 func (h *ImageHandler) Star(c *gin.Context) {

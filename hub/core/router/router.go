@@ -33,6 +33,14 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 		})
 	})
 
+	r.GET("/profile", middleware.OptionalAuthMiddleware(cfg), func(c *gin.Context) {
+		c.HTML(200, "profile.html", gin.H{"title": "My Profile"})
+	})
+
+	r.GET("/settings", middleware.OptionalAuthMiddleware(cfg), func(c *gin.Context) {
+		c.HTML(200, "settings.html", gin.H{"title": "Settings"})
+	})
+
 	r.GET("/images/:name", middleware.OptionalAuthMiddleware(cfg), imageHandler.DetailLatest)
 	r.GET("/images/:name/:tag", middleware.OptionalAuthMiddleware(cfg), imageHandler.Detail)
 
@@ -58,6 +66,7 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 	{
 		api.POST("/auth/register", authHandler.Register)
 		api.POST("/auth/login", authHandler.Login)
+		api.POST("/auth/update", middleware.AuthMiddleware(cfg), authHandler.UpdateProfile)
 
 		// Image public routes (with optional auth)
 		api.GET("/images", imageHandler.List)

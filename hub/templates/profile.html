@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ .title }} - Qube Hub</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-brand">
+        <img src="/static/logo.png" alt="Qube Logo" width="28" height="28">
+        <span>Qube Hub</span>
+      </div>
+      <div class="nav-menu">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/explore" class="nav-link">Explore</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>My Images</h1>
+    <table class="images-table" id="myImagesTable">
+      <thead>
+        <tr>
+          <th>Logo</th>
+          <th>Name</th>
+          <th>Tags</th>
+          <th>Updated</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="myImages"></tbody>
+    </table>
+    <div class="pager">
+      <button id="prevBtn" class="btn">Prev</button>
+      <span id="pageInfo"></span>
+      <button id="nextBtn" class="btn">Next</button>
+    </div>
+    <div class="section-header">
+      <div>
+        <p class="section-subtitle">Your uploaded images with tags and last updates.</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const token = localStorage.getItem('token');
+  let offset = 0; const limit = 20; let total = 0;
+  async function load(){
+    const res = await fetch(`/api/images/my?limit=${limit}&offset=${offset}`, { headers: { Authorization: `Bearer ${token}` }});
+    const data = await res.json();
+    total = data.total || 0;
+    document.getElementById('pageInfo').textContent = `${offset+1}-${Math.min(offset+limit,total)} of ${total}`;
+    const tbody = document.getElementById('myImages');
+    tbody.innerHTML = '';
+    (data.images||[]).forEach(img => {
+      const tr = document.createElement('tr');
+      const primaryTag = (img.tag||'').split(',')[0];
+      const tagsHtml = (img.tag||'').split(',').filter(Boolean).map(t=>`<span class='tag'>${t.trim()}</span>`).join('');
+      tr.innerHTML = `
+        <td><div class='thumb sm'><img src='${img.logo_path||'/static/img/placeholder.png'}' onerror="this.src='/static/img/placeholder.png'" /></div></td>
+        <td><a href="/images/${img.name}/${primaryTag}" class="title">${img.name}</a></td>
+        <td><div class="tags">${tagsHtml}</div></td>
+        <td>${new Date(img.last_updated).toLocaleString()}</td>
+        <td>
+          <div class="btn-group">
+            <button class="btn-sm" data-act="edit">Edit</button>
+            <button class="btn-sm danger" data-act="delete">Delete</button>
+            <button class="btn-sm" data-act="toggle">${img.is_public ? 'Make Private' : 'Make Public'}</button>
+          </div>
+        </td>`;
+      tr.querySelector('[data-act=edit]').addEventListener('click', ()=>{
+        window.location.href = `/images/${img.name}/${primaryTag}`;
+      });
+      tr.querySelector('[data-act=delete]').addEventListener('click', async ()=>{
+        if (!confirm('Delete this image?')) return;
+        const res = await fetch(`/api/images/${img.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` }});
+        if (res.ok) { showToast('Deleted'); load(); } else { const j = await res.json().catch(()=>({})); showToast(j.error||'Delete failed'); }
+      });
+      tr.querySelector('[data-act=toggle]').addEventListener('click', async ()=>{
+        const fd = new FormData();
+        fd.append('is_public', (!img.is_public).toString());
+        const res = await fetch(`/api/images/by-name/${encodeURIComponent(img.name)}/${encodeURIComponent(primaryTag)}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+        if (res.ok) { showToast('Visibility updated'); load(); } else { const j = await res.json().catch(()=>({})); showToast(j.error||'Update failed'); }
+      });
+      tbody.appendChild(tr);
+    });
+    document.getElementById('prevBtn').disabled = offset<=0;
+    document.getElementById('nextBtn').disabled = offset+limit>=total;
+  }
+  document.getElementById('prevBtn').addEventListener('click', ()=>{ offset = Math.max(0, offset - limit); load(); });
+  document.getElementById('nextBtn').addEventListener('click', ()=>{ offset = Math.min(total, offset + limit); load(); });
+  const toast = document.createElement('div'); toast.className = 'toast'; document.body.appendChild(toast);
+  window.showToast = (msg)=>{ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 2000); };
+  load();
+})();
+</script>
+</body>
+</html>

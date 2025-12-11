@@ -30,15 +30,6 @@ A Docker Hub-like web application for managing and sharing Qube container images
 
 - Go 1.21+
 - ScyllaDB (or Cassandra)
-- Docker (optional, for running ScyllaDB)
-
-### Running ScyllaDB with Docker
-
-```bash
-docker run -d --name scylla \
-  -p 9042:9042 \
-  scylladb/scylla
-```
 
 ### Setup
 

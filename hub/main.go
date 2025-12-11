@@ -39,7 +39,7 @@ func main() {
 
 	r := router.Setup(db, cfg)
 
-	log.Printf("Starting Qube Hub on %s", cfg.Addr)
+	log.Printf("Starting QubeCloud on %s", cfg.Addr)
 	if err := r.Run(cfg.Addr); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}

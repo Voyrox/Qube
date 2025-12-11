@@ -14,7 +14,7 @@
         <div class="container">
             <div class="nav-brand">
                 <img src="/static/logo.png" alt="Qube Logo" width="28" height="28">
-                <span>Qube Hub</span>
+                <span>QubeCloud</span>
             </div>
             <div class="nav-menu">
                 <a href="/" class="nav-link">Home</a>
@@ -27,10 +27,7 @@
                     <button id="uploadBtn" class="btn-primary-sm">+ Upload</button>
                     <div class="user-profile-menu">
                         <button id="profileMenuBtn" class="profile-btn">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                <circle cx="12" cy="7" r="4"/>
-                            </svg>
+                            <img id="navAvatar" src="/static/img/avatar-default.png" alt="Avatar" width="24" height="24" style="border-radius:50%" onerror="this.src='/static/img/avatar-default.png'" />
                         </button>
                         <div class="profile-dropdown" id="profileDropdown">
                             <div class="profile-info">
@@ -38,8 +35,8 @@
                                 <p id="profileEmail" class="profile-email">user@example.com</p>
                             </div>
                             <hr>
-                            <a href="#" class="dropdown-item">My Images</a>
-                            <a href="#" class="dropdown-item">Settings</a>
+                            <a href="/profile" class="dropdown-item">My Images</a>
+                            <a href="/settings" class="dropdown-item">Settings</a>
                             <hr>
                             <a href="#" id="logoutBtn" class="dropdown-item danger">Logout</a>
                         </div>
@@ -310,6 +307,21 @@
     </div>
 
     <script src="/static/js/app.js"></script>
+        <script>
+        (async function(){
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+                const res = await fetch('/api/auth/profile', { headers: { Authorization: `Bearer ${token}` }});
+                if (!res.ok) return;
+                const u = await res.json();
+                const avatar = document.getElementById('navAvatar');
+                if (u.id) { avatar.src = `/static/avatars/${u.id}.png`; }
+                document.getElementById('profileUsername').textContent = u.username || 'User';
+                document.getElementById('profileEmail').textContent = u.email || '';
+            } catch {}
+        })();
+        </script>
 </body>
 </html>
 

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ .title }} - Qube Hub</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-brand">
+        <img src="/static/logo.png" alt="Qube Logo" width="28" height="28">
+        <span>Qube Hub</span>
+      </div>
+      <div class="nav-menu">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/explore" class="nav-link">Explore</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="settings-layout">
+      <aside class="settings-sidebar">
+        <h2>Account</h2>
+        <ul>
+          <li class="active">Profile</li>
+          <li class="disabled" title="Coming soon">Security</li>
+        </ul>
+      </aside>
+      <section class="settings-content two-column">
+        <h1>Profile Settings</h1>
+        <p class="section-subtitle">Update your public profile and account details.</p>
+        <div class="settings-columns">
+        <form id="settingsForm" class="form-grid" enctype="multipart/form-data">
+          <div class="form-group"><label>Username</label>
+          <input type="text" name="username" id="setUsername" placeholder="Your username" /></div>
+          <div class="form-group"><label>Email</label>
+          <input type="email" name="email" id="setEmail" placeholder="you@example.com" /></div>
+          <div class="form-group"><label>Current Password</label>
+          <input type="password" name="current_password" id="setCurrent" placeholder="Required to change password" /></div>
+          <div class="form-group"><label>New Password</label>
+          <input type="password" name="new_password" id="setNew" placeholder="Minimum 8 characters" /></div>
+          <div class="form-group full"><label>Profile Picture (PNG)</label>
+          <input type="file" name="avatar" accept="image/png" /></div>
+          <div class="form-actions">
+            <button type="submit" id="settingsSaveBtn" class="btn-primary">Save Changes</button>
+            <span id="settingsMsg" class="notice"></span>
+          </div>
+        </form>
+        <div class="preview-panel sticky">
+          <div class="image-card">
+            <div class="thumb sm"><img id="settingsAvatarPreview" src="/static/img/avatar-default.png" onerror="this.src='/static/img/avatar-default.png'"/></div>
+            <div class="meta">
+              <span class="title" id="settingsUsernamePreview">username</span>
+              <div class="tags"><span class="tag">profile</span><span class="tag">preview</span></div>
+              <div class="dates">Live preview</div>
+            </div>
+          </div>
+        </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const token = localStorage.getItem('token');
+  async function loadProfile(){
+    const res = await fetch('/api/auth/profile', { headers: { Authorization: `Bearer ${token}` }});
+    const u = await res.json();
+    document.getElementById('setUsername').value = u.username || '';
+    document.getElementById('setEmail').value = u.email || '';
+    if (u.id) { document.getElementById('settingsAvatarPreview').src = `/static/avatars/${u.id}.png`; }
+    document.getElementById('settingsUsernamePreview').textContent = u.username || 'username';
+  }
+  loadProfile();
+  // live preview
+  document.getElementById('setUsername').addEventListener('input', (e)=>{
+    document.getElementById('settingsUsernamePreview').textContent = e.target.value || 'username';
+  });
+  document.querySelector('input[name=avatar]').addEventListener('change', (e)=>{
+    const file = e.target.files[0]; if (!file) return;
+    const url = URL.createObjectURL(file);
+    const img = document.getElementById('settingsAvatarPreview'); img.src = url;
+  });
+  document.getElementById('settingsForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const btn = document.getElementById('settingsSaveBtn');
+    const msg = document.getElementById('settingsMsg');
+    btn.disabled = true; btn.textContent = 'Saving...'; msg.textContent = '';
+    const fd = new FormData(e.target);
+    const res = await fetch('/api/auth/update', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+    const data = await res.json();
+    if (res.ok) {
+      localStorage.setItem('token', data.token);
+      showToast('Updated successfully');
+      msg.textContent = 'Saved';
+      msg.className = 'notice success';
+    } else {
+      const err = data.error || 'Update failed';
+      showToast(err);
+      msg.textContent = err;
+      msg.className = 'notice error';
+    }
+    btn.disabled = false; btn.textContent = 'Save Changes';
+  });
+  // Ensure toast exists
+  if (!document.querySelector('.toast')) {
+    const toast = document.createElement('div'); toast.className = 'toast'; document.body.appendChild(toast);
+  }
+  window.showToast = (msg)=>{ const t = document.querySelector('.toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2000); };
+  // Disable Security nav
+  const sec = document.querySelector('.settings-sidebar li.disabled');
+  if (sec) { sec.addEventListener('click', (ev)=>{ ev.preventDefault(); showToast('Security settings coming soon'); }); }
+})();
+</script>
+</body>
+</html>
