@@ -243,49 +243,7 @@
         </div>
     </div>
 
-    <!-- Upload Modal -->
-    <div id="uploadModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Upload Image</h2>
-                <span class="close">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </span>
-            </div>
-            <form id="uploadForm" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label>Name</label>
-                    <input type="text" id="imageName" name="name" placeholder="Image name" required>
-                </div>
-                <div class="form-group">
-                    <label>Tag</label>
-                    <input type="text" id="imageTag" name="tag" placeholder="e.g., latest, v1.0" required>
-                </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="imageDescription" name="description" placeholder="Describe your image..."></textarea>
-                </div>
-                <div class="form-group checkbox-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="imagePublic" name="is_public" checked>
-                        <span>Make this image public</span>
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label>File (.tar)</label>
-                    <input type="file" id="imageFile" name="file" accept=".tar" required>
-                </div>
-                <div class="form-group">
-                    <label>Logo (optional, PNG)</label>
-                    <input type="file" id="logoFile" name="logo" accept=".png">
-                </div>
-                <button type="submit" class="btn-submit">Upload Image</button>
-            </form>
-        </div>
-    </div>
+    <!-- Upload Modal (single instance) -->
 
     <footer>
         <div class="container">

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -152,7 +153,6 @@ func (h *ImageHandler) Download(c *gin.Context) {
 	name := c.Param("name")
 	tag := c.Param("tag")
 
-	// Find image
 	var image models.Image
 	if err := h.db.Session().Query(
 		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
@@ -165,22 +165,26 @@ func (h *ImageHandler) Download(c *gin.Context) {
 		return
 	}
 
-	// Check if image is public or user is the owner
 	userID, authenticated := middleware.GetUserID(c)
 	if !image.IsPublic && (!authenticated || userID != image.OwnerID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 		return
 	}
 
-	// Increment download and pull counters
 	if err := h.db.Session().Query(
-		`UPDATE images SET downloads = downloads + 1, pulls = pulls + 1 WHERE id = ?`,
+		`UPDATE image_downloads SET downloads = downloads + 1 WHERE image_id = ?`,
 		image.ID,
 	).Exec(); err != nil {
-		fmt.Printf("Warning: Failed to increment counters: %v\n", err)
+		fmt.Printf("Warning: Failed to increment download counter: %v\n", err)
 	}
 
-	// Serve file
+	if err := h.db.Session().Query(
+		`UPDATE images SET pulls = ? WHERE id = ?`,
+		image.Pulls+1, image.ID,
+	).Exec(); err != nil {
+		fmt.Printf("Warning: Failed to increment pulls: %v\n", err)
+	}
+
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Content-Transfer-Encoding", "binary")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s_%s.tar", image.Name, image.Tag))
@@ -188,11 +192,9 @@ func (h *ImageHandler) Download(c *gin.Context) {
 	c.File(image.FilePath)
 }
 
-// DownloadLatest resolves the latest tag for a given image name and serves the file
 func (h *ImageHandler) DownloadLatest(c *gin.Context) {
 	name := c.Param("name")
 
-	// Fetch all tags for the image name and pick the latest by last_updated
 	iter := h.db.Session().Query(
 		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
 		 FROM images WHERE name = ? ALLOW FILTERING`,
@@ -220,27 +222,279 @@ func (h *ImageHandler) DownloadLatest(c *gin.Context) {
 		return
 	}
 
-	// Access control
 	userID, authenticated := middleware.GetUserID(c)
 	if !latest.IsPublic && (!authenticated || userID != latest.OwnerID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 		return
 	}
 
-	// Increment counters
 	if err := h.db.Session().Query(
-		`UPDATE images SET downloads = downloads + 1, pulls = pulls + 1 WHERE id = ?`,
+		`UPDATE image_downloads SET downloads = downloads + 1 WHERE image_id = ?`,
 		latest.ID,
 	).Exec(); err != nil {
-		fmt.Printf("Warning: Failed to increment counters: %v\n", err)
+		fmt.Printf("Warning: Failed to increment download counter: %v\n", err)
 	}
 
-	// Serve file
+	if err := h.db.Session().Query(
+		`UPDATE images SET pulls = ? WHERE id = ?`,
+		latest.Pulls+1, latest.ID,
+	).Exec(); err != nil {
+		fmt.Printf("Warning: Failed to increment pulls: %v\n", err)
+	}
+
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Content-Transfer-Encoding", "binary")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s_%s.tar", latest.Name, latest.Tag))
 	c.Header("Content-Type", "application/x-tar")
 	c.File(latest.FilePath)
+}
+
+func (h *ImageHandler) Detail(c *gin.Context) {
+	name := c.Param("name")
+	tag := c.Param("tag")
+
+	var image models.Image
+	if err := h.db.Session().Query(
+		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+		 FROM images WHERE name = ? AND tag = ? LIMIT 1 ALLOW FILTERING`,
+		name, tag,
+	).Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
+		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
+		&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated); err != nil {
+		c.String(http.StatusNotFound, "Image not found")
+		return
+	}
+
+	// Optional: get owner username
+	var ownerUsername string
+	if err := h.db.Session().Query(
+		`SELECT username FROM users WHERE id = ? LIMIT 1`, image.OwnerID,
+	).Scan(&ownerUsername); err != nil {
+		ownerUsername = "user"
+	}
+
+	// Check ownership
+	userID, authenticated := middleware.GetUserID(c)
+	isOwner := authenticated && userID == image.OwnerID
+
+	c.HTML(http.StatusOK, "image.html", gin.H{
+		"title":          fmt.Sprintf("%s/%s", ownerUsername, image.Name),
+		"image":          image,
+		"owner_username": ownerUsername,
+		"recent_tags":    h.getRecentTags(image.Name, 8),
+		"size_formatted": formatSize(image.Size),
+		"is_owner":       isOwner,
+	})
+}
+
+// DetailLatest finds the latest tag for the name and renders detail
+func (h *ImageHandler) DetailLatest(c *gin.Context) {
+	name := c.Param("name")
+	iter := h.db.Session().Query(
+		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+		 FROM images WHERE name = ? ALLOW FILTERING`,
+		name,
+	).Iter()
+
+	var latest models.Image
+	var found bool
+	var img models.Image
+	for iter.Scan(&img.ID, &img.Name, &img.Tag, &img.OwnerID, &img.Description, &img.Digest,
+		&img.Size, &img.Downloads, &img.Pulls, &img.Stars, &img.IsPublic, &img.FilePath, &img.LogoPath,
+		&img.CreatedAt, &img.UpdatedAt, &img.LastUpdated) {
+		if !found || img.LastUpdated.After(latest.LastUpdated) {
+			latest = img
+			found = true
+		}
+	}
+	if err := iter.Close(); err != nil || !found {
+		c.String(http.StatusNotFound, "Image not found")
+		return
+	}
+
+	var ownerUsername string
+	if err := h.db.Session().Query(
+		`SELECT username FROM users WHERE id = ? LIMIT 1`, latest.OwnerID,
+	).Scan(&ownerUsername); err != nil {
+		ownerUsername = "user"
+	}
+
+	userID, authenticated := middleware.GetUserID(c)
+	isOwner := authenticated && userID == latest.OwnerID
+
+	c.HTML(http.StatusOK, "image.html", gin.H{
+		"title":          fmt.Sprintf("%s/%s", ownerUsername, latest.Name),
+		"image":          latest,
+		"owner_username": ownerUsername,
+		"recent_tags":    h.getRecentTags(latest.Name, 8),
+		"size_formatted": formatSize(latest.Size),
+		"is_owner":       isOwner,
+	})
+}
+
+// EditForm renders the edit form for an image (owner only)
+func (h *ImageHandler) EditForm(c *gin.Context) {
+	name := c.Param("name")
+	tag := c.Param("tag")
+
+	// Require auth
+	userID, exists := middleware.GetUserID(c)
+	if !exists {
+		c.String(http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	var image models.Image
+	if err := h.db.Session().Query(
+		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+		 FROM images WHERE name = ? AND tag = ? LIMIT 1 ALLOW FILTERING`,
+		name, tag,
+	).Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
+		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
+		&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated); err != nil {
+		c.String(http.StatusNotFound, "Image not found")
+		return
+	}
+
+	if image.OwnerID != userID {
+		c.String(http.StatusForbidden, "Access denied")
+		return
+	}
+
+	// Optional: get owner username
+	var ownerUsername string
+	if err := h.db.Session().Query(
+		`SELECT username FROM users WHERE id = ? LIMIT 1`, image.OwnerID,
+	).Scan(&ownerUsername); err != nil {
+		ownerUsername = "user"
+	}
+
+	c.HTML(http.StatusOK, "image_edit.html", gin.H{
+		"title":          fmt.Sprintf("Edit %s/%s:%s", ownerUsername, image.Name, image.Tag),
+		"image":          image,
+		"owner_username": ownerUsername,
+	})
+}
+
+// UpdateImage updates editable fields (owner only)
+func (h *ImageHandler) UpdateImage(c *gin.Context) {
+	name := c.Param("name")
+	tag := c.Param("tag")
+
+	userID, exists := middleware.GetUserID(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var image models.Image
+	if err := h.db.Session().Query(
+		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+		 FROM images WHERE name = ? AND tag = ? LIMIT 1 ALLOW FILTERING`,
+		name, tag,
+	).Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
+		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
+		&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Image not found"})
+		return
+	}
+
+	if image.OwnerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	// Bind input (description, is_public; optional new logo)
+	var req struct {
+		Description string `form:"description" json:"description"`
+		IsPublic    *bool  `form:"is_public" json:"is_public"`
+	}
+	// Accept multipart or JSON
+	if strings.HasPrefix(c.GetHeader("Content-Type"), "multipart/") {
+		_ = c.ShouldBind(&req)
+	} else {
+		_ = c.ShouldBindJSON(&req)
+	}
+
+	// Apply changes
+	if req.Description != "" {
+		image.Description = req.Description
+	}
+	if req.IsPublic != nil {
+		image.IsPublic = *req.IsPublic
+	}
+
+	// Handle optional logo upload
+	if logoFile, err := c.FormFile("logo"); err == nil {
+		logoFilename := fmt.Sprintf("logo_%s.png", image.ID.String())
+		logoPath := filepath.Join(h.cfg.StoragePath, image.ID.String(), logoFilename)
+		if err := c.SaveUploadedFile(logoFile, logoPath); err == nil {
+			image.LogoPath = logoPath
+		}
+	}
+
+	image.UpdatedAt = time.Now()
+	image.LastUpdated = image.UpdatedAt
+
+	if err := h.db.Session().Query(
+		`UPDATE images SET description = ?, is_public = ?, logo_path = ?, updated_at = ?, last_updated = ? WHERE id = ?`,
+		image.Description, image.IsPublic, image.LogoPath, image.UpdatedAt, image.LastUpdated, image.ID,
+	).Exec(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update image"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Image updated", "image": image})
+}
+
+// getRecentTags returns a slice of recent tag strings for an image name
+func (h *ImageHandler) getRecentTags(name string, limit int) []string {
+	iter := h.db.Session().Query(
+		`SELECT tag, last_updated FROM images WHERE name = ? LIMIT ? ALLOW FILTERING`,
+		name, limit,
+	).Iter()
+
+	var tag string
+	var last time.Time
+	var tags []struct {
+		Tag  string
+		Last time.Time
+	}
+	for iter.Scan(&tag, &last) {
+		tags = append(tags, struct {
+			Tag  string
+			Last time.Time
+		}{Tag: tag, Last: last})
+	}
+	_ = iter.Close()
+
+	// sort by last_updated desc
+	sort.Slice(tags, func(i, j int) bool { return tags[i].Last.After(tags[j].Last) })
+
+	out := make([]string, 0, len(tags))
+	for _, t := range tags {
+		out = append(out, t.Tag)
+	}
+	return out
+}
+
+// formatSize converts bytes to a human-readable string (KB/MB/GB)
+func formatSize(bytes int64) string {
+	const (
+		KB = 1024
+		MB = KB * 1024
+		GB = MB * 1024
+	)
+	if bytes >= GB {
+		return fmt.Sprintf("%.2f GB", float64(bytes)/float64(GB))
+	}
+	if bytes >= MB {
+		return fmt.Sprintf("%.2f MB", float64(bytes)/float64(MB))
+	}
+	if bytes >= KB {
+		return fmt.Sprintf("%.2f KB", float64(bytes)/float64(KB))
+	}
+	return fmt.Sprintf("%d B", bytes)
 }
 
 func (h *ImageHandler) List(c *gin.Context) {
@@ -293,7 +547,36 @@ func (h *ImageHandler) List(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"images": images})
+	// Enrich with owner_username for frontend display
+	enriched := make([]gin.H, 0, len(images))
+	for _, img := range images {
+		var ownerUsername string
+		if err := h.db.Session().Query(
+			`SELECT username FROM users WHERE id = ? LIMIT 1`, img.OwnerID,
+		).Scan(&ownerUsername); err != nil {
+			ownerUsername = "user"
+		}
+		enriched = append(enriched, gin.H{
+			"id":             img.ID,
+			"name":           img.Name,
+			"tag":            img.Tag,
+			"owner_id":       img.OwnerID,
+			"owner_username": ownerUsername,
+			"description":    img.Description,
+			"digest":         img.Digest,
+			"size":           img.Size,
+			"downloads":      img.Downloads,
+			"pulls":          img.Pulls,
+			"stars":          img.Stars,
+			"is_public":      img.IsPublic,
+			"logo_path":      img.LogoPath,
+			"created_at":     img.CreatedAt,
+			"updated_at":     img.UpdatedAt,
+			"last_updated":   img.LastUpdated,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"images": enriched})
 }
 
 func (h *ImageHandler) GetByName(c *gin.Context) {
@@ -320,7 +603,36 @@ func (h *ImageHandler) GetByName(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"images": images})
+	// Enrich with owner_username for frontend display
+	enriched := make([]gin.H, 0, len(images))
+	for _, img := range images {
+		var ownerUsername string
+		if err := h.db.Session().Query(
+			`SELECT username FROM users WHERE id = ? LIMIT 1`, img.OwnerID,
+		).Scan(&ownerUsername); err != nil {
+			ownerUsername = "user"
+		}
+		enriched = append(enriched, gin.H{
+			"id":             img.ID,
+			"name":           img.Name,
+			"tag":            img.Tag,
+			"owner_id":       img.OwnerID,
+			"owner_username": ownerUsername,
+			"description":    img.Description,
+			"digest":         img.Digest,
+			"size":           img.Size,
+			"downloads":      img.Downloads,
+			"pulls":          img.Pulls,
+			"stars":          img.Stars,
+			"is_public":      img.IsPublic,
+			"logo_path":      img.LogoPath,
+			"created_at":     img.CreatedAt,
+			"updated_at":     img.UpdatedAt,
+			"last_updated":   img.LastUpdated,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"images": enriched})
 }
 
 func (h *ImageHandler) Delete(c *gin.Context) {

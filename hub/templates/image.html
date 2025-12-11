@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ .title }}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-brand">
+        <img src="/static/logo.png" alt="Qube Logo" width="28" height="28">
+        <span>Qube Hub</span>
+      </div>
+      <div class="nav-menu">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/explore" class="nav-link">Explore</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container main-content">
+    <section class="section image-detail">
+      <div class="image-header">
+        {{ if .image.LogoPath }}
+          <img class="image-logo" src="{{ .image.LogoPath }}" alt="{{ .image.Name }} logo">
+        {{ else }}
+          <div class="image-logo-placeholder">🧊</div>
+        {{ end }}
+        <div class="image-title">
+          <h2>{{ .owner_username }}/{{ .image.Name }}</h2>
+          <span class="tag">{{ .image.Tag }}</span>
+        </div>
+      </div>
+      <br>
+      <div class="image-content">
+        <div class="image-main">
+          <p class="section-subtitle">By <span id="ownerUsername" data-owner="{{ .owner_username }}">{{ .owner_username }}</span> • Updated <span id="lastUpdated" data-date="{{ .image.LastUpdated }}">{{ .image.LastUpdated }}</span></p>
+          <div class="stats-row" style="margin:12px 0;">
+            <span>Pulls: {{ .image.Pulls }}</span>
+            <span>Stars: {{ .image.Stars }}</span>
+            <span>Size: {{ if .size_formatted }}{{ .size_formatted }}{{ else }}{{ .image.Size }}{{ end }}</span>
+          </div>
+          <div class="separator"></div>
+          <div>
+            <p>{{ .image.Description }}</p>
+          </div>
+          <div class="form-actions" style="margin-top: 20px;">
+            <a class="btn-secondary" href="/api/images/{{ .image.Name }}/{{ .image.Tag }}/download">Download</a>
+            <a id="editButton" class="btn-primary" href="/images/{{ .image.Name }}/{{ .image.Tag }}/edit" style="border-radius:6px; display:none;">Edit</a>
+          </div>
+        </div>
+        <aside class="image-sidebar">
+          <h3>Tag summary</h3>
+          <div class="sidebar-block">
+            <div class="sidebar-item"><span>Content type</span><strong>Image</strong></div>
+            <div class="sidebar-item digest-row"><span>Digest</span>
+              <div class="digest-wrap">
+                <code class="digest-clip" title="{{ .image.Digest }}" data-full="{{ .image.Digest }}">{{ .image.Digest }}</code>
+                <button class="btn-copy" onclick="copyDigest(event)" aria-label="Copy digest">Copy</button>
+              </div>
+            </div>
+            <div class="sidebar-item"><span>Size</span><strong>{{ if .size_formatted }}{{ .size_formatted }}{{ else }}{{ .image.Size }}{{ end }}</strong></div>
+            <div class="sidebar-item"><span>Last updated</span><strong><span id="lastUpdatedSidebar" data-date="{{ .image.LastUpdated }}">{{ .image.LastUpdated }}</span></strong></div>
+          </div>
+          <div class="sidebar-actions">
+            <a class="btn-primary" href="#" style="width:100%; border-radius:6px;">Run in Qube Desktop</a>
+            <p class="sidebar-note">Requires Qube Desktop 1.00.0 or later.</p>
+          </div>
+          <h4>Recent tags</h4>
+          <div id="recentTags" class="sidebar-tags">
+            {{ if .recent_tags }}
+              {{ range .recent_tags }}
+                <span class="tag">{{ . }}</span>
+              {{ end }}
+            {{ else }}
+              <p class="sidebar-note">No recent tags found.</p>
+            {{ end }}
+          </div>
+        </aside>
+      </div>
+    </section>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  <script>
+    (function(){
+      function formatRelative(elId){
+        const el = document.getElementById(elId);
+        if (!el) return;
+        try {
+          const raw = el.getAttribute('data-date');
+          const past = new Date(raw);
+          const now = new Date();
+          let diff = Math.max(0, Math.floor((now - past) / 1000)); // seconds
+          const days = Math.floor(diff / 86400); diff -= days * 86400;
+          const hours = Math.floor(diff / 3600); diff -= hours * 3600;
+          const mins = Math.floor(diff / 60); diff -= mins * 60;
+          const secs = diff;
+          let text = '';
+          if (days > 0) {
+            text = days + 'd' + (mins > 0 ? ' ' + mins + 'm' : '');
+          } else if (hours > 0) {
+            text = hours + 'h' + (mins > 0 ? ' ' + mins + 'm' : '');
+          } else if (mins > 0) {
+            text = mins + 'm' + (secs > 0 ? ' ' + secs + 's' : '');
+          } else {
+            text = secs + 's';
+          }
+          el.textContent = text;
+        } catch {}
+      }
+      formatRelative('lastUpdated');
+      formatRelative('lastUpdatedSidebar');
+    })();
+
+    // Copy digest handler
+    function copyDigest(e){
+      e.preventDefault();
+      const wrap = e.target.closest('.digest-wrap');
+      if (!wrap) return;
+      const code = wrap.querySelector('.digest-clip');
+      const full = code?.getAttribute('data-full') || code?.textContent || '';
+      if (!full) return;
+      navigator.clipboard.writeText(full).then(() => {
+        const btn = e.target;
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(()=>{ btn.textContent = original; }, 1200);
+      }).catch(()=>{});
+    }
+
+    // Show Edit if owner_username == current user
+    (function(){
+      try {
+        const ownerEl = document.getElementById('ownerUsername');
+        const editBtn = document.getElementById('editButton');
+        if (!ownerEl || !editBtn) return;
+        const owner = ownerEl.getAttribute('data-owner');
+        const userStr = localStorage.getItem('user');
+        if (!userStr) return;
+        const user = JSON.parse(userStr);
+        if (user && user.username && owner && user.username.toLowerCase() === owner.toLowerCase()) {
+          editBtn.style.display = 'inline-block';
+        }
+      } catch {}
+    })();
+  </script>
+</body>
+</html>

@@ -254,27 +254,29 @@ function displayImages(images, showDelete = false, containerId = 'imagesList') {
         return;
     }
     container.innerHTML = images.map(image => `
-        <div class="image-card">
-            ${image.logo_path ? `<img src="${image.logo_path}" alt="${escapeHtml(image.name)} logo" class="image-logo">` : '<div class="image-logo-placeholder">🧊</div>'}
-            <h3>${escapeHtml(image.name)}</h3>
-            <span class="tag">${escapeHtml(image.tag)}</span>
-            <p>${escapeHtml(image.description || 'No description')}</p>
-            <div class="stats">
-                <span>⭐ ${image.stars || 0}</span>
-                <span>🔄 ${image.pulls || 0}</span>
+        <div class="image-card" onclick="viewImage('${escapeHtml(image.name)}', '${escapeHtml(image.tag)}')">
+            <div class="image-header">
+                ${image.logo_path ? `<img src="${image.logo_path}" alt="${escapeHtml(image.name)} logo" class="image-logo">` : '<div class="image-logo-placeholder">🧊</div>'}
+                <div class="image-title">
+                    <h3>${escapeHtml((image.owner_username || image.owner_username_fallback || image.owner || 'user'))}/${escapeHtml(image.name)}</h3>
+                    <span class="tag">${escapeHtml(image.tag)}</span>
+                </div>
             </div>
-            <div class="stats">
-                <span>📦 ${formatSize(image.size)}</span>
-                <span>⬇️ ${image.downloads || 0}</span>
+            <p>${escapeHtml((image.description || 'No description')).slice(0, 30)}</p>
+            <div class="separator"></div>
+            <div class="stats stats-row">
+                <span>Pulls: ${image.pulls || 0}</span>
+                <span>Stars: ${image.stars || 0}</span>
+                <span>Last updated: ${formatDate(image.last_updated || image.updated_at)}</span>
             </div>
-            <div class="last-updated">
-                <small>${formatDate(image.last_updated || image.updated_at)}</small>
-            </div>
-            <button onclick="downloadImage('${escapeHtml(image.name)}', '${escapeHtml(image.tag)}')">⬇️ Download</button>
-            ${token ? `<button class="star-btn ${image.is_starred ? 'starred' : ''}" onclick="toggleStar('${image.id}', event)">${image.is_starred ? '⭐ Starred' : '☆ Star'}</button>` : ''}
-            ${showDelete ? `<button class="delete" onclick="deleteImage('${image.id}')">🗑️ Delete</button>` : ''}
+            ${showDelete ? `<button class="delete" onclick="event.stopPropagation(); deleteImage('${image.id}')">🗑️ Delete</button>` : ''}
         </div>
     `).join('');
+}
+
+function viewImage(name, tag) {
+    if (!tag) tag = 'latest';
+    window.location.href = `/images/${encodeURIComponent(name)}/${encodeURIComponent(tag)}`;
 }
 
 async function downloadImage(name, tag) {

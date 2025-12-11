@@ -37,6 +37,13 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 		})
 	})
 
+	// Image detail pages (optional auth so owners see Edit)
+	r.GET("/images/:name", middleware.OptionalAuthMiddleware(cfg), imageHandler.DetailLatest)
+	r.GET("/images/:name/:tag", middleware.OptionalAuthMiddleware(cfg), imageHandler.Detail)
+
+	// Image edit (owner only)
+	r.GET("/images/:name/:tag/edit", middleware.AuthMiddleware(cfg), imageHandler.EditForm)
+
 	// Auth page
 	r.GET("/auth", func(c *gin.Context) {
 		c.HTML(200, "auth.html", gin.H{
@@ -83,6 +90,7 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 			protected.DELETE("/images/:id", imageHandler.Delete)
 			protected.POST("/images/:id/star", imageHandler.Star)
 			protected.DELETE("/images/:id/star", imageHandler.Unstar)
+			protected.POST("/images/:name/:tag", imageHandler.UpdateImage)
 		}
 	}
 
