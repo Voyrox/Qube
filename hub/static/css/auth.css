@@ -1,0 +1,16 @@
+/* Auth page specific styles */
+
+.auth-container { max-width: 480px; margin: 80px auto; padding: 24px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); }
+.auth-title { font-size: 24px; font-weight: 700; margin-bottom: 16px; }
+.auth-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; }
+
+.auth-form { display: flex; flex-direction: column; gap: 12px; }
+.auth-form label { font-size: 13px; color: var(--text-secondary); }
+.auth-form input { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-primary); outline: none; }
+.auth-form input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+.auth-form .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.auth-form .actions .btn-primary { padding: 10px 16px; }
+
+.oauth-providers { margin-top: 16px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.oauth-providers .provider-btn { background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text-secondary); border-radius: 8px; padding: 10px 12px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.oauth-providers .provider-btn:hover { color: var(--text-primary); border-color: var(--border-hover); }

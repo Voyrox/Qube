@@ -1,0 +1,6 @@
+.env
+storage/
+*.tar
+*.log
+qube-hub
+qube-hub.exe

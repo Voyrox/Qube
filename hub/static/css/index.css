@@ -1,0 +1,39 @@
+/* Index page specific styles */
+
+/* Hero Section - specific to index */
+.hero {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    padding: 53px 0 67px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15), transparent 50%);
+    pointer-events: none;
+}
+
+.hero .container { position: relative; z-index: 1; }
+.hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--primary-light); border: 1px solid rgba(99, 102, 241, 0.2); padding: 6px 16px; border-radius: 24px; color: var(--primary); font-size: 13px; font-weight: 500; margin-bottom: 16px; }
+.hero-badge svg { width: 14px; height: 14px; }
+.hero h1 { font-size: 37px; font-weight: 700; line-height: 1.1; margin-bottom: 13px; letter-spacing: -0.02em; background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hero p { font-size: 12px; color: var(--text-secondary); margin-bottom: 27px; max-width: 400px; margin-left: auto; margin-right: auto; }
+
+.search-box { display: flex; align-items: center; max-width: 600px; margin: 0 auto; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 6px; transition: all 0.2s; }
+.search-box:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
+.search-box svg { margin-left: 12px; color: var(--text-tertiary); flex-shrink: 0; }
+.search-box input { flex: 1; padding: 10px 12px; border: none; background: transparent; color: var(--text-primary); font-size: 15px; outline: none; }
+.search-box input::placeholder { color: var(--text-tertiary); }
+.search-box button { padding: 10px 24px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; white-space: nowrap; }
+.search-box button:hover { background: var(--primary-hover); }
+
+.images-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }

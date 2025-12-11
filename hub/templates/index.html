@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .title }}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <img src="/static/logo.png" alt="Qube Logo" width="28" height="28">
+                <span>Qube Hub</span>
+            </div>
+            <div class="nav-menu">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/explore" class="nav-link">Explore</a>
+                <div class="nav-auth" id="navAuth">
+                    <a href="/login" class="nav-link">Login</a>
+                    <a href="/signup" class="btn-primary">Get Started</a>
+                </div>
+                <div class="nav-user" id="navUser" style="display: none;">
+                    <button id="uploadBtn" class="btn-primary-sm">+ Upload</button>
+                    <div class="user-profile-menu">
+                        <button id="profileMenuBtn" class="profile-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                        </button>
+                        <div class="profile-dropdown" id="profileDropdown">
+                            <div class="profile-info">
+                                <p id="profileUsername" class="profile-name">User</p>
+                                <p id="profileEmail" class="profile-email">user@example.com</p>
+                            </div>
+                            <hr>
+                            <a href="#" class="dropdown-item">My Images</a>
+                            <a href="#" class="dropdown-item">Settings</a>
+                            <hr>
+                            <a href="#" id="logoutBtn" class="dropdown-item danger">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="container">
+            <div class="hero-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>Built for developers</span>
+            </div>
+            <h1>Container Images,<br>Simplified</h1>
+            <p>Discover, share, and deploy container images with the Qube ecosystem</p>
+            <div class="search-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Search for images...">
+                <button id="searchBtn">Search</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="container main-content">
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number">2.5K+</div>
+                <div class="stat-label">Images</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">150K+</div>
+                <div class="stat-label">Pulls</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">1.2K+</div>
+                <div class="stat-label">Users</div>
+            </div>
+        </div>
+
+        <!-- Most Pulled Images -->
+        <section class="section">
+            <div class="section-header">
+                <div>
+                    <h2>Popular Images</h2>
+                    <p class="section-subtitle">Most pulled this month</p>
+                </div>
+                <a href="#" class="view-all">
+                    <span>View All</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </a>
+            </div>
+            <div id="mostPulledList" class="images-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>Loading images...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Trending This Week -->
+        <section class="section">
+            <div class="section-header">
+                <div>
+                    <h2>Trending Now</h2>
+                    <p class="section-subtitle">Rising stars this week</p>
+                </div>
+                <a href="#" class="view-all">
+                    <span>View All</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </a>
+            </div>
+            <div id="trendingList" class="images-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>Loading images...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories -->
+        <section class="section">
+            <div class="section-header">
+                <div>
+                    <h2>Browse by Category</h2>
+                    <p class="section-subtitle">Find what you need</p>
+                </div>
+            </div>
+            <div class="categories-grid">
+                <div class="category-card" onclick="filterByCategory('database')">
+                    <div class="category-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                            <path d="M3 5V19C3 20.6569 7.02944 22 12 22C16.9706 22 21 20.6569 21 19V5"/>
+                            <path d="M3 12C3 13.6569 7.02944 15 12 15C16.9706 15 21 13.6569 21 12"/>
+                        </svg>
+                    </div>
+                    <h3>Databases</h3>
+                    <p>PostgreSQL, Redis, MongoDB</p>
+                </div>
+                <div class="category-card" onclick="filterByCategory('ml')">
+                    <div class="category-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                            <path d="M16 3L12 7L8 3"/>
+                        </svg>
+                    </div>
+                    <h3>AI & ML</h3>
+                    <p>TensorFlow, PyTorch, Jupyter</p>
+                </div>
+                <div class="category-card" onclick="filterByCategory('monitoring')">
+                    <div class="category-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        </svg>
+                    </div>
+                    <h3>Monitoring</h3>
+                    <p>Prometheus, Grafana, ELK</p>
+                </div>
+                <div class="category-card" onclick="filterByCategory('devtools')">
+                    <div class="category-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 6 2 12 8 18"/>
+                        </svg>
+                    </div>
+                    <h3>Dev Tools</h3>
+                    <p>Git, CI/CD, Build Tools</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Welcome Back</h2>
+                <span class="close">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </span>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Username</label>
+                        <input type="text" id="loginUsername" placeholder="you@example.com or username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn-submit">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Account</h2>
+                <span class="close">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </span>
+            </div>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="registerUsername" placeholder="Choose a username" required minlength="3">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="registerEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="registerPassword" placeholder="Create a password" required minlength="8">
+                </div>
+                <button type="submit" class="btn-submit">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Upload Image</h2>
+                <span class="close">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </span>
+            </div>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="imageName" name="name" placeholder="Image name" required>
+                </div>
+                <div class="form-group">
+                    <label>Tag</label>
+                    <input type="text" id="imageTag" name="tag" placeholder="e.g., latest, v1.0" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="imageDescription" name="description" placeholder="Describe your image..."></textarea>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="imagePublic" name="is_public" checked>
+                        <span>Make this image public</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>File (.tar)</label>
+                    <input type="file" id="imageFile" name="file" accept=".tar" required>
+                </div>
+                <div class="form-group">
+                    <label>Logo (optional, PNG)</label>
+                    <input type="file" id="logoFile" name="logo" accept=".png">
+                </div>
+                <button type="submit" class="btn-submit">Upload Image</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2026 Qube Hub. Built with ❤️ for the Qube community.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content upload-modal">
+            <div class="modal-header">
+                <h2>Upload Container Image</h2>
+                <button class="close">&times;</button>
+            </div>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="uploadName">Image Name *</label>
+                    <input type="text" id="uploadName" name="name" placeholder="e.g., my-app" required>
+                    <small>Image names must be unique across the platform</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="uploadTag">Tag *</label>
+                    <input type="text" id="uploadTag" name="tag" placeholder="e.g., latest or v1.0.0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="uploadDescription">Description</label>
+                    <textarea id="uploadDescription" name="description" placeholder="Describe your container image..." rows="4"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="uploadFile">Container File (.tar) *</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="uploadFile" name="file" accept=".tar" required>
+                        <div class="file-input-label">Click to select or drag and drop</div>
+                    </div>
+                    <small>Maximum 500MB</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="uploadLogo">Logo (PNG, optional)</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="uploadLogo" name="logo" accept=".png">
+                        <div class="file-input-label">Click to select logo</div>
+                    </div>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="uploadPublic" name="is_public" checked>
+                        <span>Make this image public</span>
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary close-modal">Cancel</button>
+                    <button type="submit" class="btn-primary">Upload Image</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+
