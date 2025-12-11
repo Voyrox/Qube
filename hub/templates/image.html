@@ -154,7 +154,7 @@
       formatRelative('lastUpdatedSidebar');
     })();
 
-    // Copy digest handler
+    
     function copyDigest(e){
       e.preventDefault();
       const wrap = e.target.closest('.digest-wrap');
@@ -170,7 +170,7 @@
       }).catch(()=>{});
     }
 
-    // Inline Edit: show controls for owners, handle save
+    
     (function(){
       try {
         const ownerEl = document.getElementById('ownerUsername');

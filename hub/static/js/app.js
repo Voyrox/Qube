@@ -1,7 +1,5 @@
-// API Base URL
 const API_BASE = '/api';
 
-// State
 let token = localStorage.getItem('token');
 let currentUser = JSON.parse(localStorage.getItem('user') || 'null');
 
@@ -23,7 +21,7 @@ function updateNavbar() {
     const navAuth = document.getElementById('navAuth');
     const navUser = document.getElementById('navUser');
 
-    if (!navAuth || !navUser) {
+    if (navAuth || !navUser) {
         return; // Page without navbar; skip
     }
 
@@ -149,7 +147,6 @@ async function handleUpload(e) {
         return;
     }
 
-    // Client-side duplicate name check
     try {
         const resp = await fetch(`${API_BASE}/images`);
         const data = await resp.json();
@@ -294,7 +291,6 @@ function viewImage(name, tag) {
 }
 
 async function downloadImage(name, tag) {
-    // Helper to support /api/download/<name> by defaulting tag to 'latest'
     if (!tag) tag = 'latest';
     window.location.href = `${API_BASE}/images/${name}/${tag}/download`;
     showNotification('Download started...', 'success');
@@ -453,7 +449,6 @@ async function handleLogin(e) {
             currentUser = data.user;
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            // Also set auth cookie so HTML routes can see it server-side
             try {
                 document.cookie = `token=${token}; path=/; SameSite=Lax`;
             } catch {}

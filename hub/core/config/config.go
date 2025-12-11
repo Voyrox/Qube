@@ -6,20 +6,16 @@ import (
 )
 
 type Config struct {
-	// Server
 	Addr  string
 	Debug bool
 
-	// ScyllaDB
 	ScyllaHosts    []string
 	ScyllaKeyspace string
 	ScyllaUsername string
 	ScyllaPassword string
 
-	// JWT
 	JWTSecret string
 
-	// Storage
 	StoragePath   string
 	MaxUploadSize int64
 }
@@ -50,7 +46,6 @@ func getEnv(key, defaultValue string) string {
 
 func getEnvArray(key string, defaultValue []string) []string {
 	if value := os.Getenv(key); value != "" {
-		// Split by comma if multiple hosts
 		hosts := []string{}
 		for _, host := range splitString(value, ",") {
 			hosts = append(hosts, host)

@@ -54,7 +54,6 @@ type Comment struct {
 	CreatedAt time.Time  `json:"created_at"`
 }
 
-// Request/Response DTOs
 type RegisterRequest struct {
 	Username string `json:"username" binding:"required,min=3,max=32"`
 	Email    string `json:"email" binding:"required,email"`
@@ -62,7 +61,6 @@ type RegisterRequest struct {
 }
 
 type LoginRequest struct {
-	// Accept either username or email
 	Identifier string `json:"identifier" binding:"required"`
 	Password   string `json:"password" binding:"required"`
 }

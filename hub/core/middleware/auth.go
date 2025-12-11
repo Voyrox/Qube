@@ -18,7 +18,6 @@ type Claims struct {
 
 func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Support Authorization header OR cookie "token"
 		tokenString := ""
 		authHeader := c.GetHeader("Authorization")
 		if authHeader != "" {
@@ -28,13 +27,11 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			}
 		}
 		if tokenString == "" {
-			// try cookie
 			if cookie, err := c.Cookie("token"); err == nil {
 				tokenString = cookie
 			}
 		}
 		if tokenString == "" {
-			// try query param
 			if qp := c.Query("token"); qp != "" {
 				tokenString = qp
 			}
@@ -45,7 +42,6 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		// Parse and validate token
 		token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(cfg.JWTSecret), nil
 		})
@@ -71,7 +67,6 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 
 func OptionalAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Try header then cookie
 		tokenString := ""
 		authHeader := c.GetHeader("Authorization")
 		if authHeader != "" {
@@ -86,7 +81,6 @@ func OptionalAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			}
 		}
 		if tokenString == "" {
-			// try query param
 			if qp := c.Query("token"); qp != "" {
 				tokenString = qp
 			}

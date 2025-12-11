@@ -27,13 +27,11 @@ func NewScyllaDB(cfg *config.Config) (*ScyllaDB, error) {
 		}
 	}
 
-	// First, connect without keyspace to create it if needed
 	session, err := cluster.CreateSession()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to ScyllaDB: %w", err)
 	}
 
-	// Create keyspace if it doesn't exist
 	keyspaceQuery := fmt.Sprintf(`
 		CREATE KEYSPACE IF NOT EXISTS %s
 		WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}
@@ -46,7 +44,6 @@ func NewScyllaDB(cfg *config.Config) (*ScyllaDB, error) {
 
 	session.Close()
 
-	// Reconnect with the keyspace
 	cluster.Keyspace = cfg.ScyllaKeyspace
 	session, err = cluster.CreateSession()
 	if err != nil {

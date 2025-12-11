@@ -29,7 +29,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Check if username exists
 	var existingUser string
 	if err := h.db.Session().Query(
 		"SELECT username FROM users WHERE username = ? LIMIT 1",
@@ -39,7 +38,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Check if email exists
 	if err := h.db.Session().Query(
 		"SELECT email FROM users WHERE email = ? LIMIT 1 ALLOW FILTERING",
 		req.Email,
@@ -48,14 +46,12 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
 
-	// Create user
 	user := models.User{
 		ID:           gocql.TimeUUID(),
 		Username:     req.Username,
@@ -74,7 +70,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Generate JWT token
 	token, err := h.generateToken(user.ID.String(), user.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
@@ -94,9 +89,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Find user by username or email
 	var user models.User
-	// First attempt: username match
 	err := h.db.Session().Query(
 		`SELECT id, username, email, password_hash, created_at, updated_at 
 		 FROM users WHERE username = ? LIMIT 1 ALLOW FILTERING`,
@@ -104,7 +97,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	).Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
-		// Fallback: email match
 		err = h.db.Session().Query(
 			`SELECT id, username, email, password_hash, created_at, updated_at 
 			 FROM users WHERE email = ? LIMIT 1 ALLOW FILTERING`,
@@ -117,13 +109,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	// Generate JWT token
 	token, err := h.generateToken(user.ID.String(), user.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})

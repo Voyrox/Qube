@@ -36,7 +36,6 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 	r.GET("/images/:name", middleware.OptionalAuthMiddleware(cfg), imageHandler.DetailLatest)
 	r.GET("/images/:name/:tag", middleware.OptionalAuthMiddleware(cfg), imageHandler.Detail)
 
-	// Auth page
 	r.GET("/auth", func(c *gin.Context) {
 		c.HTML(200, "auth.html", gin.H{
 			"title": "Sign In",
@@ -55,10 +54,8 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 		})
 	})
 
-	// API routes
 	api := r.Group("/api")
 	{
-		// Public routes
 		api.POST("/auth/register", authHandler.Register)
 		api.POST("/auth/login", authHandler.Login)
 
