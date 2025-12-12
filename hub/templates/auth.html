@@ -10,23 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <a href="/" class="nav-brand" style="text-decoration: none; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                <img src="/static/logo.png" alt="Qube Logo" width="28" height="28">
-                <span>QubeCloud</span>
-            </a>
-            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <div class="nav-menu">
-                <a href="/" class="nav-link">Home</a>
-                <a href="/explore" class="nav-link">Explore</a>
-            </div>
-        </div>
-    </nav>
+    {{ template "topbar" . }}
 
     <div class="auth-container">
         <div class="auth-box">
@@ -125,6 +109,7 @@
         </div>
     </div>
 
+    <script src="/static/js/app.js"></script>
     <script src="/static/js/auth.js"></script>
 </body>
 </html>

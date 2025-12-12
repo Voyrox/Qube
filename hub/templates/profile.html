@@ -10,46 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <nav class="navbar">
-    <div class="container">
-      <a href="/" class="nav-brand" style="text-decoration: none; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-        <img src="/static/logo.png" alt="Qube Logo" width="28" height="28">
-        <span>QubeCloud</span>
-      </a>
-      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-      <div class="nav-menu">
-        <a href="/" class="nav-link">Home</a>
-        <a href="/explore" class="nav-link">Explore</a>
-        <div class="nav-auth" id="navAuth">
-          <a href="/login" class="nav-link">Login</a>
-          <a href="/signup" class="btn-primary">Get Started</a>
-        </div>
-        <div class="nav-user" id="navUser" style="display: none;">
-          <button id="uploadBtn" class="btn-primary-sm">+ Upload</button>
-          <div class="user-profile-menu">
-            <button id="profileMenuBtn" class="profile-btn">
-              <img id="navAvatar" src="/static/img/avatar-default.svg" alt="Avatar" width="24" height="24" style="border-radius:50%" onerror="this.src='/static/img/avatar-default.svg'" />
-            </button>
-            <div class="profile-dropdown" id="profileDropdown">
-              <div class="profile-info">
-                <p id="profileUsername" class="profile-name">User</p>
-                <p id="profileEmail" class="profile-email">user@example.com</p>
-              </div>
-              <hr>
-              <a href="/profile" class="dropdown-item">My Images</a>
-              <a href="/settings" class="dropdown-item">Settings</a>
-              <hr>
-              <a href="#" id="logoutBtn" class="dropdown-item danger">Logout</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </nav>
+  {{ template "topbar" . }}
 
   <div class="container">
     <h1>My Images</h1>
@@ -180,16 +141,28 @@
   const versionSelector = document.getElementById('versionSelector');
   const versionSelectorGroup = document.getElementById('versionSelectorGroup');
 
-  closeBtn.addEventListener('click', () => { modal.classList.remove('open'); });
-  window.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+  closeBtn.addEventListener('click', (e) => { 
+    e.stopPropagation();
+    modal.classList.remove('open'); 
+  });
+  window.addEventListener('click', (e) => { 
+    if (e.target === modal) {
+      e.stopImmediatePropagation();
+      modal.classList.remove('open'); 
+    }
+  });
   
-  cancelDeleteBtn.addEventListener('click', () => { modal.classList.remove('open'); });
+  cancelDeleteBtn.addEventListener('click', (e) => { 
+    e.stopPropagation();
+    modal.classList.remove('open'); 
+  });
 
   versionSelector.addEventListener('change', () => {
     deleteSpecificBtn.disabled = !versionSelector.value;
   });
 
-  deleteSpecificBtn.addEventListener('click', async () => {
+  deleteSpecificBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
     if (!versionSelector.value) return;
     const selectedImageId = versionSelector.value;
     const res = await fetch(`/api/images/${selectedImageId}`, { 
@@ -208,7 +181,8 @@
     currentDeleteImageId = null;
   });
 
-  deleteAllBtn.addEventListener('click', async () => {
+  deleteAllBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
     if (!confirm('Are you sure? This will delete ALL versions of this image.')) return;
     const imagesToDelete = allImages.filter(img => img.name === currentDeleteImageName);
     let successCount = 0;
@@ -271,7 +245,8 @@
       tr.querySelector('[data-act=edit]').addEventListener('click', ()=>{
         window.location.href = `/images/${img.name}/${primaryTag}`;
       });
-      tr.querySelector('[data-act=delete]').addEventListener('click', ()=>{
+      tr.querySelector('[data-act=delete]').addEventListener('click', (e)=>{
+        e.stopPropagation();
         currentDeleteImageId = img.id;
         currentDeleteImageName = img.name;
         currentDeleteImageTag = primaryTag;
@@ -300,7 +275,13 @@
         
         deleteAllBtn.style.display = versions.length > 1 ? 'block' : 'none';
         
-        modal.classList.add('open');
+        // Clear any inline display style that might have been set by app.js
+        modal.style.display = '';
+        
+        // Use setTimeout to ensure modal opens after any pending event propagation
+        setTimeout(() => {
+          modal.classList.add('open');
+        }, 10);
       });
       tr.querySelector('[data-act=toggle]').addEventListener('click', async ()=>{
         const fd = new FormData();
@@ -318,21 +299,6 @@
   const toast = document.createElement('div'); toast.className = 'toast'; document.body.appendChild(toast);
   window.showToast = (msg)=>{ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 2000); };
   load();
-})();
-</script>
-<script>
-(async function(){
-    try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        const res = await fetch('/api/auth/profile', { headers: { Authorization: `Bearer ${token}` }});
-        if (!res.ok) return;
-        const u = await res.json();
-        const avatar = document.getElementById('navAvatar');
-        if (u.id) { avatar.src = `/static/avatars/${u.id}.png`; }
-        document.getElementById('profileUsername').textContent = u.username || 'User';
-        document.getElementById('profileEmail').textContent = u.email || '';
-    } catch {}
 })();
 </script>
 <script src="/static/js/app.js"></script>
