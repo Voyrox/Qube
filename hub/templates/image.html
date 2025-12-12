@@ -49,7 +49,7 @@
   <div class="container main-content">
     <section class="section image-detail">
       <div class="image-header">
-        <img class="image-logo" src="/api/images/{{ .image.Name }}/{{ .image.Tag }}/logo" alt="{{ .image.Name }} logo" onerror="this.outerHTML='\\u003cdiv class=\'image-logo-placeholder\'\\u003e🧊\\u003c/div\\u003e'">
+        <img class="image-logo" src="/api/images/{{ .image.Name }}/{{ .image.Tag }}/logo" alt="{{ .image.Name }} logo" onerror="this.style.display='none'; var div=document.createElement('div'); div.className='image-logo-placeholder'; div.textContent='🧊'; this.parentNode.insertBefore(div, this);">
         <div class="image-title">
           <h2>{{ .owner_username }}/{{ .image.Name }}</h2>
           <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">

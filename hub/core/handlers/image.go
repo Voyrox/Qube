@@ -771,12 +771,15 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 		}
 
 		now := time.Now()
+		newDigest := fmt.Sprintf("sha256:%x", newImageID.String())
+
 		newImage := models.Image{
 			ID:          newImageID,
 			Name:        image.Name,
 			Tag:         req.NewTag,
 			OwnerID:     image.OwnerID,
 			Description: image.Description, // Inherit from parent
+			Digest:      newDigest,         // Generate new digest for this version
 			Category:    image.Category,    // Inherit from parent
 			IsPublic:    image.IsPublic,
 			FilePath:    newFilePath,
@@ -791,7 +794,7 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 		if err := h.db.Session().Query(
 			`INSERT INTO images (id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated) 
 			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			newImage.ID, newImage.Name, newImage.Tag, newImage.OwnerID, newImage.Description, "",
+			newImage.ID, newImage.Name, newImage.Tag, newImage.OwnerID, newImage.Description, newImage.Digest,
 			newImage.Size, 0, 0, 0, newImage.Category, newImage.IsPublic, newImage.FilePath, newImage.LogoPath,
 			newImage.CreatedAt, newImage.UpdatedAt, newImage.LastUpdated,
 		).Exec(); err != nil {
@@ -1059,6 +1062,21 @@ func (h *ImageHandler) List(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch images"})
 			return
 		}
+	}
+
+	// Deduplicate: only show latest version of each image name
+	latestByName := make(map[string]models.Image)
+	for _, img := range images {
+		existing, found := latestByName[img.Name]
+		if !found || img.LastUpdated.After(existing.LastUpdated) {
+			latestByName[img.Name] = img
+		}
+	}
+
+	// Convert map back to slice
+	images = make([]models.Image, 0, len(latestByName))
+	for _, img := range latestByName {
+		images = append(images, img)
 	}
 
 	enriched := make([]gin.H, 0, len(images))
