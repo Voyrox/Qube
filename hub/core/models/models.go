@@ -26,6 +26,7 @@ type Image struct {
 	Downloads   int64      `json:"downloads"`
 	Pulls       int64      `json:"pulls"`
 	Stars       int64      `json:"stars"`
+	Category    string     `json:"category"`
 	IsPublic    bool       `json:"is_public"`
 	FilePath    string     `json:"-"`
 	LogoPath    string     `json:"logo_path,omitempty"`
@@ -74,6 +75,7 @@ type ImageUploadRequest struct {
 	Name        string `form:"name" binding:"required"`
 	Tag         string `form:"tag" binding:"required"`
 	Description string `form:"description"`
+	Category    string `form:"category"`
 	IsPublic    bool   `form:"is_public"`
 }
 

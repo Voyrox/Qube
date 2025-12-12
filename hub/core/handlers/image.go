@@ -128,6 +128,7 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 		Downloads:   0,
 		Pulls:       0,
 		Stars:       0,
+		Category:    req.Category,
 		IsPublic:    req.IsPublic,
 		FilePath:    filePath,
 		LogoPath:    logoPath,
@@ -137,10 +138,10 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 	}
 
 	if err := h.db.Session().Query(
-		`INSERT INTO images (id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated) 
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO images (id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated) 
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		image.ID, image.Name, image.Tag, image.OwnerID, image.Description, image.Digest,
-		image.Size, image.Downloads, image.Pulls, image.Stars, image.IsPublic, image.FilePath, image.LogoPath,
+		image.Size, image.Downloads, image.Pulls, image.Stars, image.Category, image.IsPublic, image.FilePath, image.LogoPath,
 		image.CreatedAt, image.UpdatedAt, image.LastUpdated,
 	).Exec(); err != nil {
 		os.Remove(filePath) // Clean up file on error
@@ -175,21 +176,21 @@ func (h *ImageHandler) Download(c *gin.Context) {
 
 	var image models.Image
 	if err := h.db.Session().Query(
-		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
 		 FROM images WHERE name = ? AND tag = ? LIMIT 1 ALLOW FILTERING`,
 		name, tag,
 	).Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
-		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
+		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.Category, &image.IsPublic, &image.FilePath, &image.LogoPath,
 		&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated); err != nil {
 
 		iter := h.db.Session().Query(
-			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated FROM images WHERE name = ? ALLOW FILTERING`,
+			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated FROM images WHERE name = ? ALLOW FILTERING`,
 			name,
 		).Iter()
 		var cand models.Image
 		var found bool
 		for iter.Scan(&cand.ID, &cand.Name, &cand.Tag, &cand.OwnerID, &cand.Description, &cand.Digest,
-			&cand.Size, &cand.Downloads, &cand.Pulls, &cand.Stars, &cand.IsPublic, &cand.FilePath, &cand.LogoPath,
+			&cand.Size, &cand.Downloads, &cand.Pulls, &cand.Stars, &cand.Category, &cand.IsPublic, &cand.FilePath, &cand.LogoPath,
 			&cand.CreatedAt, &cand.UpdatedAt, &cand.LastUpdated) {
 			if strings.Contains(cand.Tag, ",") {
 				parts := strings.Split(cand.Tag, ",")
@@ -308,7 +309,7 @@ func (h *ImageHandler) DownloadLatest(c *gin.Context) {
 	name := c.Param("name")
 
 	iter := h.db.Session().Query(
-		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
 		 FROM images WHERE name = ? ALLOW FILTERING`,
 		name,
 	).Iter()
@@ -317,7 +318,7 @@ func (h *ImageHandler) DownloadLatest(c *gin.Context) {
 	var found bool
 	var img models.Image
 	for iter.Scan(&img.ID, &img.Name, &img.Tag, &img.OwnerID, &img.Description, &img.Digest,
-		&img.Size, &img.Downloads, &img.Pulls, &img.Stars, &img.IsPublic, &img.FilePath, &img.LogoPath,
+		&img.Size, &img.Downloads, &img.Pulls, &img.Stars, &img.Category, &img.IsPublic, &img.FilePath, &img.LogoPath,
 		&img.CreatedAt, &img.UpdatedAt, &img.LastUpdated) {
 		if !found || img.LastUpdated.After(latest.LastUpdated) {
 			latest = img
@@ -367,22 +368,22 @@ func (h *ImageHandler) Detail(c *gin.Context) {
 
 	var image models.Image
 	if err := h.db.Session().Query(
-		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
 		 FROM images WHERE name = ? AND tag = ? LIMIT 1 ALLOW FILTERING`,
 		name, tag,
 	).Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
-		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
+		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.Category, &image.IsPublic, &image.FilePath, &image.LogoPath,
 		&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated); err != nil {
 
 		iter := h.db.Session().Query(
-			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
 			 FROM images WHERE name = ? ALLOW FILTERING`,
 			name,
 		).Iter()
 		var cand models.Image
 		var found bool
 		for iter.Scan(&cand.ID, &cand.Name, &cand.Tag, &cand.OwnerID, &cand.Description, &cand.Digest,
-			&cand.Size, &cand.Downloads, &cand.Pulls, &cand.Stars, &cand.IsPublic, &cand.FilePath, &cand.LogoPath,
+			&cand.Size, &cand.Downloads, &cand.Pulls, &cand.Stars, &cand.Category, &cand.IsPublic, &cand.FilePath, &cand.LogoPath,
 			&cand.CreatedAt, &cand.UpdatedAt, &cand.LastUpdated) {
 			if strings.Contains(cand.Tag, ",") {
 				parts := strings.Split(cand.Tag, ",")
@@ -483,7 +484,7 @@ func (h *ImageHandler) Detail(c *gin.Context) {
 func (h *ImageHandler) DetailLatest(c *gin.Context) {
 	name := c.Param("name")
 	iter := h.db.Session().Query(
-		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
 		 FROM images WHERE name = ? ALLOW FILTERING`,
 		name,
 	).Iter()
@@ -492,7 +493,7 @@ func (h *ImageHandler) DetailLatest(c *gin.Context) {
 	var found bool
 	var img models.Image
 	for iter.Scan(&img.ID, &img.Name, &img.Tag, &img.OwnerID, &img.Description, &img.Digest,
-		&img.Size, &img.Downloads, &img.Pulls, &img.Stars, &img.IsPublic, &img.FilePath, &img.LogoPath,
+		&img.Size, &img.Downloads, &img.Pulls, &img.Stars, &img.Category, &img.IsPublic, &img.FilePath, &img.LogoPath,
 		&img.CreatedAt, &img.UpdatedAt, &img.LastUpdated) {
 		if !found || img.LastUpdated.After(latest.LastUpdated) {
 			latest = img
@@ -601,11 +602,11 @@ func (h *ImageHandler) EditForm(c *gin.Context) {
 
 	var image models.Image
 	if err := h.db.Session().Query(
-		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
 		 FROM images WHERE name = ? AND tag = ? LIMIT 1 ALLOW FILTERING`,
 		name, tag,
 	).Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
-		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
+		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.Category, &image.IsPublic, &image.FilePath, &image.LogoPath,
 		&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated); err != nil {
 		c.String(http.StatusNotFound, "Image not found")
 		return
@@ -642,22 +643,22 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 
 	var image models.Image
 	if err := h.db.Session().Query(
-		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
 		 FROM images WHERE name = ? AND tag = ? LIMIT 1 ALLOW FILTERING`,
 		name, tag,
 	).Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
-		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
+		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.Category, &image.IsPublic, &image.FilePath, &image.LogoPath,
 		&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated); err != nil {
 
 		iter := h.db.Session().Query(
-			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
 			 FROM images WHERE name = ? ALLOW FILTERING`,
 			name,
 		).Iter()
 		var cand models.Image
 		var found bool
 		for iter.Scan(&cand.ID, &cand.Name, &cand.Tag, &cand.OwnerID, &cand.Description, &cand.Digest,
-			&cand.Size, &cand.Downloads, &cand.Pulls, &cand.Stars, &cand.IsPublic, &cand.FilePath, &cand.LogoPath,
+			&cand.Size, &cand.Downloads, &cand.Pulls, &cand.Stars, &cand.Category, &cand.IsPublic, &cand.FilePath, &cand.LogoPath,
 			&cand.CreatedAt, &cand.UpdatedAt, &cand.LastUpdated) {
 
 			if strings.Contains(cand.Tag, ",") {
@@ -697,6 +698,7 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 
 	var req struct {
 		Description string `form:"description" json:"description"`
+		Category    string `form:"category" json:"category"`
 		IsPublic    *bool  `form:"is_public" json:"is_public"`
 		NewTag      string `form:"new_tag" json:"new_tag"`
 		Tags        string `form:"tags" json:"tags"`
@@ -709,6 +711,9 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 
 	if req.Description != "" {
 		image.Description = req.Description
+	}
+	if req.Category != "" {
+		image.Category = req.Category
 	}
 	if req.IsPublic != nil {
 		image.IsPublic = *req.IsPublic
@@ -776,8 +781,8 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 	image.LastUpdated = image.UpdatedAt
 
 	if err := h.db.Session().Query(
-		`UPDATE images SET description = ?, is_public = ?, logo_path = ?, file_path = ?, tag = ?, updated_at = ?, last_updated = ? WHERE id = ?`,
-		image.Description, image.IsPublic, image.LogoPath, image.FilePath, image.Tag, image.UpdatedAt, image.LastUpdated, image.ID,
+		`UPDATE images SET description = ?, category = ?, is_public = ?, logo_path = ?, file_path = ?, tag = ?, updated_at = ?, last_updated = ? WHERE id = ?`,
+		image.Description, image.Category, image.IsPublic, image.LogoPath, image.FilePath, image.Tag, image.UpdatedAt, image.LastUpdated, image.ID,
 	).Exec(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update image"})
 		return
@@ -865,14 +870,14 @@ func (h *ImageHandler) List(c *gin.Context) {
 
 	if query != "" {
 		iter := h.db.Session().Query(
-			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
 			 FROM images WHERE name = ? LIMIT ? ALLOW FILTERING`,
 			query, limit,
 		).Iter()
 
 		var image models.Image
 		for iter.Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
-			&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
+			&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.Category, &image.IsPublic, &image.FilePath, &image.LogoPath,
 			&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated) {
 			if image.IsPublic {
 				images = append(images, image)
@@ -885,14 +890,14 @@ func (h *ImageHandler) List(c *gin.Context) {
 		}
 	} else {
 		iter := h.db.Session().Query(
-			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
 			 FROM images LIMIT ? ALLOW FILTERING`,
 			limit,
 		).Iter()
 
 		var image models.Image
 		for iter.Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
-			&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
+			&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.Category, &image.IsPublic, &image.FilePath, &image.LogoPath,
 			&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated) {
 			if image.IsPublic {
 				images = append(images, image)
@@ -929,6 +934,7 @@ func (h *ImageHandler) List(c *gin.Context) {
 			"downloads":      img.Downloads,
 			"pulls":          img.Pulls,
 			"stars":          img.Stars,
+			"category":       img.Category,
 			"is_public":      img.IsPublic,
 			"logo_path":      logoURL,
 			"created_at":     img.CreatedAt,
@@ -945,14 +951,14 @@ func (h *ImageHandler) GetByName(c *gin.Context) {
 
 	var images []models.Image
 	iter := h.db.Session().Query(
-		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
 		 FROM images WHERE name = ? ALLOW FILTERING`,
 		name,
 	).Iter()
 
 	var image models.Image
 	for iter.Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
-		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
+		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.Category, &image.IsPublic, &image.FilePath, &image.LogoPath,
 		&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated) {
 		if image.IsPublic {
 			images = append(images, image)
@@ -988,6 +994,7 @@ func (h *ImageHandler) GetByName(c *gin.Context) {
 			"downloads":      img.Downloads,
 			"pulls":          img.Pulls,
 			"stars":          img.Stars,
+			"category":       img.Category,
 			"is_public":      img.IsPublic,
 			"logo_path":      logoURL,
 			"created_at":     img.CreatedAt,
@@ -1069,14 +1076,14 @@ func (h *ImageHandler) GetMyImages(c *gin.Context) {
 
 	var images []models.Image
 	iter := h.db.Session().Query(
-		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+		`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
 		 FROM images WHERE owner_id = ? ALLOW FILTERING`,
 		userID,
 	).Iter()
 
 	var image models.Image
 	for iter.Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
-		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
+		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.Category, &image.IsPublic, &image.FilePath, &image.LogoPath,
 		&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated) {
 		images = append(images, image)
 	}

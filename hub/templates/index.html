@@ -12,10 +12,10 @@
 <body>
     <nav class="navbar">
         <div class="container">
-            <div class="nav-brand">
+            <a href="/" class="nav-brand" style="text-decoration: none; display: flex; align-items: center; gap: 8px; cursor: pointer;">
                 <img src="/static/logo.png" alt="Qube Logo" width="28" height="28">
                 <span>QubeCloud</span>
-            </div>
+            </a>
             <div class="nav-menu">
                 <a href="/" class="nav-link">Home</a>
                 <a href="/explore" class="nav-link">Explore</a>
@@ -27,7 +27,7 @@
                     <button id="uploadBtn" class="btn-primary-sm">+ Upload</button>
                     <div class="user-profile-menu">
                         <button id="profileMenuBtn" class="profile-btn">
-                            <img id="navAvatar" src="/static/img/avatar-default.png" alt="Avatar" width="24" height="24" style="border-radius:50%" onerror="this.src='/static/img/avatar-default.png'" />
+                            <img id="navAvatar" src="/static/img/avatar-default.svg" alt="Avatar" width="24" height="24" style="border-radius:50%" onerror="this.src='/static/img/avatar-default.svg'" />
                         </button>
                         <div class="profile-dropdown" id="profileDropdown">
                             <div class="profile-info">
@@ -274,6 +274,18 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="uploadCategory">Category</label>
+                    <select id="uploadCategory" name="category">
+                        <option value="">None</option>
+                        <option value="programming-languages">Programming Languages</option>
+                        <option value="databases">Databases</option>
+                        <option value="ai-ml">AI & ML</option>
+                        <option value="monitoring">Monitoring</option>
+                        <option value="dev-tools">Dev Tools</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label for="uploadFile">Container File (.tar) *</label>
                     <div class="file-input-wrapper">
                         <input type="file" id="uploadFile" name="file" accept=".tar" required>
@@ -306,7 +318,52 @@
     </div>
 
     <script src="/static/js/app.js"></script>
-        <script>
+    <script>
+        // Search functionality
+        document.getElementById('searchBtn').addEventListener('click', function() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (query) {
+                window.location.href = '/explore?q=' + encodeURIComponent(query);
+            } else {
+                window.location.href = '/explore';
+            }
+        });
+
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('searchBtn').click();
+            }
+        });
+
+        // View All buttons
+        document.querySelectorAll('.view-all').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const section = this.closest('.section');
+                const isPopular = section.querySelector('#mostPulledList');
+                const isTrending = section.querySelector('#trendingList');
+                
+                if (isPopular) {
+                    window.location.href = '/explore?sort=stars';
+                } else if (isTrending) {
+                    window.location.href = '/explore?sort=pulls';
+                }
+            });
+        });
+
+        // Category card filter
+        window.filterByCategory = function(category) {
+            const categoryMap = {
+                'database': 'databases',
+                'ml': 'ai-ml',
+                'monitoring': 'monitoring',
+                'devtools': 'dev-tools'
+            };
+            const mappedCategory = categoryMap[category] || category;
+            window.location.href = '/explore?category=' + encodeURIComponent(mappedCategory);
+        };
+    </script>
+    <script>
         (async function(){
             try {
                 const token = localStorage.getItem('token');
@@ -320,7 +377,7 @@
                 document.getElementById('profileEmail').textContent = u.email || '';
             } catch {}
         })();
-        </script>
+    </script>
 </body>
 </html>
 

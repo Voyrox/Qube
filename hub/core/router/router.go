@@ -33,6 +33,10 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 		})
 	})
 
+	r.GET("/explore", middleware.OptionalAuthMiddleware(cfg), func(c *gin.Context) {
+		c.HTML(200, "explore.html", gin.H{"title": "Explore Images"})
+	})
+
 	r.GET("/profile", middleware.OptionalAuthMiddleware(cfg), func(c *gin.Context) {
 		c.HTML(200, "profile.html", gin.H{"title": "My Profile"})
 	})

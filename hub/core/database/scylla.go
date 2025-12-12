@@ -92,6 +92,7 @@ func (db *ScyllaDB) InitSchema() error {
 			downloads BIGINT,
 			pulls BIGINT,
 			stars BIGINT,
+			category TEXT,
 			is_public BOOLEAN,
 			file_path TEXT,
 			logo_path TEXT,
@@ -141,6 +142,16 @@ func (db *ScyllaDB) InitSchema() error {
 		if err := db.session.Query(query).Exec(); err != nil {
 			return fmt.Errorf("failed to execute query: %w\nQuery: %s", err, query)
 		}
+	}
+
+	// Migrations: Add category column if it doesn't exist
+	migrations := []string{
+		`ALTER TABLE images ADD category TEXT`,
+	}
+
+	for _, migration := range migrations {
+		// Ignore errors if column already exists
+		_ = db.session.Query(migration).Exec()
 	}
 
 	return nil

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .title }}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar (same as other pages) -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="nav-brand" style="text-decoration: none; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <img src="/static/logo.png" alt="Qube Logo" width="28" height="28">
+                <span>QubeCloud</span>
+            </a>
+            <div class="nav-menu">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/explore" class="nav-link">Explore</a>
+                <div class="nav-auth" id="navAuth">
+                    <a href="/login" class="nav-link">Login</a>
+                    <a href="/signup" class="btn-primary">Get Started</a>
+                </div>
+                <div class="nav-user" id="navUser" style="display: none;">
+                    <button id="uploadBtn" class="btn-primary-sm">+ Upload</button>
+                    <div class="user-profile-menu">
+                        <button id="profileMenuBtn" class="profile-btn">
+                            <img id="navAvatar" src="/static/img/avatar-default.svg" alt="Avatar" width="24" height="24" style="border-radius:50%" onerror="this.src='/static/img/avatar-default.svg'"/>
+                        </button>
+                        <div class="profile-dropdown" id="profileDropdown">
+                            <div class="profile-info">
+                                <p id="profileUsername" class="profile-name">User</p>
+                                <p id="profileEmail" class="profile-email">user@example.com</p>
+                            </div>
+                            <hr>
+                            <a href="/profile" class="dropdown-item">My Images</a>
+                            <a href="/settings" class="dropdown-item">Settings</a>
+                            <hr>
+                            <a href="#" id="logoutBtn" class="dropdown-item danger">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+        <section class="section">
+            <div class="section-header">
+                <div>
+                    <h2>Explore Containers</h2>
+                    <p class="section-subtitle">Browse featured images from the QubeCloud community</p>
+                </div>
+            </div>
+
+            <!-- Two-column layout: floating sidebar (left) + grid (right) -->
+            <div class="settings-layout">
+                <!-- Sidebar (reuses settings-sidebar styles) -->
+                <aside class="settings-sidebar" style="position:sticky; top:84px; align-self:start; min-width: 200px;">
+                    <h2>Filters</h2>
+                    
+                    <!-- Search Input -->
+                    <div style="margin-bottom: 16px;">
+                        <input type="text" id="searchFilter" placeholder="Search by name..." style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-primary); color: var(--text-primary); box-sizing: border-box;">
+                    </div>
+
+                    <!-- Category Filters -->
+                    <div style="margin-bottom: 16px;">
+                        <h3 style="font-size: 13px; color: var(--text-secondary); margin: 0 0 8px 0; text-transform: uppercase;">Categories</h3>
+                        <ul style="display: flex; flex-direction: column; gap: 6px; list-style: none; margin: 0; padding: 0;">
+                            <li class="active" style="padding: 8px 10px; border-radius: 6px; cursor: pointer; background: var(--bg-tertiary); color: var(--text-primary); font-size: 14px;" data-filter="all">All Containers</li>
+                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-filter="databases">Databases</li>
+                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-filter="ai-ml">AI &amp; ML</li>
+                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-filter="monitoring">Monitoring</li>
+                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-filter="dev-tools">Dev Tools</li>
+                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-filter="networking">Networking</li>
+                        </ul>
+                    </div>
+
+                    <!-- Tag Filters -->
+                    <div style="margin-bottom: 16px;">
+                        <h3 style="font-size: 13px; color: var(--text-secondary); margin: 0 0 8px 0; text-transform: uppercase;">Popular Tags</h3>
+                        <div id="tagFilters" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                    </div>
+
+                    <!-- Sort Options -->
+                    <div>
+                        <h3 style="font-size: 13px; color: var(--text-secondary); margin: 0 0 8px 0; text-transform: uppercase;">Sort By</h3>
+                        <ul style="display: flex; flex-direction: column; gap: 6px; list-style: none; margin: 0; padding: 0;">
+                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-sort="name">Name (A-Z)</li>
+                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-sort="stars">Most Starred</li>
+                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-sort="pulls">Most Pulled</li>
+                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-sort="recent">Recently Updated</li>
+                        </ul>
+                    </div>
+                </aside>
+
+                <!-- Right side: dynamic containers grid -->
+                <div class="settings-content" style="background:transparent; border:none; padding:0;">
+                    <div class="images-grid" id="imagesContainer" style="grid-template-columns:repeat(3, minmax(0, 1fr)); gap:20px;">
+                        <!-- Images will be loaded here dynamically -->
+                        <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">
+                            <p>Loading containers...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2026 Qube Hub. Built with ❤️ for the Qube community.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+
+    <script>
+        let allImages = [];
+        let currentFilter = 'all';
+        let currentSort = 'name';
+        let currentSearch = '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadExploreImages();
+            setupFilterListeners();
+            setupSearchListener();
+            setupSortListeners();
+            loadQueryParams();
+        });
+
+        function loadQueryParams() {
+            const params = new URLSearchParams(window.location.search);
+            const query = params.get('q');
+            if (query) {
+                const searchInput = document.getElementById('searchFilter');
+                searchInput.value = query;
+                currentSearch = query.toLowerCase();
+                displayFilteredImages();
+            }
+        }
+
+        async function loadExploreImages() {
+            try {
+                const response = await fetch('/api/images');
+                const data = await response.json();
+                
+                if (response.ok && data.images) {
+                    allImages = data.images;
+                    populateTagFilters();
+                    displayFilteredImages();
+                } else {
+                    const container = document.getElementById('imagesContainer');
+                    container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;"><p>No public images available yet.</p></div>';
+                }
+            } catch (error) {
+                console.error('Error loading images:', error);
+                const container = document.getElementById('imagesContainer');
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;"><p>Error loading images.</p></div>';
+            }
+        }
+
+        function populateTagFilters() {
+            const allTags = new Set();
+            allImages.forEach(img => {
+                if (img.tag) {
+                    img.tag.split(',').forEach(t => {
+                        const tag = t.trim();
+                        if (tag) allTags.add(tag);
+                    });
+                }
+            });
+            
+            const tagContainer = document.getElementById('tagFilters');
+            Array.from(allTags).slice(0, 8).forEach(tag => {
+                const btn = document.createElement('button');
+                btn.textContent = tag;
+                btn.style.cssText = 'padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 12px;';
+                btn.addEventListener('click', () => {
+                    currentSearch = tag;
+                    displayFilteredImages();
+                });
+                btn.addEventListener('mouseover', () => {
+                    btn.style.background = 'var(--bg-tertiary)';
+                    btn.style.color = 'var(--text-primary)';
+                });
+                btn.addEventListener('mouseout', () => {
+                    btn.style.background = 'transparent';
+                    btn.style.color = 'var(--text-secondary)';
+                });
+                tagContainer.appendChild(btn);
+            });
+        }
+
+        function setupSearchListener() {
+            const searchInput = document.getElementById('searchFilter');
+            searchInput.addEventListener('input', function() {
+                currentSearch = this.value.trim().toLowerCase();
+                displayFilteredImages();
+            });
+        }
+
+        function setupFilterListeners() {
+            const filterItems = document.querySelectorAll('[data-filter]');
+            filterItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    filterItems.forEach(li => {
+                        li.classList.remove('active');
+                        li.style.background = '';
+                        li.style.color = 'var(--text-secondary)';
+                    });
+                    this.classList.add('active');
+                    this.style.background = 'var(--bg-tertiary)';
+                    this.style.color = 'var(--text-primary)';
+                    currentFilter = this.getAttribute('data-filter');
+                    displayFilteredImages();
+                });
+            });
+        }
+
+        function setupSortListeners() {
+            const sortItems = document.querySelectorAll('[data-sort]');
+            sortItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    sortItems.forEach(li => {
+                        li.style.background = '';
+                        li.style.color = 'var(--text-secondary)';
+                    });
+                    this.style.background = 'var(--bg-tertiary)';
+                    this.style.color = 'var(--text-primary)';
+                    currentSort = this.getAttribute('data-sort');
+                    displayFilteredImages();
+                });
+            });
+        }
+
+        function displayFilteredImages() {
+            let filtered = allImages;
+
+            // Apply category filter
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(image => {
+                    const name = (image.name || '').toLowerCase();
+                    const category = (image.category || '').toLowerCase();
+                    const tags = (image.tag || '').toLowerCase();
+                    const description = (image.description || '').toLowerCase();
+                    const fullText = `${name} ${category} ${tags} ${description}`;
+
+                    if (currentFilter === 'databases') {
+                        return fullText.includes('database') || fullText.includes('postgres') || fullText.includes('mongo') || 
+                               fullText.includes('redis') || fullText.includes('mysql') || fullText.includes('db');
+                    } else if (currentFilter === 'ai-ml') {
+                        return fullText.includes('ai') || fullText.includes('ml') || fullText.includes('torch') || 
+                               fullText.includes('tensorflow') || fullText.includes('jupyter') || fullText.includes('python');
+                    } else if (currentFilter === 'monitoring') {
+                        return fullText.includes('monitoring') || fullText.includes('prometheus') || fullText.includes('grafana') || 
+                               fullText.includes('elk') || fullText.includes('logging');
+                    } else if (currentFilter === 'dev-tools') {
+                        return fullText.includes('dev') || fullText.includes('node') || fullText.includes('go') || 
+                               fullText.includes('rust') || fullText.includes('java') || fullText.includes('tools');
+                    } else if (currentFilter === 'networking') {
+                        return fullText.includes('network') || fullText.includes('nginx') || fullText.includes('proxy') || 
+                               fullText.includes('traefik') || fullText.includes('envoy');
+                    }
+                });
+            }
+
+            // Apply search filter
+            if (currentSearch) {
+                filtered = filtered.filter(image => {
+                    const name = (image.name || '').toLowerCase();
+                    const owner = (image.owner_username || '').toLowerCase();
+                    const tag = (image.tag || '').toLowerCase();
+                    const description = (image.description || '').toLowerCase();
+                    return name.includes(currentSearch) || owner.includes(currentSearch) || 
+                           tag.includes(currentSearch) || description.includes(currentSearch);
+                });
+            }
+
+            // Apply sorting
+            filtered.sort((a, b) => {
+                if (currentSort === 'name') {
+                    return (a.name || '').localeCompare(b.name || '');
+                } else if (currentSort === 'stars') {
+                    return (b.stars || 0) - (a.stars || 0);
+                } else if (currentSort === 'pulls') {
+                    return (b.pulls || 0) - (a.pulls || 0);
+                } else if (currentSort === 'recent') {
+                    return new Date(b.last_updated) - new Date(a.last_updated);
+                }
+                return 0;
+            });
+
+            displayImages(filtered, false, 'imagesContainer');
+        }
+    </script>
+</body>
+</html>

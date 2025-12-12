@@ -12,13 +12,36 @@
 <body>
   <nav class="navbar">
     <div class="container">
-      <div class="nav-brand">
+      <a href="/" class="nav-brand" style="text-decoration: none; display: flex; align-items: center; gap: 8px; cursor: pointer;">
         <img src="/static/logo.png" alt="Qube Logo" width="28" height="28">
-        <span>Qube Hub</span>
-      </div>
+        <span>QubeCloud</span>
+      </a>
       <div class="nav-menu">
         <a href="/" class="nav-link">Home</a>
         <a href="/explore" class="nav-link">Explore</a>
+        <div class="nav-auth" id="navAuth">
+          <a href="/login" class="nav-link">Login</a>
+          <a href="/signup" class="btn-primary">Get Started</a>
+        </div>
+        <div class="nav-user" id="navUser" style="display: none;">
+          <button id="uploadBtn" class="btn-primary-sm">+ Upload</button>
+          <div class="user-profile-menu">
+            <button id="profileMenuBtn" class="profile-btn">
+              <img id="navAvatar" src="/static/img/avatar-default.svg" alt="Avatar" width="24" height="24" style="border-radius:50%" onerror="this.src='/static/img/avatar-default.svg'" />
+            </button>
+            <div class="profile-dropdown" id="profileDropdown">
+              <div class="profile-info">
+                <p id="profileUsername" class="profile-name">User</p>
+                <p id="profileEmail" class="profile-email">user@example.com</p>
+              </div>
+              <hr>
+              <a href="/profile" class="dropdown-item">My Images</a>
+              <a href="/settings" class="dropdown-item">Settings</a>
+              <hr>
+              <a href="#" id="logoutBtn" class="dropdown-item danger">Logout</a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </nav>
@@ -43,6 +66,7 @@
       <div class="image-content">
         <div class="image-main">
           <p class="section-subtitle">By <span id="ownerUsername" data-owner="{{ .owner_username }}">{{ .owner_username }}</span> • Updated <span id="lastUpdated" data-date="{{ .image.LastUpdated }}">{{ .image.LastUpdated }}</span></p>
+          {{ if .image.Category }}<p class="section-subtitle" style="margin-top:8px;">Category: <span class="tag">{{ .image.Category }}</span></p>{{ end }}
             <div class="stats-row" style="margin:12px 0;">
             <span>Pulls: {{ .image.Pulls }}</span>
             <span>Stars: <span id="starsCount">{{ .image.Stars }}</span></span>
@@ -55,6 +79,17 @@
             </div>
           </div>
           <div id="inlineEditPanel" style="display:none; margin-top:12px;">
+            <div class="form-group">
+              <label>Category</label>
+              <select id="inlineEditCategory">
+                <option value="">None</option>
+                <option value="programming-languages" {{ if eq .image.Category "programming-languages" }}selected{{ end }}>Programming Languages</option>
+                <option value="databases" {{ if eq .image.Category "databases" }}selected{{ end }}>Databases</option>
+                <option value="ai-ml" {{ if eq .image.Category "ai-ml" }}selected{{ end }}>AI & ML</option>
+                <option value="monitoring" {{ if eq .image.Category "monitoring" }}selected{{ end }}>Monitoring</option>
+                <option value="dev-tools" {{ if eq .image.Category "dev-tools" }}selected{{ end }}>Dev Tools</option>
+              </select>
+            </div>
             <div class="form-group">
               <label>Tags</label>
               <input id="inlineEditTags" type="text" placeholder="e.g. latest, v1.0, stable" value="{{ .image.Tag }}{{ range $i, $v := .aliases }}, {{ $v }}{{ end }}" />
@@ -227,12 +262,14 @@
             const token = localStorage.getItem('token');
             if (!token) { alert('Please login to save changes.'); return; }
             const description = document.getElementById('inlineEditDescription').value;
+            const category = document.getElementById('inlineEditCategory').value;
             const tagsStr = (document.getElementById('inlineEditTags').value || '').trim();
             const newTag = tagsStr.split(',')[0]?.trim() || '';
             const isPublic = document.getElementById('inlineEditPublic').checked;
             const logo = document.getElementById('inlineEditLogo').files[0];
             const fd = new FormData();
             if (description != null) fd.append('description', description);
+            if (category) fd.append('category', category);
             fd.append('is_public', isPublic ? 'true' : 'false');
             if (tagsStr) fd.append('tags', tagsStr);
             if (newTag && newTag !== '{{ .image.Tag }}') fd.append('new_tag', newTag);
@@ -274,6 +311,21 @@
           }
         }
       } catch {}
+    })();
+  </script>
+  <script>
+    (async function(){
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            const res = await fetch('/api/auth/profile', { headers: { Authorization: `Bearer ${token}` }});
+            if (!res.ok) return;
+            const u = await res.json();
+            const avatar = document.getElementById('navAvatar');
+            if (u.id) { avatar.src = `/static/avatars/${u.id}.png`; }
+            document.getElementById('profileUsername').textContent = u.username || 'User';
+            document.getElementById('profileEmail').textContent = u.email || '';
+        } catch {}
     })();
   </script>
 </body>
