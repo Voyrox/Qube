@@ -47,6 +47,21 @@ function setupEventListeners() {
         });
     }
 
+    const navToggle = document.getElementById('navToggle');
+    const navMenu = document.querySelector('.nav-menu');
+    if (navToggle && navMenu) {
+        navToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navMenu.classList.toggle('open');
+            navToggle.classList.toggle('open');
+        });
+        document.addEventListener('click', () => {
+            navMenu.classList.remove('open');
+            navToggle.classList.remove('open');
+        });
+        navMenu.addEventListener('click', (e) => e.stopPropagation());
+    }
+
     const profileMenuBtn = document.getElementById('profileMenuBtn');
     const profileDropdown = document.getElementById('profileDropdown');
     if (profileMenuBtn && profileDropdown) {

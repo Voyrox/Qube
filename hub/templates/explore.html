@@ -17,6 +17,11 @@
                 <img src="/static/logo.png" alt="Qube Logo" width="28" height="28">
                 <span>QubeCloud</span>
             </a>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             <div class="nav-menu">
                 <a href="/" class="nav-link">Home</a>
                 <a href="/explore" class="nav-link">Explore</a>
@@ -28,7 +33,7 @@
                     <button id="uploadBtn" class="btn-primary-sm">+ Upload</button>
                     <div class="user-profile-menu">
                         <button id="profileMenuBtn" class="profile-btn">
-                            <img id="navAvatar" src="/static/img/avatar-default.svg" alt="Avatar" width="24" height="24" style="border-radius:50%" onerror="this.src='/static/img/avatar-default.svg'"/>
+                            <img id="navAvatar" src="/static/img/avatar-default.svg" alt="Avatar" width="24" height="24" style="border-radius:50%" onerror="this.src='/static/img/avatar-default.svg'" />
                         </button>
                         <div class="profile-dropdown" id="profileDropdown">
                             <div class="profile-info">
@@ -58,42 +63,36 @@
 
             <!-- Two-column layout: floating sidebar (left) + grid (right) -->
             <div class="settings-layout">
-                <!-- Sidebar (reuses settings-sidebar styles) -->
-                <aside class="settings-sidebar" style="position:sticky; top:84px; align-self:start; min-width: 200px;">
+                <aside class="settings-sidebar filters-panel">
                     <h2>Filters</h2>
-                    
-                    <!-- Search Input -->
-                    <div style="margin-bottom: 16px;">
-                        <input type="text" id="searchFilter" placeholder="Search by name..." style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-primary); color: var(--text-primary); box-sizing: border-box;">
+                    <div class="filter-section">
+                        <input type="text" id="searchFilter" class="filter-input" placeholder="Search by name...">
                     </div>
 
-                    <!-- Category Filters -->
-                    <div style="margin-bottom: 16px;">
-                        <h3 style="font-size: 13px; color: var(--text-secondary); margin: 0 0 8px 0; text-transform: uppercase;">Categories</h3>
-                        <ul style="display: flex; flex-direction: column; gap: 6px; list-style: none; margin: 0; padding: 0;">
-                            <li class="active" style="padding: 8px 10px; border-radius: 6px; cursor: pointer; background: var(--bg-tertiary); color: var(--text-primary); font-size: 14px;" data-filter="all">All Containers</li>
-                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-filter="databases">Databases</li>
-                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-filter="ai-ml">AI &amp; ML</li>
-                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-filter="monitoring">Monitoring</li>
-                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-filter="dev-tools">Dev Tools</li>
-                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-filter="networking">Networking</li>
+                    <div class="filter-section">
+                        <h3 class="filter-title">Categories</h3>
+                        <ul class="filter-list">
+                            <li class="filter-item active" data-filter="all">All Containers</li>
+                            <li class="filter-item" data-filter="databases">Databases</li>
+                            <li class="filter-item" data-filter="ai-ml">AI &amp; ML</li>
+                            <li class="filter-item" data-filter="monitoring">Monitoring</li>
+                            <li class="filter-item" data-filter="dev-tools">Dev Tools</li>
+                            <li class="filter-item" data-filter="networking">Networking</li>
                         </ul>
                     </div>
 
-                    <!-- Tag Filters -->
-                    <div style="margin-bottom: 16px;">
-                        <h3 style="font-size: 13px; color: var(--text-secondary); margin: 0 0 8px 0; text-transform: uppercase;">Popular Tags</h3>
-                        <div id="tagFilters" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                    <div class="filter-section">
+                        <h3 class="filter-title">Popular Tags</h3>
+                        <div id="tagFilters" class="tag-chips"></div>
                     </div>
 
-                    <!-- Sort Options -->
-                    <div>
-                        <h3 style="font-size: 13px; color: var(--text-secondary); margin: 0 0 8px 0; text-transform: uppercase;">Sort By</h3>
-                        <ul style="display: flex; flex-direction: column; gap: 6px; list-style: none; margin: 0; padding: 0;">
-                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-sort="name">Name (A-Z)</li>
-                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-sort="stars">Most Starred</li>
-                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-sort="pulls">Most Pulled</li>
-                            <li style="padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 14px;" data-sort="recent">Recently Updated</li>
+                    <div class="filter-section">
+                        <h3 class="filter-title">Sort By</h3>
+                        <ul class="filter-list">
+                            <li class="filter-item" data-sort="name">Name (A-Z)</li>
+                            <li class="filter-item" data-sort="stars">Most Starred</li>
+                            <li class="filter-item" data-sort="pulls">Most Pulled</li>
+                            <li class="filter-item" data-sort="recent">Recently Updated</li>
                         </ul>
                     </div>
                 </aside>
@@ -299,6 +298,23 @@
 
             displayImages(filtered, false, 'imagesContainer');
         }
+    </script>
+    <script>
+        (async function(){
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+                const res = await fetch('/api/auth/profile', { headers: { Authorization: `Bearer ${token}` }});
+                if (!res.ok) return;
+                const u = await res.json();
+                const avatar = document.getElementById('navAvatar');
+                if (avatar && u.id) { avatar.src = `/static/avatars/${u.id}.png`; }
+                const uname = document.getElementById('profileUsername');
+                const uemail = document.getElementById('profileEmail');
+                if (uname) uname.textContent = u.username || 'User';
+                if (uemail) uemail.textContent = u.email || '';
+            } catch {}
+        })();
     </script>
 </body>
 </html>
