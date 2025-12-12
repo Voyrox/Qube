@@ -325,9 +325,9 @@ function viewImage(name, tag) {
     window.location.href = `/images/${encodeURIComponent(name)}/${encodeURIComponent(tag)}`;
 }
 
-async function downloadImage(name, tag) {
-    if (!tag) tag = 'latest';
-    window.location.href = `${API_BASE}/images/${name}/${tag}/download`;
+async function downloadImage(username, name, version) {
+    if (!version) version = 'latest';
+    window.location.href = `/download/${username}/${name}?version=${version}`;
     showNotification('Download started...', 'success');
 }
 

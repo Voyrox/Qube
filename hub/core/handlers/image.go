@@ -305,6 +305,185 @@ func (h *ImageHandler) Logo(c *gin.Context) {
 	c.File(image.LogoPath)
 }
 
+func (h *ImageHandler) DownloadByUser(c *gin.Context) {
+	user := c.Param("user")
+	name := c.Param("image")
+	version := c.Query("version")
+
+	if version == "" {
+		version = "latest"
+	}
+
+	var ownerID gocql.UUID
+	if err := h.db.Session().Query(
+		`SELECT id FROM users WHERE username = ? LIMIT 1`,
+		user,
+	).Scan(&ownerID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	if version == "latest" {
+		iter := h.db.Session().Query(
+			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+			 FROM images WHERE name = ? AND owner_id = ? ALLOW FILTERING`,
+			name, ownerID,
+		).Iter()
+
+		var latest models.Image
+		var found bool
+		var img models.Image
+		for iter.Scan(&img.ID, &img.Name, &img.Tag, &img.OwnerID, &img.Description, &img.Digest,
+			&img.Size, &img.Downloads, &img.Pulls, &img.Stars, &img.Category, &img.IsPublic, &img.FilePath, &img.LogoPath,
+			&img.CreatedAt, &img.UpdatedAt, &img.LastUpdated) {
+			if !found || img.LastUpdated.After(latest.LastUpdated) {
+				latest = img
+				found = true
+			}
+		}
+		if err := iter.Close(); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch image"})
+			return
+		}
+
+		if !found {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Image not found"})
+			return
+		}
+
+		userID, authenticated := middleware.GetUserID(c)
+		if !latest.IsPublic && (!authenticated || userID != latest.OwnerID) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+			return
+		}
+
+		if err := h.db.Session().Query(
+			`UPDATE image_downloads SET downloads = downloads + 1 WHERE image_id = ?`,
+			latest.ID,
+		).Exec(); err != nil {
+			fmt.Printf("Warning: Failed to increment download counter: %v\n", err)
+		}
+
+		if err := h.db.Session().Query(
+			`UPDATE images SET pulls = ? WHERE id = ?`,
+			latest.Pulls+1, latest.ID,
+		).Exec(); err != nil {
+			fmt.Printf("Warning: Failed to increment pulls: %v\n", err)
+		}
+
+		c.Header("Content-Description", "File Transfer")
+		c.Header("Content-Transfer-Encoding", "binary")
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s_%s.tar", latest.Name, latest.Tag))
+		c.Header("Content-Type", "application/x-tar")
+		c.File(latest.FilePath)
+		return
+	}
+
+	versionVariants := []string{version}
+	if strings.HasPrefix(version, "v") {
+		versionVariants = append(versionVariants, strings.TrimPrefix(version, "v"))
+	} else {
+		versionVariants = append(versionVariants, "v"+version)
+	}
+
+	var image models.Image
+	var found bool
+
+	for _, v := range versionVariants {
+		if err := h.db.Session().Query(
+			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+			 FROM images WHERE name = ? AND owner_id = ? AND tag = ? LIMIT 1 ALLOW FILTERING`,
+			name, ownerID, v,
+		).Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
+			&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.Category, &image.IsPublic, &image.FilePath, &image.LogoPath,
+			&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated); err == nil {
+			found = true
+			break
+		} else {
+			// Not found, continue
+		}
+	}
+
+	// If exact match not found, try comma-separated tags or aliases
+	if !found {
+		iter := h.db.Session().Query(
+			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+			 FROM images WHERE name = ? AND owner_id = ? ALLOW FILTERING`,
+			name, ownerID,
+		).Iter()
+		var cand models.Image
+		imageCount := 0
+		for iter.Scan(&cand.ID, &cand.Name, &cand.Tag, &cand.OwnerID, &cand.Description, &cand.Digest,
+			&cand.Size, &cand.Downloads, &cand.Pulls, &cand.Stars, &cand.Category, &cand.IsPublic, &cand.FilePath, &cand.LogoPath,
+			&cand.CreatedAt, &cand.UpdatedAt, &cand.LastUpdated) {
+			imageCount++
+
+			for _, v := range versionVariants {
+				if cand.Tag == v {
+					image = cand
+					found = true
+					break
+				}
+			}
+			if found {
+				break
+			}
+
+			if strings.Contains(cand.Tag, ",") {
+				parts := strings.Split(cand.Tag, ",")
+				for _, p := range parts {
+					trimmedTag := strings.TrimSpace(p)
+					for _, v := range versionVariants {
+						if trimmedTag == v {
+							image = cand
+							found = true
+							break
+						}
+					}
+					if found {
+						break
+					}
+				}
+				if found {
+					break
+				}
+			}
+		}
+		_ = iter.Close()
+	}
+
+	if !found {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Image version not found"})
+		return
+	}
+
+	userID, authenticated := middleware.GetUserID(c)
+	if !image.IsPublic && (!authenticated || userID != image.OwnerID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	if err := h.db.Session().Query(
+		`UPDATE image_downloads SET downloads = downloads + 1 WHERE image_id = ?`,
+		image.ID,
+	).Exec(); err != nil {
+		fmt.Printf("Warning: Failed to increment download counter: %v\n", err)
+	}
+
+	if err := h.db.Session().Query(
+		`UPDATE images SET pulls = ? WHERE id = ?`,
+		image.Pulls+1, image.ID,
+	).Exec(); err != nil {
+		fmt.Printf("Warning: Failed to increment pulls: %v\n", err)
+	}
+
+	c.Header("Content-Description", "File Transfer")
+	c.Header("Content-Transfer-Encoding", "binary")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s_%s.tar", image.Name, image.Tag))
+	c.Header("Content-Type", "application/x-tar")
+	c.File(image.FilePath)
+}
+
 func (h *ImageHandler) DownloadLatest(c *gin.Context) {
 	name := c.Param("name")
 

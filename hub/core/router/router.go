@@ -66,6 +66,8 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 		})
 	})
 
+	r.GET("/download/:user/:image", imageHandler.DownloadByUser)
+
 	api := r.Group("/api")
 	{
 		api.POST("/auth/register", authHandler.Register)
@@ -95,12 +97,10 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 			protected.POST("/image-id/:id/star", imageHandler.Star)
 			protected.DELETE("/image-id/:id/star", imageHandler.Unstar)
 			protected.GET("/image-id/:id/star", imageHandler.StarStatus)
-			// Use distinct prefix to avoid conflict with existing :id route
 			protected.POST("/images/by-name/:name/:tag", imageHandler.UpdateImage)
 		}
 	}
 
-	// Legacy compatibility route (for existing Qube client)
 	r.GET("/files/:filename", imageHandler.DownloadFile)
 
 	return r

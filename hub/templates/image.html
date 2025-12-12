@@ -103,7 +103,7 @@
             </div>
           </div>
           <div class="form-actions" style="margin-top: 20px; gap:8px;">
-            <a class="btn-secondary" href="/api/images/{{ .image.Name }}/{{ .image.Tag }}/download">Download</a>
+            <a class="btn-secondary" href="/download/{{ .owner_username }}/{{ .image.Name }}?version={{ .image.Tag }}">Download</a>
             <button id="starButton" class="btn-secondary {{ if .is_starred }}starred{{ end }}" style="border-radius:6px;" onclick="toggleStar('{{ .image.ID }}', event)">
               {{ if .is_starred }}⭐ Starred{{ else }}☆ Star{{ end }}
             </button>
