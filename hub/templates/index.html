@@ -138,6 +138,16 @@
                 </div>
             </div>
             <div class="categories-grid">
+                <div class="category-card" onclick="filterByCategory('programming')">
+                    <div class="category-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 6 2 12 8 18"/>
+                        </svg>
+                    </div>
+                    <h3>Programming Languages</h3>
+                    <p>Node.js, Go, Python, Rust</p>
+                </div>
                 <div class="category-card" onclick="filterByCategory('database')">
                     <div class="category-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -178,6 +188,101 @@
                     <h3>Dev Tools</h3>
                     <p>Git, CI/CD, Build Tools</p>
                 </div>
+            </div>
+        </section>
+
+        <!-- Programming Languages Category -->
+        <section class="section">
+            <div class="section-header">
+                <div>
+                    <h2>💻 Programming Languages</h2>
+                    <p class="section-subtitle">Node.js, Go, Python, Rust & more</p>
+                </div>
+                <a href="/explore?category=programming-languages" class="view-all">
+                    <span>View All</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </a>
+            </div>
+            <div id="programminglangsList" class="images-grid">
+                <div class="loading"><span>Loading...</span></div>
+            </div>
+        </section>
+
+        <!-- Databases Category -->
+        <section class="section">
+            <div class="section-header">
+                <div>
+                    <h2>📦 Databases</h2>
+                    <p class="section-subtitle">PostgreSQL, Redis, MongoDB & more</p>
+                </div>
+                <a href="/explore?category=databases" class="view-all">
+                    <span>View All</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </a>
+            </div>
+            <div id="databasesList" class="images-grid">
+                <div class="loading"><span>Loading...</span></div>
+            </div>
+        </section>
+
+        <!-- AI & ML Category -->
+        <section class="section">
+            <div class="section-header">
+                <div>
+                    <h2>🤖 AI & Machine Learning</h2>
+                    <p class="section-subtitle">TensorFlow, PyTorch, Jupyter & more</p>
+                </div>
+                <a href="/explore?category=ai-ml" class="view-all">
+                    <span>View All</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </a>
+            </div>
+            <div id="aimlList" class="images-grid">
+                <div class="loading"><span>Loading...</span></div>
+            </div>
+        </section>
+
+        <!-- Monitoring Category -->
+        <section class="section">
+            <div class="section-header">
+                <div>
+                    <h2>📊 Monitoring & Observability</h2>
+                    <p class="section-subtitle">Prometheus, Grafana, ELK & more</p>
+                </div>
+                <a href="/explore?category=monitoring" class="view-all">
+                    <span>View All</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </a>
+            </div>
+            <div id="monitoringList" class="images-grid">
+                <div class="loading"><span>Loading...</span></div>
+            </div>
+        </section>
+
+        <!-- Dev Tools Category -->
+        <section class="section">
+            <div class="section-header">
+                <div>
+                    <h2>⚙️ Developer Tools</h2>
+                    <p class="section-subtitle">Node.js, Go, Rust & more</p>
+                </div>
+                <a href="/explore?category=dev-tools" class="view-all">
+                    <span>View All</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </a>
+            </div>
+            <div id="devtoolsList" class="images-grid">
+                <div class="loading"><span>Loading...</span></div>
             </div>
         </section>
     </div>
@@ -319,6 +424,43 @@
 
     <script src="/static/js/app.js"></script>
     <script>
+        // Load category containers
+        async function loadCategoryContainers() {
+            try {
+                const response = await fetch('/api/images');
+                const data = await response.json();
+                if (!response.ok || !data.images) return;
+
+                const images = data.images;
+
+                // Programming Languages - filter by exact category
+                const programming = images.filter(img => img.category === 'programming-languages').slice(0, 6);
+                displayImages(programming, false, 'programminglangsList');
+
+                // Databases - filter by exact category
+                const databases = images.filter(img => img.category === 'databases').slice(0, 6);
+                displayImages(databases, false, 'databasesList');
+
+                // AI & ML - filter by exact category
+                const aiml = images.filter(img => img.category === 'ai-ml').slice(0, 6);
+                displayImages(aiml, false, 'aimlList');
+
+                // Monitoring - filter by exact category
+                const monitoring = images.filter(img => img.category === 'monitoring').slice(0, 6);
+                displayImages(monitoring, false, 'monitoringList');
+
+                // Dev Tools - filter by exact category
+                const devtools = images.filter(img => img.category === 'dev-tools').slice(0, 6);
+                displayImages(devtools, false, 'devtoolsList');
+            } catch (error) {
+                console.error('Error loading category containers:', error);
+            }
+        }
+
+        // Call on page load
+        document.addEventListener('DOMContentLoaded', loadCategoryContainers);
+    </script>
+    <script>
         // Search functionality
         document.getElementById('searchBtn').addEventListener('click', function() {
             const query = document.getElementById('searchInput').value.trim();
@@ -354,6 +496,7 @@
         // Category card filter
         window.filterByCategory = function(category) {
             const categoryMap = {
+                'programming': 'programming-languages',
                 'database': 'databases',
                 'ml': 'ai-ml',
                 'monitoring': 'monitoring',

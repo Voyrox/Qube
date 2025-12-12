@@ -1129,7 +1129,7 @@ body {
 }
 
 .category-card {
-    background: var(--card-bg);
+    background: #12121a;
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 1.5rem;
@@ -1168,9 +1168,11 @@ body {
     position: fixed;
     z-index: 1000;
     left: 0;
+    right: 0;
     top: 0;
-    position: fixed;
-    top: 24px;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
     overflow-y: auto;
     padding: 24px 12px;
@@ -1183,11 +1185,11 @@ body {
 .modal-content {
     background: var(--bg-secondary);
     margin: 32px auto;
-    padding: 24px;
+    padding: 32px;
     border: 1px solid var(--border);
     border-radius: 14px;
-    width: 92%;
-    max-width: 520px;
+    width: 90%;
+    max-width: 900px;
     box-shadow: var(--shadow-xl);
 }
 
