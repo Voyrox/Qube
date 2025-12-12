@@ -72,23 +72,185 @@
     </div>
   </div>
 
+  <div id="deleteModal" class="modal">
+    <div class="modal-content delete-modal">
+      <div class="modal-header">
+        <h2>Delete Images</h2>
+        <button class="close">&times;</button>
+      </div>
+      <p>What would you like to delete?</p>
+      
+      <div class="form-group" id="versionSelectorGroup" style="display: none;">
+        <label for="versionSelector">Select Version:</label>
+        <select id="versionSelector" class="form-control">
+          <option value="">Select a version...</option>
+        </select>
+      </div>
+      
+      <div class="modal-buttons">
+        <button id="deleteSpecificBtn" class="btn-primary">Delete This Version</button>
+        <button id="deleteAllBtn" class="btn-secondary danger">Delete All Versions</button>
+        <button id="cancelDeleteBtn" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .delete-modal {
+      max-width: 400px;
+      width: 90%;
+    }
+    
+    .delete-modal p {
+      margin-bottom: 25px;
+      color: var(--text-secondary);
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    
+    .form-control:hover {
+      border-color: var(--border-hover);
+    }
+    
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+    }
+    
+    .modal-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .modal-buttons button {
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+  </style>
+
 <script>
 (function(){
   const token = localStorage.getItem('token');
   let offset = 0; const limit = 20; let total = 0;
+  let currentDeleteImageId = null;
+  let currentDeleteImageName = null;
+  let currentDeleteImageTag = null;
+  let allImages = [];
+
+  const modal = document.getElementById('deleteModal');
+  const closeBtn = document.querySelector('.close');
+  const deleteSpecificBtn = document.getElementById('deleteSpecificBtn');
+  const deleteAllBtn = document.getElementById('deleteAllBtn');
+  const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+  const versionSelector = document.getElementById('versionSelector');
+  const versionSelectorGroup = document.getElementById('versionSelectorGroup');
+
+  closeBtn.addEventListener('click', () => { modal.classList.remove('open'); });
+  window.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+  
+  cancelDeleteBtn.addEventListener('click', () => { modal.classList.remove('open'); });
+
+  versionSelector.addEventListener('change', () => {
+    deleteSpecificBtn.disabled = !versionSelector.value;
+  });
+
+  deleteSpecificBtn.addEventListener('click', async () => {
+    if (!versionSelector.value) return;
+    const selectedImageId = versionSelector.value;
+    const res = await fetch(`/api/images/${selectedImageId}`, { 
+      method: 'DELETE', 
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) { 
+      showToast('Version deleted'); 
+      load(); 
+    } else { 
+      const j = await res.json().catch(()=>({})); 
+      showToast(j.error||'Delete failed'); 
+    }
+    modal.classList.remove('open');
+    versionSelector.value = '';
+    currentDeleteImageId = null;
+  });
+
+  deleteAllBtn.addEventListener('click', async () => {
+    if (!confirm('Are you sure? This will delete ALL versions of this image.')) return;
+    const imagesToDelete = allImages.filter(img => img.name === currentDeleteImageName);
+    let successCount = 0;
+    for (const img of imagesToDelete) {
+      const res = await fetch(`/api/images/${img.id}`, { 
+        method: 'DELETE', 
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) successCount++;
+    }
+    if (successCount > 0) {
+      showToast(`${successCount} version(s) deleted`); 
+      load(); 
+    } else {
+      showToast('Delete failed'); 
+    }
+    modal.classList.remove('open');
+  });
+  
   async function load(){
-    const res = await fetch(`/api/images/my?limit=${limit}&offset=${offset}`, { headers: { Authorization: `Bearer ${token}` }});
+    const res = await fetch(`/api/images/my?limit=1000&offset=0`, { headers: { Authorization: `Bearer ${token}` }});
     const data = await res.json();
-    total = data.total || 0;
-    document.getElementById('pageInfo').textContent = `${offset+1}-${Math.min(offset+limit,total)} of ${total}`;
+    allImages = data.images || [];
+    
+    // Deduplicate: keep only one image per name (ignore tags)
+    const imageMap = new Map();
+    allImages.forEach(img => {
+      const existing = imageMap.get(img.name);
+      if (!existing || new Date(img.last_updated) > new Date(existing.last_updated)) {
+        imageMap.set(img.name, img);
+      }
+    });
+    
+    const uniqueImages = Array.from(imageMap.values());
+    total = uniqueImages.length;
+    
+    const startIdx = offset;
+    const endIdx = Math.min(offset + limit, total);
+    const paginatedImages = uniqueImages.slice(startIdx, endIdx);
+    
+    document.getElementById('pageInfo').textContent = `${startIdx+1}-${endIdx} of ${total}`;
     const tbody = document.getElementById('myImages');
     tbody.innerHTML = '';
-    (data.images||[]).forEach(img => {
+    paginatedImages.forEach(img => {
       const tr = document.createElement('tr');
       const primaryTag = (img.tag||'').split(',')[0];
       const tagsHtml = (img.tag||'').split(',').filter(Boolean).map(t=>`<span class='tag'>${t.trim()}</span>`).join('');
       tr.innerHTML = `
-        <td><div class='thumb sm'><img src='${img.logo_path||'/static/img/placeholder.png'}' onerror="this.src='/static/img/placeholder.png'" /></div></td>
+        <td><div class='thumb sm'><img src='${img.logo_path||'/static/img/placeholder.svg'}' onerror="this.src='/static/img/placeholder.svg'" /></div></td>
         <td><a href="/images/${img.name}/${primaryTag}" class="title">${img.name}</a></td>
         <td><div class="tags">${tagsHtml}</div></td>
         <td>${new Date(img.last_updated).toLocaleString()}</td>
@@ -102,10 +264,36 @@
       tr.querySelector('[data-act=edit]').addEventListener('click', ()=>{
         window.location.href = `/images/${img.name}/${primaryTag}`;
       });
-      tr.querySelector('[data-act=delete]').addEventListener('click', async ()=>{
-        if (!confirm('Delete this image?')) return;
-        const res = await fetch(`/api/images/${img.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` }});
-        if (res.ok) { showToast('Deleted'); load(); } else { const j = await res.json().catch(()=>({})); showToast(j.error||'Delete failed'); }
+      tr.querySelector('[data-act=delete]').addEventListener('click', ()=>{
+        currentDeleteImageId = img.id;
+        currentDeleteImageName = img.name;
+        currentDeleteImageTag = primaryTag;
+        
+        // Get all versions of this image
+        const versions = allImages.filter(i => i.name === img.name);
+        versionSelector.innerHTML = '<option value="">Select a version...</option>';
+        versions.forEach(v => {
+          const tag = (v.tag||'').split(',')[0] || 'unknown';
+          const option = document.createElement('option');
+          option.value = v.id;
+          option.textContent = `${tag} (${new Date(v.last_updated).toLocaleDateString()})`;
+          versionSelector.appendChild(option);
+        });
+        
+        if (versions.length > 1) {
+          versionSelectorGroup.style.display = 'block';
+          deleteSpecificBtn.disabled = true;
+        } else {
+          versionSelectorGroup.style.display = 'none';
+          if (versions.length > 0) {
+            versionSelector.value = versions[0].id;
+            deleteSpecificBtn.disabled = false;
+          }
+        }
+        
+        deleteAllBtn.style.display = versions.length > 1 ? 'block' : 'none';
+        
+        modal.classList.add('open');
       });
       tr.querySelector('[data-act=toggle]').addEventListener('click', async ()=>{
         const fd = new FormData();

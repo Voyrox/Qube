@@ -1219,15 +1219,35 @@ body {
 }
 
 .upload-modal form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 20px;
+}
+
+.upload-modal .form-group {
+    margin-bottom: 0;
+}
+
+.upload-modal .form-group label {
+    margin-bottom: 8px;
 }
 
 .upload-modal .form-group.full-width,
 .upload-modal .form-actions,
 .upload-modal .checkbox-group {
-    grid-column: 1 / -1;
+    margin-bottom: 1.5rem;
+}
+
+.upload-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.upload-columns .column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .file-input-wrapper {
