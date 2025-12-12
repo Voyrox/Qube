@@ -891,13 +891,6 @@ body {
     width: fit-content;
 }
 
-.tag::before {
-    content: '#';
-    display: inline-block;
-    color: var(--primary);
-    opacity: 0.85;
-}
-
 .image-card p {
     color: #999;
     margin-bottom: 0.75rem;
@@ -1189,7 +1182,7 @@ body {
     border: 1px solid var(--border);
     border-radius: 14px;
     width: 90%;
-    max-width: 900px;
+    max-width: 1100px;
     box-shadow: var(--shadow-xl);
 }
 
@@ -1222,7 +1215,19 @@ body {
 }
 
 .upload-modal {
-    max-width: 520px;
+    max-width: 1100px;
+}
+
+.upload-modal form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.upload-modal .form-group.full-width,
+.upload-modal .form-actions,
+.upload-modal .checkbox-group {
+    grid-column: 1 / -1;
 }
 
 .file-input-wrapper {

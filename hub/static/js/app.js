@@ -131,6 +131,12 @@ async function handleUpload(e) {
         return;
     }
 
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
+    
+    // Prevent spam clicking
+    if (submitBtn.disabled) return;
+
     const name = document.getElementById('uploadName').value.trim();
     const tag = document.getElementById('uploadTag').value.trim();
     const description = document.getElementById('uploadDescription').value.trim();
@@ -147,6 +153,10 @@ async function handleUpload(e) {
         return;
     }
 
+    // Disable button and show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner" style="width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; display: inline-block; animation: spin 0.8s linear infinite; margin-right: 8px;"></span>Uploading...';
+
     try {
         const resp = await fetch(`${API_BASE}/images`);
         const data = await resp.json();
@@ -154,6 +164,8 @@ async function handleUpload(e) {
             const exists = data.images.some(img => (img.name || '').toLowerCase() === name.toLowerCase());
             if (exists) {
                 showNotification('An image with this name already exists', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
                 return;
             }
         }
@@ -191,6 +203,10 @@ async function handleUpload(e) {
     } catch (error) {
         console.error('Upload error:', error);
         showNotification('Upload error. See console for details.', 'error');
+    } finally {
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
     }
 }
 
@@ -258,20 +274,23 @@ function displayImages(images, showDelete = false, containerId = 'imagesList') {
     }
     container.innerHTML = images.map(image => {
         const tagStr = String(image.tag || '').trim();
-        let tagsHtml = '';
-        if (tagStr.includes(',')) {
-            tagsHtml = tagStr.split(',').map(t => t.trim()).filter(Boolean).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join(' ');
-        } else if (tagStr) {
-            tagsHtml = `<span class="tag">${escapeHtml(tagStr)}</span>`;
+        
+        // Determine version: use tag if it's a valid version (numbers and dots), otherwise default to 1.0.0
+        let version = tagStr;
+        if (!tagStr || !/^[0-9.]+$/.test(tagStr)) {
+            version = '1.0.0';
         }
-        const firstTag = tagStr.includes(',') ? tagStr.split(',')[0].trim() : tagStr;
+        
+        // Display version as "# v1.0.0"
+        const versionHtml = `<span class="tag"># v${escapeHtml(version)}</span>`;
+        
         return `
-        <div class="image-card" onclick="viewImage('${escapeHtml(image.name)}', '${escapeHtml(firstTag)}')">
+        <div class="image-card" onclick="viewImage('${escapeHtml(image.name)}', '${escapeHtml(version)}')">
             <div class="image-header">
                 ${image.logo_path ? `<img src="${image.logo_path}" alt="${escapeHtml(image.name)} logo" class="image-logo">` : '<div class="image-logo-placeholder">🧊</div>'}
                 <div class="image-title">
                     <h3>${escapeHtml((image.owner_username || image.owner_username_fallback || image.owner || 'user'))}/${escapeHtml(image.name)}</h3>
-                    <div class="tags">${tagsHtml}</div>
+                    <div class="tags">${versionHtml}</div>
                 </div>
             </div>
             <p>${escapeHtml((image.description || 'No description')).slice(0, 30)}</p>

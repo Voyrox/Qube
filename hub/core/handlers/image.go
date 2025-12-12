@@ -473,6 +473,7 @@ func (h *ImageHandler) Detail(c *gin.Context) {
 		"image":            image,
 		"owner_username":   ownerUsername,
 		"recent_tags":      h.getRecentTags(image.Name, 8),
+		"all_versions":     h.getAllVersions(image.Name),
 		"size_formatted":   formatSize(image.Size),
 		"is_owner":         isOwner,
 		"is_starred":       isStarred,
@@ -697,16 +698,118 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 	}
 
 	var req struct {
-		Description string `form:"description" json:"description"`
-		Category    string `form:"category" json:"category"`
-		IsPublic    *bool  `form:"is_public" json:"is_public"`
-		NewTag      string `form:"new_tag" json:"new_tag"`
-		Tags        string `form:"tags" json:"tags"`
+		Description   string `form:"description" json:"description"`
+		Category      string `form:"category" json:"category"`
+		IsPublic      *bool  `form:"is_public" json:"is_public"`
+		NewTag        string `form:"new_tag" json:"new_tag"`
+		Tags          string `form:"tags" json:"tags"`
+		CreateVersion string `form:"create_version" json:"create_version"`
 	}
 	if strings.HasPrefix(c.GetHeader("Content-Type"), "multipart/") {
 		_ = c.ShouldBind(&req)
 	} else {
 		_ = c.ShouldBindJSON(&req)
+	}
+
+	// Handle creating a new version (separate image record)
+	if req.CreateVersion == "true" && req.NewTag != "" {
+		// Check if version already exists
+		var tmp models.Image
+		if err := h.db.Session().Query(
+			`SELECT id FROM images WHERE name = ? AND tag = ? LIMIT 1 ALLOW FILTERING`,
+			image.Name, req.NewTag,
+		).Scan(&tmp.ID); err == nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "Version already exists"})
+			return
+		}
+
+		// Get the uploaded file for the new version
+		newFile, err := c.FormFile("file")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "File is required for new version"})
+			return
+		}
+
+		if !strings.HasSuffix(newFile.Filename, ".tar") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Only .tar files are allowed"})
+			return
+		}
+
+		// Create a NEW image record with new ID, but store in SAME folder as parent
+		newImageID := gocql.TimeUUID()
+		newFilename := fmt.Sprintf("%s_%s.tar", image.Name, req.NewTag)
+		// Use the SAME storage folder as the parent image
+		parentStorageDir := filepath.Dir(image.FilePath)
+		newFilePath := filepath.Join(parentStorageDir, newFilename)
+
+		if err := os.MkdirAll(filepath.Dir(newFilePath), 0755); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create storage directory"})
+			return
+		}
+
+		if err := c.SaveUploadedFile(newFile, newFilePath); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+			return
+		}
+
+		// Copy logo from old version if no new logo uploaded
+		var newLogoPath string
+		if logoFile, err := c.FormFile("logo"); err == nil {
+			logoFilename := fmt.Sprintf("logo_%s.png", newImageID.String())
+			newLogoPath = filepath.Join(parentStorageDir, logoFilename)
+			_ = c.SaveUploadedFile(logoFile, newLogoPath)
+		} else if image.LogoPath != "" {
+			// Use the same logo as parent (no need to copy)
+			newLogoPath = image.LogoPath
+		}
+
+		// Get file size
+		fileInfo, _ := os.Stat(newFilePath)
+		fileSize := int64(0)
+		if fileInfo != nil {
+			fileSize = fileInfo.Size()
+		}
+
+		now := time.Now()
+		newImage := models.Image{
+			ID:          newImageID,
+			Name:        image.Name,
+			Tag:         req.NewTag,
+			OwnerID:     image.OwnerID,
+			Description: image.Description, // Inherit from parent
+			Category:    image.Category,    // Inherit from parent
+			IsPublic:    image.IsPublic,
+			FilePath:    newFilePath,
+			LogoPath:    newLogoPath,
+			Size:        fileSize,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+			LastUpdated: now,
+		}
+
+		// Insert new version as separate image
+		if err := h.db.Session().Query(
+			`INSERT INTO images (id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated) 
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			newImage.ID, newImage.Name, newImage.Tag, newImage.OwnerID, newImage.Description, "",
+			newImage.Size, 0, 0, 0, newImage.Category, newImage.IsPublic, newImage.FilePath, newImage.LogoPath,
+			newImage.CreatedAt, newImage.UpdatedAt, newImage.LastUpdated,
+		).Exec(); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create new version"})
+			return
+		}
+
+		// Add tag entry
+		_ = h.db.Session().Query(
+			`INSERT INTO image_tags (image_id, tag, created_at) VALUES (?, ?, ?)`,
+			newImage.ID, newImage.Tag, now,
+		).Exec()
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "New version created successfully",
+			"image":   newImage,
+		})
+		return
 	}
 
 	if req.Description != "" {
@@ -839,6 +942,54 @@ func (h *ImageHandler) getRecentTags(name string, limit int) []string {
 					return out
 				}
 			}
+		}
+	}
+	return out
+}
+
+func (h *ImageHandler) getAllVersions(name string) []string {
+	iter := h.db.Session().Query(
+		`SELECT tag, last_updated FROM images WHERE name = ? ALLOW FILTERING`,
+		name,
+	).Iter()
+
+	var tag string
+	var last time.Time
+	var versions []struct {
+		Tag  string
+		Last time.Time
+	}
+	for iter.Scan(&tag, &last) {
+		// Only include valid version numbers (numbers and dots)
+		tag = strings.TrimSpace(tag)
+		if tag != "" && strings.ContainsAny(tag, "0123456789") {
+			// Simple check: if it looks like a version number
+			isVersion := true
+			for _, ch := range tag {
+				if ch != '.' && (ch < '0' || ch > '9') {
+					isVersion = false
+					break
+				}
+			}
+			if isVersion {
+				versions = append(versions, struct {
+					Tag  string
+					Last time.Time
+				}{Tag: tag, Last: last})
+			}
+		}
+	}
+	_ = iter.Close()
+
+	// Sort by last updated (newest first)
+	sort.Slice(versions, func(i, j int) bool { return versions[i].Last.After(versions[j].Last) })
+
+	out := make([]string, 0, len(versions))
+	seen := map[string]bool{}
+	for _, v := range versions {
+		if !seen[v.Tag] {
+			seen[v.Tag] = true
+			out = append(out, v.Tag)
 		}
 	}
 	return out

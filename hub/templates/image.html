@@ -52,13 +52,19 @@
         <img class="image-logo" src="/api/images/{{ .image.Name }}/{{ .image.Tag }}/logo" alt="{{ .image.Name }} logo" onerror="this.outerHTML='\\u003cdiv class=\'image-logo-placeholder\'\\u003e🧊\\u003c/div\\u003e'">
         <div class="image-title">
           <h2>{{ .owner_username }}/{{ .image.Name }}</h2>
-          <div>
-            <span class="tag">{{ .image.Tag }}</span>
-            {{ if .aliases }}
-              {{ range .aliases }}
-                <span class="tag">{{ . }}</span>
+          <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+            <label style="color: var(--text-secondary); font-size: 14px; font-weight: 500;">Version:</label>
+            <select id="versionSelector" style="background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 14px; cursor: pointer;">
+              {{ if .all_versions }}
+                {{ $currentTag := .image.Tag }}
+                {{ range .all_versions }}
+                  <option value="{{ . }}" {{ if eq . $currentTag }}selected{{ end }}>{{ . }}</option>
+                {{ end }}
+              {{ else }}
+                <option value="{{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}" selected>{{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}</option>
               {{ end }}
-            {{ end }}
+            </select>
+            <span id="currentVersionBadge" class="tag" style="background: var(--primary); color: white;"># v{{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}</span>
           </div>
         </div>
       </div>
@@ -80,6 +86,26 @@
           </div>
           <div id="inlineEditPanel" style="display:none; margin-top:12px;">
             <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="createNewVersion" style="width: auto; cursor: pointer;">
+                <span style="font-weight: 600; color: var(--primary);">Create New Version</span>
+              </label>
+              <div class="sidebar-note">Check this to create a new version instead of updating the current {{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}</div>
+            </div>
+            <div class="form-group" id="newVersionField" style="display:none;">
+              <label>New Version Number *</label>
+              <input id="newVersionTag" type="text" placeholder="e.g. 2.0.0, 1.5.0, 25.1.0" pattern="[0-9.]+" />
+              <div class="sidebar-note">Version must contain only numbers and dots (e.g., 1.0.0, 2.5.0, 21.0.0)</div>
+            </div>
+            <div class="form-group" id="newVersionFileField" style="display:none;">
+              <label>Container File (.tar) for New Version *</label>
+              <div class="file-input-wrapper">
+                <input type="file" id="newVersionFile" accept=".tar">
+                <div class="file-input-label">Click to select or drag new version .tar file</div>
+              </div>
+              <div class="sidebar-note">Upload the .tar file for this new version (Maximum 500MB)</div>
+            </div>
+            <div class="form-group" id="categoryField">
               <label>Category</label>
               <select id="inlineEditCategory">
                 <option value="">None</option>
@@ -90,19 +116,19 @@
                 <option value="dev-tools" {{ if eq .image.Category "dev-tools" }}selected{{ end }}>Dev Tools</option>
               </select>
             </div>
-            <div class="form-group">
-              <label>Tags</label>
-              <input id="inlineEditTags" type="text" placeholder="e.g. latest, v1.0, stable" value="{{ .image.Tag }}{{ range $i, $v := .aliases }}, {{ $v }}{{ end }}" />
-              <div class="sidebar-note">Separate multiple tags with commas. First tag becomes primary.</div>
+            <div class="form-group" id="aliasesField">
+              <label>Aliases (Additional Version Tags)</label>
+              <input id="inlineEditTags" type="text" placeholder="e.g. latest, stable, production" value="{{ range $i, $v := .aliases }}{{ if $i }}, {{ end }}{{ $v }}{{ end }}" />
+              <div class="sidebar-note">Separate multiple aliases with commas (e.g., latest, stable)</div>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="descriptionField">
               <label>Description</label>
               <textarea id="inlineEditDescription" rows="4" placeholder="Describe your image...">{{ .image.Description }}</textarea>
             </div>
             <div class="form-group">
               <label class="checkbox-label"><input type="checkbox" id="inlineEditPublic" {{ if .image.IsPublic }}checked{{ end }}> <span>Public</span></label>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="logoField">
               <label>Logo (PNG)</label>
               <div class="file-input-wrapper">
                 <input type="file" id="inlineEditLogo" accept=".png">
@@ -213,6 +239,27 @@
       } catch {}
     })();
 
+    (function(){
+      const versionSelector = document.getElementById('versionSelector');
+      const versionBadge = document.getElementById('currentVersionBadge');
+      
+      if (versionSelector && versionBadge) {
+        const currentValue = versionSelector.value;
+        if (!/^[0-9.]+$/.test(currentValue)) {
+          versionSelector.value = '1.0.0';
+          versionSelector.querySelector('option').value = '1.0.0';
+          versionSelector.querySelector('option').textContent = '1.0.0';
+          versionBadge.textContent = '# v1.0.0';
+        }
+        
+        versionSelector.addEventListener('change', function(){
+          const selectedVersion = this.value;
+          const imageName = '{{ .image.Name }}';
+          window.location.href = '/images/' + encodeURIComponent(imageName) + '/' + encodeURIComponent(selectedVersion);
+        });
+      }
+    })();
+
     
     function copyDigest(e){
       e.preventDefault();
@@ -257,29 +304,85 @@
           editBtn.addEventListener('click', function(e){ e.preventDefault(); setEditMode(true); });
           cancelBtn.addEventListener('click', function(){ setEditMode(false); });
 
+          // Handle create new version checkbox toggle
+          const createNewVersionCheckbox = document.getElementById('createNewVersion');
+          const newVersionField = document.getElementById('newVersionField');
+          const newVersionFileField = document.getElementById('newVersionFileField');
+          const categoryField = document.getElementById('categoryField');
+          const aliasesField = document.getElementById('aliasesField');
+          const descriptionField = document.getElementById('descriptionField');
+          const logoField = document.getElementById('logoField');
+          
+          if (createNewVersionCheckbox && newVersionField && newVersionFileField) {
+            createNewVersionCheckbox.addEventListener('change', function(){
+              const isCreatingNew = this.checked;
+              newVersionField.style.display = isCreatingNew ? 'block' : 'none';
+              newVersionFileField.style.display = isCreatingNew ? 'block' : 'none';
+              
+              // Hide category, aliases, description, and logo when creating new version
+              if (categoryField) categoryField.style.display = isCreatingNew ? 'none' : 'block';
+              if (aliasesField) aliasesField.style.display = isCreatingNew ? 'none' : 'block';
+              if (descriptionField) descriptionField.style.display = isCreatingNew ? 'none' : 'block';
+              if (logoField) logoField.style.display = isCreatingNew ? 'none' : 'block';
+              
+              if (isCreatingNew) {
+                document.getElementById('newVersionTag').focus();
+              }
+            });
+          }
+
           // save handler
           saveBtn.addEventListener('click', async function(){
             const token = localStorage.getItem('token');
             if (!token) { alert('Please login to save changes.'); return; }
+            
+            const createNew = document.getElementById('createNewVersion')?.checked || false;
+            let newVersionTag = document.getElementById('newVersionTag')?.value?.trim() || '';
+            
+            if (createNew) {
+              if (!newVersionTag) {
+                alert('Please enter a version number for the new version');
+                return;
+              }
+              
+              // Validate version format (only numbers and dots)
+              if (!/^[0-9.]+$/.test(newVersionTag)) {
+                alert('Version number must contain only numbers and dots (e.g., 1.0, 2.5, 21.0)');
+                return;
+              }
+              
+              // Check if .tar file is provided for new version
+              const newVersionFile = document.getElementById('newVersionFile')?.files[0];
+              if (!newVersionFile) {
+                alert('Please upload a .tar file for the new version');
+                return;
+              }
+            }
+
             const description = document.getElementById('inlineEditDescription').value;
             const category = document.getElementById('inlineEditCategory').value;
             const tagsStr = (document.getElementById('inlineEditTags').value || '').trim();
-            const newTag = tagsStr.split(',')[0]?.trim() || '';
             const isPublic = document.getElementById('inlineEditPublic').checked;
             const logo = document.getElementById('inlineEditLogo').files[0];
+            const newVersionFile = document.getElementById('newVersionFile')?.files[0];
+            
             const fd = new FormData();
             if (description != null) fd.append('description', description);
             if (category) fd.append('category', category);
             fd.append('is_public', isPublic ? 'true' : 'false');
             if (tagsStr) fd.append('tags', tagsStr);
-            if (newTag && newTag !== '{{ .image.Tag }}') fd.append('new_tag', newTag);
+            if (createNew && newVersionTag) {
+              fd.append('new_tag', newVersionTag);
+              fd.append('create_version', 'true');
+              if (newVersionFile) fd.append('file', newVersionFile);
+            }
             if (logo) fd.append('logo', logo);
             const url = '/api/images/by-name/{{ .image.Name }}/{{ .image.Tag }}';
             try {
               const resp = await fetch(url, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd });
               const data = await resp.json().catch(()=>({}));
               if (resp.ok) {
-                const nextTag = (data && data.image && data.image.tag) || newTag || '{{ .image.Tag }}';
+                const nextTag = createNew ? newVersionTag : (data && data.image && data.image.tag) || '{{ .image.Tag }}';
                 window.location.href = '/images/{{ .image.Name }}/' + encodeURIComponent(nextTag);
               } else {
                 alert((data && data.error) || 'Failed to update image');
