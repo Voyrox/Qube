@@ -43,9 +43,9 @@
       <div class="image-content">
         <div class="image-main">
           <p class="section-subtitle">By <span id="ownerUsername" data-owner="{{ .owner_username }}">{{ .owner_username }}</span> • Updated <span id="lastUpdated" data-date="{{ .image.LastUpdated }}">{{ .image.LastUpdated }}</span></p>
-          <div class="stats-row" style="margin:12px 0;">
+            <div class="stats-row" style="margin:12px 0;">
             <span>Pulls: {{ .image.Pulls }}</span>
-            <span>Stars: {{ .image.Stars }}</span>
+            <span>Stars: <span id="starsCount">{{ .image.Stars }}</span></span>
             <span>Size: {{ if .size_formatted }}{{ .size_formatted }}{{ else }}{{ .image.Size }}{{ end }}</span>
           </div>
           <div class="separator"></div>
@@ -77,6 +77,9 @@
           </div>
           <div class="form-actions" style="margin-top: 20px; gap:8px;">
             <a class="btn-secondary" href="/api/images/{{ .image.Name }}/{{ .image.Tag }}/download">Download</a>
+            <button id="starButton" class="btn-secondary {{ if .is_starred }}starred{{ end }}" style="border-radius:6px;" onclick="toggleStar('{{ .image.ID }}', event)">
+              {{ if .is_starred }}⭐ Starred{{ else }}☆ Star{{ end }}
+            </button>
             <a id="editButton" class="btn-primary" href="#" style="border-radius:6px; display:none;">Edit</a>
             <button id="saveEditBtn" class="btn-primary" style="display:none;" type="button">Save</button>
             <button id="cancelEditBtn" class="btn-secondary" style="display:none;" type="button">Cancel</button>
@@ -152,6 +155,27 @@
       }
       formatRelative('lastUpdated');
       formatRelative('lastUpdatedSidebar');
+    })();
+
+    (async function(){
+      try {
+        const btn = document.getElementById('starButton');
+        const starsEl = document.getElementById('starsCount');
+        const token = localStorage.getItem('token');
+        if (!btn || !starsEl || !token) return;
+        const imageId = '{{ .image.ID }}';
+        const resp = await fetch(`/api/image-id/${imageId}/star`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (typeof data.stars === 'number') { starsEl.textContent = String(data.stars); }
+        if (data.starred) {
+          btn.classList.add('starred');
+          btn.textContent = '⭐ Starred';
+        } else {
+          btn.classList.remove('starred');
+          btn.textContent = '☆ Star';
+        }
+      } catch {}
     })();
 
     

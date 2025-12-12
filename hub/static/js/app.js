@@ -215,7 +215,7 @@ async function loadMostPulled() {
         const data = await response.json();
         if (response.ok && data.images) {
             const topImages = data.images
-                .sort((a, b) => (b.pulls || 0) - (a.pulls || 0))
+                .sort((a, b) => (b.stars || 0) - (a.stars || 0))
                 .slice(0, 6);
             displayImages(topImages, false, 'mostPulledList');
         } else {
@@ -235,8 +235,9 @@ async function loadTrending() {
         const response = await fetch(`${API_BASE}/images`);
         const data = await response.json();
         if (response.ok && data.images) {
+            // Trending: by most pulls
             const trending = data.images
-                .sort((a, b) => ((b.stars || 0) + (b.downloads || 0)) - ((a.stars || 0) + (a.downloads || 0)))
+                .sort((a, b) => (b.pulls || 0) - (a.pulls || 0))
                 .slice(0, 6);
             displayImages(trending, false, 'trendingList');
         } else {
@@ -323,16 +324,21 @@ async function toggleStar(imageId, event) {
         showNotification('Please login to star images', 'error');
         return;
     }
-    const button = event.target;
+    const button = event.currentTarget || event.target.closest('button') || event.target;
     const isStarred = button.classList.contains('starred');
     try {
-        const response = await fetch(`${API_BASE}/images/${imageId}/star`, {
+        const response = await fetch(`${API_BASE}/image-id/${imageId}/star`, {
             method: isStarred ? 'DELETE' : 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
+            const data = await response.json().catch(() => ({}));
             button.classList.toggle('starred');
             button.textContent = isStarred ? '☆ Star' : '⭐ Starred';
+            const starsEl = document.getElementById('starsCount');
+            if (starsEl && typeof data.stars === 'number') {
+                starsEl.textContent = String(data.stars);
+            }
             showNotification(isStarred ? 'Unstarred' : 'Starred!', 'success');
             setTimeout(() => { loadMostPulled(); loadTrending(); }, 500);
         } else {

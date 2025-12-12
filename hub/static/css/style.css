@@ -1,3 +1,13 @@
+.btn-secondary.starred {
+    background: #16a34a; /* green */
+    color: #fff;
+    border-color: #16a34a;
+}
+
+.btn-secondary.starred:hover {
+    background: #15803d;
+    border-color: #15803d;
+}
 .settings-sidebar li.disabled {
     opacity: 0.5;
     cursor: not-allowed;

@@ -73,46 +73,38 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 		}
 	}
 
-	// Get uploaded file
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File is required"})
 		return
 	}
 
-	// Check file size
 	if file.Size > h.cfg.MaxUploadSize {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File too large"})
 		return
 	}
 
-	// Validate file extension
 	if !strings.HasSuffix(file.Filename, ".tar") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Only .tar files are allowed"})
 		return
 	}
 
-	// Create image record
 	imageID := gocql.TimeUUID()
 	filename := fmt.Sprintf("%s_%s.tar", req.Name, req.Tag)
 	filePath := filepath.Join(h.cfg.StoragePath, imageID.String(), filename)
 
-	// Create directory
 	if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create storage directory"})
 		return
 	}
 
-	// Save file
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
 		return
 	}
 
-	// Calculate digest (SHA256 of file)
 	digest := fmt.Sprintf("sha256:%x", imageID.String()) // Simplified for now
 
-	// Handle optional logo upload
 	var logoPath string
 	if logoFile, err := c.FormFile("logo"); err == nil {
 		logoFilename := fmt.Sprintf("logo_%s.png", imageID.String())
@@ -159,21 +151,19 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 		return
 	}
 
-	// Add tag to image_tags table
 	if err := h.db.Session().Query(
 		`INSERT INTO image_tags (image_id, tag, created_at) VALUES (?, ?, ?)`,
 		image.ID, image.Tag, time.Now(),
 	).Exec(); err != nil {
-		// Non-critical error, just log it
-		fmt.Printf("Warning: Failed to add tag: %v\n", err)
+		fmt.Printf("Warning: Failed to insert primary tag: %v\n", err)
 	}
-
-	// Insert any extra alias tags
 	for _, t := range extraTags {
-		_ = h.db.Session().Query(
+		if err := h.db.Session().Query(
 			`INSERT INTO image_tags (image_id, tag, created_at) VALUES (?, ?, ?)`,
 			image.ID, t, time.Now(),
-		).Exec()
+		).Exec(); err != nil {
+			fmt.Printf("Warning: Failed to insert extra tag '%s': %v\n", t, err)
+		}
 	}
 
 	c.JSON(http.StatusCreated, image)
@@ -191,10 +181,9 @@ func (h *ImageHandler) Download(c *gin.Context) {
 	).Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
 		&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.IsPublic, &image.FilePath, &image.LogoPath,
 		&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated); err != nil {
-		// Fallback: resolve via legacy comma-separated tag or alias in image_tags
+
 		iter := h.db.Session().Query(
-			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated 
-			 FROM images WHERE name = ? ALLOW FILTERING`,
+			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, is_public, file_path, logo_path, created_at, updated_at, last_updated FROM images WHERE name = ? ALLOW FILTERING`,
 			name,
 		).Iter()
 		var cand models.Image
@@ -467,6 +456,17 @@ func (h *ImageHandler) Detail(c *gin.Context) {
 
 	descHTML := renderMarkdown(image.Description)
 
+	isStarred := false
+	if authenticated {
+		var tmp gocql.UUID
+		if err := h.db.Session().Query(
+			`SELECT user_id FROM stars WHERE user_id = ? AND image_id = ?`,
+			userID, image.ID,
+		).Scan(&tmp); err == nil {
+			isStarred = true
+		}
+	}
+
 	c.HTML(http.StatusOK, "image.html", gin.H{
 		"title":            fmt.Sprintf("%s/%s", ownerUsername, image.Name),
 		"image":            image,
@@ -474,6 +474,7 @@ func (h *ImageHandler) Detail(c *gin.Context) {
 		"recent_tags":      h.getRecentTags(image.Name, 8),
 		"size_formatted":   formatSize(image.Size),
 		"is_owner":         isOwner,
+		"is_starred":       isStarred,
 		"aliases":          aliases,
 		"description_html": descHTML,
 	})
@@ -544,6 +545,18 @@ func (h *ImageHandler) DetailLatest(c *gin.Context) {
 
 	descHTML := renderMarkdown(latest.Description)
 
+	// Check if current user has starred this image
+	isStarred := false
+	if authenticated {
+		var tmp gocql.UUID
+		if err := h.db.Session().Query(
+			`SELECT user_id FROM stars WHERE user_id = ? AND image_id = ?`,
+			userID, latest.ID,
+		).Scan(&tmp); err == nil {
+			isStarred = true
+		}
+	}
+
 	c.HTML(http.StatusOK, "image.html", gin.H{
 		"title":            fmt.Sprintf("%s/%s", ownerUsername, latest.Name),
 		"image":            latest,
@@ -551,6 +564,7 @@ func (h *ImageHandler) DetailLatest(c *gin.Context) {
 		"recent_tags":      h.getRecentTags(latest.Name, 8),
 		"size_formatted":   formatSize(latest.Size),
 		"is_owner":         isOwner,
+		"is_starred":       isStarred,
 		"aliases":          aliases,
 		"description_html": descHTML,
 	})
@@ -1123,7 +1137,15 @@ func (h *ImageHandler) Star(c *gin.Context) {
 		`SELECT user_id FROM stars WHERE user_id = ? AND image_id = ?`,
 		userID, imageID,
 	).Scan(&existingUserID); err == nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "Already starred"})
+		var currentStars int64
+		if err := h.db.Session().Query(
+			`SELECT stars FROM images WHERE id = ?`,
+			imageID,
+		).Scan(&currentStars); err != nil {
+			c.JSON(http.StatusOK, gin.H{"message": "Already starred", "starred": true})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Already starred", "stars": currentStars, "starred": true})
 		return
 	}
 
@@ -1135,14 +1157,24 @@ func (h *ImageHandler) Star(c *gin.Context) {
 		return
 	}
 
+	// Read-modify-write for non-counter column
+	var currentStars int64
 	if err := h.db.Session().Query(
-		`UPDATE images SET stars = stars + 1 WHERE id = ?`,
+		`SELECT stars FROM images WHERE id = ?`,
 		imageID,
+	).Scan(&currentStars); err != nil {
+		fmt.Printf("Warning: Failed to read stars: %v\n", err)
+		c.JSON(http.StatusOK, gin.H{"message": "Image starred successfully"})
+		return
+	}
+	if err := h.db.Session().Query(
+		`UPDATE images SET stars = ? WHERE id = ?`,
+		currentStars+1, imageID,
 	).Exec(); err != nil {
 		fmt.Printf("Warning: Failed to increment star counter: %v\n", err)
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Image starred successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Image starred successfully", "stars": currentStars + 1, "starred": true})
 }
 
 func (h *ImageHandler) Unstar(c *gin.Context) {
@@ -1163,18 +1195,64 @@ func (h *ImageHandler) Unstar(c *gin.Context) {
 		`DELETE FROM stars WHERE user_id = ? AND image_id = ?`,
 		userID, imageID,
 	).Exec(); err != nil {
+		// If not starred, respond idempotently
+		var currentStars int64
+		if err2 := h.db.Session().Query(
+			`SELECT stars FROM images WHERE id = ?`,
+			imageID,
+		).Scan(&currentStars); err2 == nil {
+			c.JSON(http.StatusOK, gin.H{"message": "Not starred", "stars": currentStars, "starred": false})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unstar image"})
 		return
 	}
 
+	// Read-modify-write and clamp at zero
+	var currentStars int64
 	if err := h.db.Session().Query(
-		`UPDATE images SET stars = stars - 1 WHERE id = ?`,
+		`SELECT stars FROM images WHERE id = ?`,
 		imageID,
+	).Scan(&currentStars); err != nil {
+		fmt.Printf("Warning: Failed to read stars: %v\n", err)
+		c.JSON(http.StatusOK, gin.H{"message": "Image unstarred successfully"})
+		return
+	}
+	newStars := currentStars - 1
+	if newStars < 0 {
+		newStars = 0
+	}
+	if err := h.db.Session().Query(
+		`UPDATE images SET stars = ? WHERE id = ?`,
+		newStars, imageID,
 	).Exec(); err != nil {
 		fmt.Printf("Warning: Failed to decrement star counter: %v\n", err)
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Image unstarred successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Image unstarred successfully", "stars": newStars, "starred": false})
+}
+
+func (h *ImageHandler) StarStatus(c *gin.Context) {
+	userID, exists := middleware.GetUserID(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	imageIDStr := c.Param("id")
+	imageID, err := gocql.ParseUUID(imageIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid image ID"})
+		return
+	}
+	var currentStars int64
+	_ = h.db.Session().Query(`SELECT stars FROM images WHERE id = ?`, imageID).Scan(&currentStars)
+
+	var tmp gocql.UUID
+	starred := false
+	if err := h.db.Session().Query(`SELECT user_id FROM stars WHERE user_id = ? AND image_id = ?`, userID, imageID).Scan(&tmp); err == nil {
+		starred = true
+	}
+	c.JSON(http.StatusOK, gin.H{"stars": currentStars, "starred": starred})
 }
 
 func (h *ImageHandler) DownloadFile(c *gin.Context) {

@@ -87,8 +87,10 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 			protected.POST("/images/upload", imageHandler.Upload)
 			protected.GET("/images/my", imageHandler.GetMyImages)
 			protected.DELETE("/images/:id", imageHandler.Delete)
-			protected.POST("/images/:id/star", imageHandler.Star)
-			protected.DELETE("/images/:id/star", imageHandler.Unstar)
+			// Use /image-id to avoid conflict with /images/:name
+			protected.POST("/image-id/:id/star", imageHandler.Star)
+			protected.DELETE("/image-id/:id/star", imageHandler.Unstar)
+			protected.GET("/image-id/:id/star", imageHandler.StarStatus)
 			// Use distinct prefix to avoid conflict with existing :id route
 			protected.POST("/images/by-name/:name/:tag", imageHandler.UpdateImage)
 		}
