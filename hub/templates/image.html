@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,37 +10,45 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
   {{ template "topbar" . }}
 
   <div class="container main-content">
     <section class="section image-detail">
       <div class="image-header">
-        <img class="image-logo" src="/api/images/{{ .image.Name }}/{{ .image.Tag }}/logo" alt="{{ .image.Name }} logo" onerror="this.style.display='none'; var div=document.createElement('div'); div.className='image-logo-placeholder'; div.textContent='🧊'; this.parentNode.insertBefore(div, this);">
+        <img class="image-logo" src="/api/images/{{ .image.Name }}/{{ .image.Tag }}/logo" alt="{{ .image.Name }} logo"
+          onerror="this.style.display='none'; var div=document.createElement('div'); div.className='image-logo-placeholder'; div.textContent='🧊'; this.parentNode.insertBefore(div, this);">
         <div class="image-title">
           <h2>{{ .owner_username }}/{{ .image.Name }}</h2>
           <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
             <label style="color: var(--text-secondary); font-size: 14px; font-weight: 500;">Version:</label>
-            <select id="versionSelector" style="background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 14px; cursor: pointer;">
+            <select id="versionSelector"
+              style="background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 14px; cursor: pointer;">
               {{ if .all_versions }}
-                {{ $currentTag := .image.Tag }}
-                {{ range .all_versions }}
-                  <option value="{{ . }}" {{ if eq . $currentTag }}selected{{ end }}>{{ . }}</option>
-                {{ end }}
+              {{ $currentTag := .image.Tag }}
+              {{ range .all_versions }}
+              <option value="{{ . }}" {{ if eq . $currentTag }}selected{{ end }}>{{ . }}</option>
+              {{ end }}
               {{ else }}
-                <option value="{{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}" selected>{{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}</option>
+              <option value="{{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}" selected>{{ if .image.Tag }}{{
+                .image.Tag }}{{ else }}1.0.0{{ end }}</option>
               {{ end }}
             </select>
-            <span id="currentVersionBadge" class="tag" style="background: var(--primary); color: white;"># v{{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}</span>
+            <span id="currentVersionBadge" class="tag" style="background: var(--primary); color: white;"># v{{ if
+              .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}</span>
           </div>
         </div>
       </div>
       <br>
       <div class="image-content">
         <div class="image-main">
-          <p class="section-subtitle">By <span id="ownerUsername" data-owner="{{ .owner_username }}">{{ .owner_username }}</span> • Updated <span id="lastUpdated" data-date="{{ .image.LastUpdated }}">{{ .image.LastUpdated }}</span></p>
-          {{ if .image.Category }}<p class="section-subtitle" style="margin-top:8px;">Category: <span class="tag">{{ .image.Category }}</span></p>{{ end }}
-            <div class="stats-row" style="margin:12px 0;">
+          <p class="section-subtitle">By <span id="ownerUsername" data-owner="{{ .owner_username }}">{{ .owner_username
+              }}</span> • Updated <span id="lastUpdated" data-date="{{ .image.LastUpdated }}">{{ .image.LastUpdated
+              }}</span></p>
+          {{ if .image.Category }}<p class="section-subtitle" style="margin-top:8px;">Category: <span class="tag">{{
+              .image.Category }}</span></p>{{ end }}
+          <div class="stats-row" style="margin:12px 0;">
             <span>Pulls: {{ .image.Pulls }}</span>
             <span>Stars: <span id="starsCount">{{ .image.Stars }}</span></span>
             <span>Size: {{ if .size_formatted }}{{ .size_formatted }}{{ else }}{{ .image.Size }}{{ end }}</span>
@@ -56,7 +65,8 @@
                 <input type="checkbox" id="createNewVersion" style="width: auto; cursor: pointer;">
                 <span style="font-weight: 600; color: var(--primary);">Create New Version</span>
               </label>
-              <div class="sidebar-note">Check this to create a new version instead of updating the current {{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}</div>
+              <div class="sidebar-note">Check this to create a new version instead of updating the current {{ if
+                .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}</div>
             </div>
             <div class="form-group" id="newVersionField" style="display:none;">
               <label>New Version Number *</label>
@@ -75,7 +85,8 @@
               <label>Category</label>
               <select id="inlineEditCategory">
                 <option value="">None</option>
-                <option value="programming-languages" {{ if eq .image.Category "programming-languages" }}selected{{ end }}>Programming Languages</option>
+                <option value="programming-languages" {{ if eq .image.Category "programming-languages" }}selected{{ end
+                  }}>Programming Languages</option>
                 <option value="databases" {{ if eq .image.Category "databases" }}selected{{ end }}>Databases</option>
                 <option value="ai-ml" {{ if eq .image.Category "ai-ml" }}selected{{ end }}>AI & ML</option>
                 <option value="monitoring" {{ if eq .image.Category "monitoring" }}selected{{ end }}>Monitoring</option>
@@ -84,15 +95,18 @@
             </div>
             <div class="form-group" id="aliasesField">
               <label>Aliases (Additional Version Tags)</label>
-              <input id="inlineEditTags" type="text" placeholder="e.g. latest, stable, production" value="{{ range $i, $v := .aliases }}{{ if $i }}, {{ end }}{{ $v }}{{ end }}" />
+              <input id="inlineEditTags" type="text" placeholder="e.g. latest, stable, production"
+                value="{{ range $i, $v := .aliases }}{{ if $i }}, {{ end }}{{ $v }}{{ end }}" />
               <div class="sidebar-note">Separate multiple aliases with commas (e.g., latest, stable)</div>
             </div>
             <div class="form-group" id="descriptionField">
               <label>Description</label>
-              <textarea id="inlineEditDescription" rows="4" placeholder="Describe your image...">{{ .image.Description }}</textarea>
+              <textarea id="inlineEditDescription" rows="4"
+                placeholder="Describe your image...">{{ .image.Description }}</textarea>
             </div>
             <div class="form-group">
-              <label class="checkbox-label"><input type="checkbox" id="inlineEditPublic" {{ if .image.IsPublic }}checked{{ end }}> <span>Public</span></label>
+              <label class="checkbox-label"><input type="checkbox" id="inlineEditPublic" {{ if .image.IsPublic
+                  }}checked{{ end }}> <span>Public</span></label>
             </div>
             <div class="form-group" id="logoField">
               <label>Logo (PNG)</label>
@@ -103,34 +117,51 @@
             </div>
           </div>
           <div class="form-actions" style="margin-top: 20px; gap:8px;">
-            <a class="btn-secondary" href="/download/{{ .owner_username }}/{{ .image.Name }}?version={{ .image.Tag }}">Download</a>
-            <button id="starButton" class="btn-secondary {{ if .is_starred }}starred{{ end }}" style="border-radius:6px;" onclick="toggleStar('{{ .image.ID }}', event)">
+            <a class="btn-secondary"
+              href="/download/{{ .owner_username }}/{{ .image.Name }}?version={{ .image.Tag }}">Download</a>
+            <button id="starButton" class="btn-secondary {{ if .is_starred }}starred{{ end }}"
+              style="border-radius:6px;" onclick="toggleStar('{{ .image.ID }}', event)">
               {{ if .is_starred }}⭐ Starred{{ else }}☆ Star{{ end }}
             </button>
             <a id="editButton" class="btn-primary" href="#" style="border-radius:6px; display:none;">Edit</a>
             <button id="saveEditBtn" class="btn-primary" style="display:none;" type="button">Save</button>
             <button id="cancelEditBtn" class="btn-secondary" style="display:none;" type="button">Cancel</button>
-            <button id="deleteImageBtn" class="delete" style="display:none; margin-left:auto; background:#dc2626; color:#fff; border:0; border-radius:6px; padding:10px 14px;" type="button" data-image-id="{{ .image.ID }}">Delete</button>
+            <button id="deleteImageBtn" class="delete"
+              style="display:none; margin-left:auto; background:#dc2626; color:#fff; border:0; border-radius:6px; padding:10px 14px;"
+              type="button" data-image-id="{{ .image.ID }}">Delete</button>
           </div>
         </div>
         <aside class="image-sidebar">
           <h3>Tag summary</h3>
           <div class="sidebar-block">
             <div class="sidebar-item"><span>Content type</span><strong>Image</strong></div>
+            <div class="sidebar-item"><span>Size</span><strong>{{ if .size_formatted }}{{ .size_formatted }}{{ else }}{{
+                .image.Size }}{{ end }}</strong></div>
+            <div class="sidebar-item"><span>Last updated</span><strong><span id="lastUpdatedSidebar"
+                  data-date="{{ .image.LastUpdated }}">{{ .image.LastUpdated }}</span></strong></div>
             <div class="sidebar-item digest-row"><span>Digest</span>
               <div class="digest-wrap">
-                <code class="digest-clip" title="{{ .image.Digest }}" data-full="{{ .image.Digest }}">{{ .image.Digest }}</code>
+                <code class="digest-clip" title="{{ .image.Digest }}"
+                  data-full="{{ .image.Digest }}">{{ .image.Digest }}</code>
                 <button class="btn-copy" onclick="copyDigest(event)" aria-label="Copy digest">Copy</button>
               </div>
             </div>
-            <div class="sidebar-item"><span>Size</span><strong>{{ if .size_formatted }}{{ .size_formatted }}{{ else }}{{ .image.Size }}{{ end }}</strong></div>
-            <div class="sidebar-item"><span>Last updated</span><strong><span id="lastUpdatedSidebar" data-date="{{ .image.LastUpdated }}">{{ .image.LastUpdated }}</span></strong></div>
+            <div class="sidebar-item digest-row"><span>Download</span>
+              <div class="digest-wrap" style="margin-top:8px;">
+                <code class="digest-clip"
+                  title="qube pull {{ .owner_username }}:{{ .image.Name }}:{{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}"
+                  data-full="qube pull {{ .owner_username }}:{{ .image.Name }}:{{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}">qube pull {{ .owner_username }}:{{ .image.Name }}:{{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}</code>
+                <button class="btn-copy" onclick="copyCommand(event)" aria-label="Copy pull command">Copy</button>
+              </div>
+            </div>
           </div>
           <div class="sidebar-actions">
-            <a class="btn-primary" href="#" style="width:100%; border-radius:6px; position:relative; padding-left:36px;">
-              <span aria-hidden="true" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); display:inline-flex; align-items:center;">
+            <a class="btn-primary" href="#"
+              style="width:100%; border-radius:6px; position:relative; padding-left:36px;">
+              <span aria-hidden="true"
+                style="position:absolute; left:12px; top:50%; transform:translateY(-50%); display:inline-flex; align-items:center;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8 5v14l11-7z"/>
+                  <path d="M8 5v14l11-7z" />
                 </svg>
               </span>
               Run in Qube Desktop
@@ -140,11 +171,11 @@
           <h4>Recent tags</h4>
           <div id="recentTags" class="sidebar-tags">
             {{ if .recent_tags }}
-              {{ range .recent_tags }}
-                <span class="tag">{{ . }}</span>
-              {{ end }}
+            {{ range .recent_tags }}
+            <span class="tag">{{ . }}</span>
+            {{ end }}
             {{ else }}
-              <p class="sidebar-note">No recent tags found.</p>
+            <p class="sidebar-note">No recent tags found.</p>
             {{ end }}
           </div>
         </aside>
@@ -154,8 +185,8 @@
 
   <script src="/static/js/app.js"></script>
   <script>
-    (function(){
-      function formatRelative(elId){
+    (function () {
+      function formatRelative(elId) {
         const el = document.getElementById(elId);
         if (!el) return;
         try {
@@ -178,13 +209,13 @@
             text = secs + 's';
           }
           el.textContent = text;
-        } catch {}
+        } catch { }
       }
       formatRelative('lastUpdated');
       formatRelative('lastUpdatedSidebar');
     })();
 
-    (async function(){
+    (async function () {
       try {
         const btn = document.getElementById('starButton');
         const starsEl = document.getElementById('starsCount');
@@ -202,13 +233,13 @@
           btn.classList.remove('starred');
           btn.textContent = '☆ Star';
         }
-      } catch {}
+      } catch { }
     })();
 
-    (function(){
+    (function () {
       const versionSelector = document.getElementById('versionSelector');
       const versionBadge = document.getElementById('currentVersionBadge');
-      
+
       if (versionSelector && versionBadge) {
         const currentValue = versionSelector.value;
         if (!/^[0-9.]+$/.test(currentValue)) {
@@ -217,8 +248,8 @@
           versionSelector.querySelector('option').textContent = '1.0.0';
           versionBadge.textContent = '# v1.0.0';
         }
-        
-        versionSelector.addEventListener('change', function(){
+
+        versionSelector.addEventListener('change', function () {
           const selectedVersion = this.value;
           const imageName = '{{ .image.Name }}';
           window.location.href = '/images/' + encodeURIComponent(imageName) + '/' + encodeURIComponent(selectedVersion);
@@ -226,8 +257,8 @@
       }
     })();
 
-    
-    function copyDigest(e){
+
+    function copyDigest(e) {
       e.preventDefault();
       const wrap = e.target.closest('.digest-wrap');
       if (!wrap) return;
@@ -238,12 +269,27 @@
         const btn = e.target;
         const original = btn.textContent;
         btn.textContent = 'Copied';
-        setTimeout(()=>{ btn.textContent = original; }, 1200);
-      }).catch(()=>{});
+        setTimeout(() => { btn.textContent = original; }, 1200);
+      }).catch(() => { });
     }
 
-    
-    (function(){
+    function copyCommand(e) {
+      e.preventDefault();
+      const wrap = e.target.closest('.digest-wrap');
+      if (!wrap) return;
+      const code = wrap.querySelector('.digest-clip');
+      const full = code?.getAttribute('data-full') || code?.textContent || '';
+      if (!full) return;
+      navigator.clipboard.writeText(full).then(() => {
+        const btn = e.target;
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = original; }, 1200);
+      }).catch(() => { });
+    }
+
+
+    (function () {
       try {
         const ownerEl = document.getElementById('ownerUsername');
         const editBtn = document.getElementById('editButton');
@@ -261,14 +307,14 @@
           editBtn.style.display = 'inline-block';
           if (deleteBtn) deleteBtn.style.display = 'inline-block';
           // toggle edit mode
-          function setEditMode(on){
+          function setEditMode(on) {
             panel.style.display = on ? 'block' : 'none';
             saveBtn.style.display = on ? 'inline-block' : 'none';
             cancelBtn.style.display = on ? 'inline-block' : 'none';
             descView.style.display = on ? 'none' : 'block';
           }
-          editBtn.addEventListener('click', function(e){ e.preventDefault(); setEditMode(true); });
-          cancelBtn.addEventListener('click', function(){ setEditMode(false); });
+          editBtn.addEventListener('click', function (e) { e.preventDefault(); setEditMode(true); });
+          cancelBtn.addEventListener('click', function () { setEditMode(false); });
 
           // Handle create new version checkbox toggle
           const createNewVersionCheckbox = document.getElementById('createNewVersion');
@@ -278,19 +324,19 @@
           const aliasesField = document.getElementById('aliasesField');
           const descriptionField = document.getElementById('descriptionField');
           const logoField = document.getElementById('logoField');
-          
+
           if (createNewVersionCheckbox && newVersionField && newVersionFileField) {
-            createNewVersionCheckbox.addEventListener('change', function(){
+            createNewVersionCheckbox.addEventListener('change', function () {
               const isCreatingNew = this.checked;
               newVersionField.style.display = isCreatingNew ? 'block' : 'none';
               newVersionFileField.style.display = isCreatingNew ? 'block' : 'none';
-              
+
               // Hide category, aliases, description, and logo when creating new version
               if (categoryField) categoryField.style.display = isCreatingNew ? 'none' : 'block';
               if (aliasesField) aliasesField.style.display = isCreatingNew ? 'none' : 'block';
               if (descriptionField) descriptionField.style.display = isCreatingNew ? 'none' : 'block';
               if (logoField) logoField.style.display = isCreatingNew ? 'none' : 'block';
-              
+
               if (isCreatingNew) {
                 document.getElementById('newVersionTag').focus();
               }
@@ -298,25 +344,25 @@
           }
 
           // save handler
-          saveBtn.addEventListener('click', async function(){
+          saveBtn.addEventListener('click', async function () {
             const token = localStorage.getItem('token');
             if (!token) { alert('Please login to save changes.'); return; }
-            
+
             const createNew = document.getElementById('createNewVersion')?.checked || false;
             let newVersionTag = document.getElementById('newVersionTag')?.value?.trim() || '';
-            
+
             if (createNew) {
               if (!newVersionTag) {
                 alert('Please enter a version number for the new version');
                 return;
               }
-              
+
               // Validate version format (only numbers and dots)
               if (!/^[0-9.]+$/.test(newVersionTag)) {
                 alert('Version number must contain only numbers and dots (e.g., 1.0, 2.5, 21.0)');
                 return;
               }
-              
+
               // Check if .tar file is provided for new version
               const newVersionFile = document.getElementById('newVersionFile')?.files[0];
               if (!newVersionFile) {
@@ -331,7 +377,7 @@
             const isPublic = document.getElementById('inlineEditPublic').checked;
             const logo = document.getElementById('inlineEditLogo').files[0];
             const newVersionFile = document.getElementById('newVersionFile')?.files[0];
-            
+
             const fd = new FormData();
             if (description != null) fd.append('description', description);
             if (category) fd.append('category', category);
@@ -346,7 +392,7 @@
             const url = '/api/images/by-name/{{ .image.Name }}/{{ .image.Tag }}';
             try {
               const resp = await fetch(url, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd });
-              const data = await resp.json().catch(()=>({}));
+              const data = await resp.json().catch(() => ({}));
               if (resp.ok) {
                 const nextTag = createNew ? newVersionTag : (data && data.image && data.image.tag) || '{{ .image.Tag }}';
                 window.location.href = '/images/{{ .image.Name }}/' + encodeURIComponent(nextTag);
@@ -360,7 +406,7 @@
 
           // delete handler
           if (deleteBtn) {
-            deleteBtn.addEventListener('click', async function(){
+            deleteBtn.addEventListener('click', async function () {
               if (!confirm('Delete this image? This cannot be undone.')) return;
               const token = localStorage.getItem('token');
               if (!token) { alert('Please login to delete.'); return; }
@@ -370,7 +416,7 @@
                 if (resp.ok) {
                   window.location.href = '/';
                 } else {
-                  const d = await resp.json().catch(()=>({}));
+                  const d = await resp.json().catch(() => ({}));
                   alert((d && d.error) || 'Failed to delete image');
                 }
               } catch (e) {
@@ -379,8 +425,9 @@
             });
           }
         }
-      } catch {}
+      } catch { }
     })();
   </script>
 </body>
+
 </html>
