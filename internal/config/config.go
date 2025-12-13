@@ -1,7 +1,7 @@
 package config
 
 const (
-	BaseURL = "https://files.ewenmacculloch.com"
+	BaseURL = "https://hub.qubecloud.org"
 
 	QubeContainersBase = "/var/tmp/Qube_containers"
 

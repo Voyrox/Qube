@@ -76,6 +76,9 @@ func main() {
 	case "docker":
 		cli.DockerCommand(os.Args)
 
+	case "pull":
+		cli.PullCommand(os.Args)
+
 	default:
 		color.Red("✗ Unknown command: %s\n", command)
 		printUsage()
@@ -106,6 +109,7 @@ func printUsage() {
 		{"eval", "Execute command in a container"},
 		{"snapshot", "Create a snapshot of a container"},
 		{"docker", "Convert and run a Dockerfile"},
+		{"pull", "Download an image from Qube Hub"},
 	}
 
 	for _, cmd := range commands {

@@ -51,10 +51,13 @@ make install
 sudo systemctl start qubed
 
 # Run a Node.js container
-sudo qube run --image Ubuntu24_NODE --ports 3000 --cmd "npm install && npm start"
+sudo qube run --image Voyrox:nodejs:1.0.0 --ports 3000 --cmd "npm install && npm start"
 
 # List running containers
 sudo qube list
+
+# Pull an image
+sudo qube pull Voyrox:nodejs:1.0.0
 
 # View container info
 sudo qube info <container_name>
@@ -86,13 +89,13 @@ make release  # Build for multiple platforms
 sudo qube run --image <image> --cmd "<command>"
 
 # With ports and network isolation
-sudo qube run --image Ubuntu24_NODE --ports 3000 --isolated --cmd "node server.js"
+sudo qube run --image Voyrox:nodejs:1.0.0 --ports 3000 --isolated --cmd "node server.js"
 
 # With environment variables
-sudo qube run --image Ubuntu24_PYTHON --env "DEBUG=true" --cmd "python app.py"
+sudo qube run --image Voyrox:python:1.0.0 --env "DEBUG=true" --cmd "python app.py"
 
 # With volume mounts
-sudo qube run --image Ubuntu24_RUST --volume /host/path:/container/path --cmd "cargo run"
+sudo qube run --image Voyrox:rust:1.0.0 --volume /host/path:/container/path --cmd "cargo run"
 ```
 
 ### Using QML Configuration
@@ -101,7 +104,7 @@ Create `qube.yml`:
 
 ```yaml
 container:
-  system: Ubuntu24_NODE
+  system: Voyrox:nodejs:1.0.0
   ports:
     - "3000"
   cmd:
@@ -136,13 +139,7 @@ qube snapshot <id> # Create snapshot
 ```
 
 ### Prebuilt Images
-
-- `Ubuntu24_Multi` - Node.js, Rust, Python3
-- `Ubuntu24_NODE` - Node.js
-- `Ubuntu24_RUST` - Rust
-- `Ubuntu24_PYTHON` - Python3
-- `Ubuntu24_GOLANG` - Go
-- `Ubuntu24_JAVA` - Java
+Check out available images at: [Qube Hub](https://hub.qubecloud.org)
 
 ## API Endpoints
 

@@ -337,3 +337,33 @@ func DockerCommand(args []string) {
 		os.Exit(1)
 	}
 }
+
+func PullCommand(args []string) {
+	if len(args) < 3 {
+		color.Red("Usage: qube pull <user>:<image>:<version>")
+		color.Yellow("Example: qube pull Voyrox:nodejs:1.1.0")
+		os.Exit(1)
+	}
+
+	imageSpec := args[2]
+	parts := strings.Split(imageSpec, ":")
+
+	if len(parts) != 3 {
+		color.Red("Error: Image must be in format <user>:<image>:<version>")
+		color.Yellow("Example: Voyrox:nodejs:1.1.0")
+		os.Exit(1)
+	}
+
+	user := parts[0]
+	image := parts[1]
+	version := parts[2]
+
+	color.Blue("Pulling image: %s/%s version %s from Qube Hub...", user, image, version)
+
+	if err := container.PullImageFromHub(user, image, version); err != nil {
+		color.Red("Failed to pull image: %v", err)
+		os.Exit(1)
+	}
+
+	color.Green("✓ Successfully pulled %s:%s:%s", user, image, version)
+}
