@@ -148,7 +148,7 @@ async function handleUpload(e) {
 
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalBtnText = submitBtn.textContent;
-    
+
     // Prevent spam clicking
     if (submitBtn.disabled) return;
 
@@ -228,7 +228,7 @@ async function handleUpload(e) {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    try { document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; } catch {}
+    try { document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; } catch { }
     token = null;
     currentUser = null;
     updateNavbar();
@@ -289,16 +289,16 @@ function displayImages(images, showDelete = false, containerId = 'imagesList') {
     }
     container.innerHTML = images.map(image => {
         const tagStr = String(image.tag || '').trim();
-        
+
         // Determine version: use tag if it's a valid version (numbers and dots), otherwise default to 1.0.0
         let version = tagStr;
         if (!tagStr || !/^[0-9.]+$/.test(tagStr)) {
             version = '1.0.0';
         }
-        
+
         // Display version as "# v1.0.0"
         const versionHtml = `<span class="tag"># v${escapeHtml(version)}</span>`;
-        
+
         return `
         <div class="image-card" onclick="viewImage('${escapeHtml(image.name)}', '${escapeHtml(version)}')">
             <div class="image-header">
@@ -393,14 +393,78 @@ function handleSearch() {
 }
 
 function showNotification(message, type = 'success') {
+    // Create or get toast container
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+    
     const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        setTimeout(() => { notification.remove(); }, 300);
-    }, 4000);
+    notification.className = `toast-notification ${type}`;
+    
+    const icons = {
+        success: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fill="currentColor"/></svg>',
+        error: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" fill="currentColor"/></svg>',
+        info: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" fill="currentColor"/></svg>',
+        warning: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" fill="currentColor"/></svg>'
+    };
+    
+    const titles = {
+        success: 'Success',
+        error: 'Error',
+        info: 'Info',
+        warning: 'Warning'
+    };
+    
+    notification.innerHTML = `
+        <div class="toast-icon">${icons[type] || icons.success}</div>
+        <div class="toast-content">
+            <div class="toast-title">${titles[type] || titles.success}</div>
+            <div class="toast-message">${escapeHtml(message)}</div>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <div class="toast-progress"></div>
+    `;
+    
+    container.appendChild(notification);
+    // Trigger animation
+    requestAnimationFrame(() => {
+        notification.classList.add('show');
+    });
+
+    const duration = 4000;
+    const progressBar = notification.querySelector('.toast-progress');
+    progressBar.style.animation = `toast-progress ${duration}ms linear forwards`;
+
+    const timeout = setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            if (notification.parentElement) notification.remove();
+        }, 300);
+    }, duration);
+
+    // Pause on hover
+    notification.addEventListener('mouseenter', () => {
+        progressBar.style.animationPlayState = 'paused';
+        clearTimeout(timeout);
+    });
+
+    notification.addEventListener('mouseleave', () => {
+        progressBar.style.animationPlayState = 'running';
+        const remainingTime = duration * (1 - (progressBar.offsetWidth / notification.offsetWidth));
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentElement) notification.remove();
+            }, 300);
+        }, Math.max(remainingTime, 500));
+    });
 }
 
 function formatSize(bytes) {
@@ -454,7 +518,7 @@ async function handleRegister(e) {
             currentUser = data.user;
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            try { document.cookie = `token=${token}; path=/; SameSite=Lax`; } catch {}
+            try { document.cookie = `token=${token}; path=/; SameSite=Lax`; } catch { }
             document.getElementById('registerModal').style.display = 'none';
             updateNavbar();
             showNotification('Registration successful!', 'success');
@@ -470,7 +534,7 @@ async function handleRegister(e) {
 
 async function reportImage(imageId, event) {
     if (event) event.preventDefault();
-    
+
     const token = localStorage.getItem('token');
     if (!token) {
         alert('Please login to report images');
@@ -532,7 +596,7 @@ async function handleLogin(e) {
             localStorage.setItem('user', JSON.stringify(data.user));
             try {
                 document.cookie = `token=${token}; path=/; SameSite=Lax`;
-            } catch {}
+            } catch { }
             document.getElementById('loginModal').style.display = 'none';
             updateNavbar();
             showNotification('Login successful!', 'success');
