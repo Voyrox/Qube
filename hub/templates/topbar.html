@@ -16,6 +16,7 @@
         <div class="nav-menu">
             <a href="/" class="nav-link">Home</a>
             <a href="/explore" class="nav-link">Explore</a>
+            <a href="/reports" id="navReportsLink" class="nav-link" style="display:none;">Reports <span id="reportsCount" class="badge" style="background:#dc2626; color:white; padding:2px 6px; border-radius:10px; font-size:12px; margin-left:4px;"></span></a>
             <div class="nav-auth" id="navAuth">
                 <a href="/login" class="nav-link">Login</a>
                 <a href="/signup" class="btn-primary">Get Started</a>
@@ -34,6 +35,7 @@
                         <hr>
                         <a href="/profile" class="dropdown-item">My Images</a>
                         <a href="/settings" class="dropdown-item">Settings</a>
+                        <a href="/reports" id="navReportsDropdown" class="dropdown-item" style="display:none;">Reports</a>
                         <hr>
                         <a href="#" id="logoutBtn" class="dropdown-item danger">Logout</a>
                     </div>
@@ -57,6 +59,30 @@
         const uemail = document.getElementById('profileEmail');
         if (uname) uname.textContent = u.username || 'User';
         if (uemail) uemail.textContent = u.email || '';
+        
+        // Check if user is admin by attempting to access reports API
+        try {
+            const reportRes = await fetch('/api/reports', { headers: { Authorization: `Bearer ${token}` }});
+            if (reportRes.ok) {
+                const reports = await reportRes.json();
+                const reportsLink = document.getElementById('navReportsLink');
+                const reportsDropdown = document.getElementById('navReportsDropdown');
+                
+                // Show Reports link in both navbar and dropdown
+                if (reportsLink) reportsLink.style.display = 'inline-block';
+                if (reportsDropdown) reportsDropdown.style.display = 'block';
+                
+                // Update badge count
+                const count = Object.keys(reports).length;
+                const badge = document.getElementById('reportsCount');
+                if (badge && count > 0) {
+                    badge.textContent = count;
+                    badge.style.display = 'inline-block';
+                } else if (badge) {
+                    badge.style.display = 'none';
+                }
+            }
+        } catch {}
     } catch {}
 })();
 </script>

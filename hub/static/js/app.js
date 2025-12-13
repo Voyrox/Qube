@@ -468,6 +468,47 @@ async function handleRegister(e) {
     }
 }
 
+async function reportImage(imageId, event) {
+    if (event) event.preventDefault();
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('Please login to report images');
+        window.location.href = '/login';
+        return;
+    }
+
+    const reason = prompt('Please provide a reason for reporting this image (minimum 5 characters):');
+    if (!reason || reason.trim().length < 5) {
+        if (reason !== null) {
+            alert('Report reason must be at least 5 characters long');
+        }
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/reports/${imageId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ reason: reason.trim() })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('Thank you for your report. Our team will review it shortly.');
+        } else {
+            alert(data.error || 'Failed to submit report. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error reporting image:', error);
+        alert('Network error. Please try again.');
+    }
+}
+
 async function handleLogin(e) {
     e.preventDefault();
     const identifier = document.getElementById('loginUsername').value;

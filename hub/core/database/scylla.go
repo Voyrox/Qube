@@ -136,6 +136,17 @@ func (db *ScyllaDB) InitSchema() error {
 			created_at TIMESTAMP,
 			PRIMARY KEY (image_id, created_at, id)
 		) WITH CLUSTERING ORDER BY (created_at DESC)`,
+
+		// Reports table
+		`CREATE TABLE IF NOT EXISTS reports (
+			id UUID,
+			image_id UUID,
+			user_id UUID,
+			reason TEXT,
+			created_at TIMESTAMP,
+			PRIMARY KEY (image_id, user_id)
+		)`,
+		`CREATE INDEX IF NOT EXISTS ON reports (id)`,
 	}
 
 	for _, query := range queries {
@@ -144,13 +155,11 @@ func (db *ScyllaDB) InitSchema() error {
 		}
 	}
 
-	// Migrations: Add category column if it doesn't exist
 	migrations := []string{
 		`ALTER TABLE images ADD category TEXT`,
 	}
 
 	for _, migration := range migrations {
-		// Ignore errors if column already exists
 		_ = db.session.Query(migration).Exec()
 	}
 

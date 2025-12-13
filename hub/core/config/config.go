@@ -18,6 +18,10 @@ type Config struct {
 
 	StoragePath   string
 	MaxUploadSize int64
+
+	DisableAtMinReports int
+
+	AdminEmail string
 }
 
 func Load() *Config {
@@ -34,6 +38,10 @@ func Load() *Config {
 
 		StoragePath:   getEnv("STORAGE_PATH", "./storage/images"),
 		MaxUploadSize: getEnvInt64("MAX_UPLOAD_SIZE", 1073741824), // 1GB default
+
+		DisableAtMinReports: getEnvInt("DISABLE_AT_MIN_REPORTS", 5), // Default 5 reports
+
+		AdminEmail: getEnv("ADMIN_EMAIL", "ewen@macculloch.net"),
 	}
 }
 
@@ -51,6 +59,15 @@ func getEnvArray(key string, defaultValue []string) []string {
 			hosts = append(hosts, host)
 		}
 		return hosts
+	}
+	return defaultValue
+}
+
+func getEnvInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intVal, err := strconv.Atoi(value); err == nil {
+			return intVal
+		}
 	}
 	return defaultValue
 }

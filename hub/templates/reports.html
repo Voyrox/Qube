@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ .title }}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .reports-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .reports-header {
+      margin-bottom: 30px;
+    }
+
+    .reports-header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .report-card {
+      background: var(--card-bg, #1a1a1a);
+      border: 1px solid var(--border-color, #333);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-color, #333);
+      padding-bottom: 16px;
+    }
+
+    .report-image-info {
+      flex: 1;
+    }
+
+    .report-image-info h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .report-image-info .meta {
+      color: var(--text-secondary, #888);
+      font-size: 14px;
+    }
+
+    .report-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .report-list {
+      margin-top: 16px;
+    }
+
+    .report-item {
+      background: var(--bg-secondary, #0d0d0d);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .report-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .reporter-info {
+      font-weight: 500;
+      color: var(--text-primary, #fff);
+    }
+
+    .report-time {
+      color: var(--text-secondary, #888);
+      font-size: 13px;
+    }
+
+    .report-reason {
+      color: var(--text-primary, #ddd);
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+
+    .report-count {
+      display: inline-block;
+      background: var(--primary, #3b82f6);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+
+    .btn-warning {
+      background: #ea580c;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .btn-warning:hover {
+      background: #c2410c;
+    }
+
+    .btn-dismiss {
+      background: #6b7280;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .btn-dismiss:hover {
+      background: #4b5563;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary, #888);
+    }
+
+    .empty-state h2 {
+      font-size: 24px;
+      margin-bottom: 12px;
+      color: var(--text-primary, #fff);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary, #888);
+    }
+  </style>
+</head>
+
+<body>
+  {{ template "topbar" . }}
+
+  <div class="reports-container">
+    <div class="reports-header">
+      <h1>🚩 Reported Images</h1>
+      <p style="color: var(--text-secondary, #888);">Review and moderate reported content</p>
+    </div>
+
+    <div id="loadingState" class="loading">
+      <p>Loading reports...</p>
+    </div>
+
+    <div id="emptyState" class="empty-state" style="display: none;">
+      <h2>No Reports</h2>
+      <p>There are currently no reported images.</p>
+    </div>
+
+    <div id="reportsContainer"></div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  <script>
+    async function loadReports() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/reports', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          if (response.status === 403) {
+            alert('Access denied. Admin privileges required.');
+            window.location.href = '/';
+            return;
+          }
+          throw new Error('Failed to load reports');
+        }
+
+        const reports = await response.json();
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        const reportsContainer = document.getElementById('reportsContainer');
+
+        loadingState.style.display = 'none';
+
+        const imageIds = Object.keys(reports);
+        if (imageIds.length === 0) {
+          emptyState.style.display = 'block';
+          return;
+        }
+
+        imageIds.forEach(imageId => {
+          const imageReports = reports[imageId];
+          if (!imageReports || imageReports.length === 0) return;
+
+          const firstReport = imageReports[0];
+          const card = document.createElement('div');
+          card.className = 'report-card';
+          card.id = `report-card-${imageId}`;
+
+          const reportItems = imageReports.map(r => `
+            <div class="report-item">
+              <div class="report-item-header">
+                <span class="reporter-info">👤 ${escapeHtml(r.reporter_username)}</span>
+                <span class="report-time">${formatDate(r.report.created_at)}</span>
+              </div>
+              <div class="report-reason">${escapeHtml(r.report.reason)}</div>
+            </div>
+          `).join('');
+
+          card.innerHTML = `
+            <div class="report-header">
+              <div class="report-image-info">
+                <h3>
+                  <a href="/images/${encodeURIComponent(firstReport.image_name)}/${encodeURIComponent(firstReport.image_tag)}" 
+                     style="color: var(--text-primary); text-decoration: none;">
+                    ${escapeHtml(firstReport.image_owner)}/${escapeHtml(firstReport.image_name)}:${escapeHtml(firstReport.image_tag)}
+                  </a>
+                </h3>
+                <div class="meta">
+                  <span class="report-count">${imageReports.length} report${imageReports.length > 1 ? 's' : ''}</span>
+                  <span style="margin-left: 12px;">Owner: ${escapeHtml(firstReport.image_owner)}</span>
+                </div>
+              </div>
+              <div class="report-actions">
+                <button class="btn-dismiss" onclick="dismissReports('${imageId}')">Dismiss</button>
+                <button class="btn-danger" onclick="deleteImage('${imageId}')">Delete Image</button>
+                <button class="btn-warning" onclick="banUser('${firstReport.image_owner_id}', '${escapeHtml(firstReport.image_owner)}')">Ban User</button>
+              </div>
+            </div>
+            <div class="report-list">
+              ${reportItems}
+            </div>
+          `;
+
+          reportsContainer.appendChild(card);
+        });
+
+      } catch (error) {
+        console.error('Error loading reports:', error);
+        document.getElementById('loadingState').innerHTML = '<p style="color: #dc2626;">Failed to load reports. Please try again.</p>';
+      }
+    }
+
+    async function dismissReports(imageId) {
+      if (!confirm('Are you sure you want to dismiss all reports for this image?')) return;
+
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch(`/api/reports/dismiss/${imageId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to dismiss reports');
+
+        const card = document.getElementById(`report-card-${imageId}`);
+        if (card) card.remove();
+
+        const remainingCards = document.querySelectorAll('.report-card');
+        if (remainingCards.length === 0) {
+          document.getElementById('emptyState').style.display = 'block';
+        }
+
+        alert('Reports dismissed successfully');
+      } catch (error) {
+        console.error('Error dismissing reports:', error);
+        alert('Failed to dismiss reports. Please try again.');
+      }
+    }
+
+    async function deleteImage(imageId) {
+      if (!confirm('Are you sure you want to DELETE this image? This action cannot be undone.')) return;
+
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch(`/api/reports/image/${imageId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to delete image');
+
+        const card = document.getElementById(`report-card-${imageId}`);
+        if (card) card.remove();
+
+        const remainingCards = document.querySelectorAll('.report-card');
+        if (remainingCards.length === 0) {
+          document.getElementById('emptyState').style.display = 'block';
+        }
+
+        alert('Image deleted successfully');
+      } catch (error) {
+        console.error('Error deleting image:', error);
+        alert('Failed to delete image. Please try again.');
+      }
+    }
+
+    async function banUser(userId, username) {
+      if (!confirm(`Are you sure you want to BAN user "${username}"? This will delete all their content. This action cannot be undone.`)) return;
+
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch(`/api/reports/user/${userId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to ban user');
+
+        // Remove all cards belonging to this user
+        document.querySelectorAll('.report-card').forEach(card => {
+          card.remove();
+        });
+
+        document.getElementById('emptyState').style.display = 'block';
+        alert(`User "${username}" has been banned and all their content deleted`);
+      } catch (error) {
+        console.error('Error banning user:', error);
+        alert('Failed to ban user. Please try again.');
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatDate(dateStr) {
+      try {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diff = Math.floor((now - date) / 1000);
+
+        if (diff < 60) return 'Just now';
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+        
+        return date.toLocaleDateString();
+      } catch {
+        return dateStr;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadReports);
+  </script>
+</body>
+
+</html>

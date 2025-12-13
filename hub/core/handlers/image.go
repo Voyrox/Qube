@@ -647,6 +647,25 @@ func (h *ImageHandler) Detail(c *gin.Context) {
 		}
 	}
 
+	reportCount := 0
+	iter := h.db.Session().Query(
+		`SELECT user_id FROM reports WHERE image_id = ?`,
+		image.ID,
+	).Iter()
+	var tmpUserID gocql.UUID
+	for iter.Scan(&tmpUserID) {
+		reportCount++
+	}
+	iter.Close()
+
+	if reportCount >= h.cfg.DisableAtMinReports && image.IsPublic {
+		image.IsPublic = false
+		h.db.Session().Query(
+			`UPDATE images SET is_public = ? WHERE id = ?`,
+			false, image.ID,
+		).Exec()
+	}
+
 	c.HTML(http.StatusOK, "image.html", gin.H{
 		"title":            fmt.Sprintf("%s/%s", ownerUsername, image.Name),
 		"image":            image,
@@ -658,6 +677,8 @@ func (h *ImageHandler) Detail(c *gin.Context) {
 		"is_starred":       isStarred,
 		"aliases":          aliases,
 		"description_html": descHTML,
+		"report_count":     reportCount,
+		"report_threshold": h.cfg.DisableAtMinReports,
 	})
 }
 
@@ -738,6 +759,27 @@ func (h *ImageHandler) DetailLatest(c *gin.Context) {
 		}
 	}
 
+	// Get report count for this image
+	reportCount := 0
+	iter2 := h.db.Session().Query(
+		`SELECT user_id FROM reports WHERE image_id = ?`,
+		latest.ID,
+	).Iter()
+	var tmpUserID gocql.UUID
+	for iter2.Scan(&tmpUserID) {
+		reportCount++
+	}
+	iter2.Close()
+
+	// Auto-disable image if report count reaches threshold
+	if reportCount >= h.cfg.DisableAtMinReports && latest.IsPublic {
+		latest.IsPublic = false
+		h.db.Session().Query(
+			`UPDATE images SET is_public = ? WHERE id = ?`,
+			false, latest.ID,
+		).Exec()
+	}
+
 	c.HTML(http.StatusOK, "image.html", gin.H{
 		"title":            fmt.Sprintf("%s/%s", ownerUsername, latest.Name),
 		"image":            latest,
@@ -748,6 +790,8 @@ func (h *ImageHandler) DetailLatest(c *gin.Context) {
 		"is_starred":       isStarred,
 		"aliases":          aliases,
 		"description_html": descHTML,
+		"report_count":     reportCount,
+		"report_threshold": h.cfg.DisableAtMinReports,
 	})
 }
 

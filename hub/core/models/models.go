@@ -55,6 +55,14 @@ type Comment struct {
 	CreatedAt time.Time  `json:"created_at"`
 }
 
+type Report struct {
+	ID        gocql.UUID `json:"id"`
+	ImageID   gocql.UUID `json:"image_id"`
+	UserID    gocql.UUID `json:"user_id"`
+	Reason    string     `json:"reason"`
+	CreatedAt time.Time  `json:"created_at"`
+}
+
 type RegisterRequest struct {
 	Username string `json:"username" binding:"required,min=3,max=32"`
 	Email    string `json:"email" binding:"required,email"`
@@ -87,4 +95,8 @@ type SearchImagesRequest struct {
 
 type CommentRequest struct {
 	Content string `json:"content" binding:"required,min=1,max=500"`
+}
+
+type ReportRequest struct {
+	Reason string `json:"reason" binding:"required,min=5,max=500"`
 }

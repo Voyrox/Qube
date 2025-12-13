@@ -116,24 +116,44 @@
               </div>
             </div>
           </div>
-          <div class="form-actions" style="margin-top: 20px; gap:8px;">
-            <a class="btn-secondary"
-              href="/download/{{ .owner_username }}/{{ .image.Name }}?version={{ .image.Tag }}">Download</a>
+          <div class="form-actions"
+            style="margin-top: 32px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <button id="starButton" class="btn-secondary {{ if .is_starred }}starred{{ end }}"
-              style="border-radius:6px;" onclick="toggleStar('{{ .image.ID }}', event)">
+              style="border-radius:6px; padding: 10px 16px; font-weight: 500;"
+              onclick="toggleStar('{{ .image.ID }}', event)">
               {{ if .is_starred }}⭐ Starred{{ else }}☆ Star{{ end }}
             </button>
-            <a id="editButton" class="btn-primary" href="#" style="border-radius:6px; display:none;">Edit</a>
-            <button id="saveEditBtn" class="btn-primary" style="display:none;" type="button">Save</button>
-            <button id="cancelEditBtn" class="btn-secondary" style="display:none;" type="button">Cancel</button>
-            <button id="deleteImageBtn" class="delete"
-              style="display:none; margin-left:auto; background:#dc2626; color:#fff; border:0; border-radius:6px; padding:10px 14px;"
-              type="button" data-image-id="{{ .image.ID }}">Delete</button>
+            <button id="reportButton" class="btn-secondary"
+              style="border-radius:6px; background:#f59e0b; border-color:#f59e0b; padding: 10px 16px; font-weight: 500; color: white;"
+              onclick="reportImage('{{ .image.ID }}', event)">🚩 Report</button>
+
+            <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+              <a id="editButton" class="btn-primary" href="#"
+                style="border-radius:6px; padding: 10px 18px; font-weight: 500; display:none;">✏️ Edit</a>
+              <div id="editActionsGroup" style="display: none; gap: 10px; align-items: center;">
+                <button id="saveEditBtn" class="btn-primary"
+                  style="border-radius:6px; padding: 10px 18px; font-weight: 500; background: #10b981; border-color: #10b981;"
+                  type="button">✓ Save</button>
+                <button id="cancelEditBtn" class="btn-secondary"
+                  style="border-radius:6px; padding: 10px 18px; font-weight: 500;" type="button">✕ Cancel</button>
+                <button id="deleteImageBtn" class="delete"
+                  style="background:#dc2626; color:#fff; border:0; border-radius:6px; padding:10px 16px; font-weight: 500; cursor: pointer;"
+                  type="button" data-image-id="{{ .image.ID }}">🗑️ Delete</button>
+              </div>
+            </div>
           </div>
         </div>
         <aside class="image-sidebar">
           <h3>Tag summary</h3>
           <div class="sidebar-block">
+            {{ if .report_count }}
+            <div class="sidebar-item">
+              <div style="padding:8px 12px; background:#dc2626; color:white;font-weight: bold; border-radius:6px;">
+                ⚠️ Reported {{ .report_count }} time{{ if gt .report_count 1 }}s{{ end }}
+                {{ if ge .report_count .report_threshold }}(Private){{ end }}
+              </div>
+            </div>
+            {{ end }}
             <div class="sidebar-item"><span>Content type</span><strong>Image</strong></div>
             <div class="sidebar-item"><span>Size</span><strong>{{ if .size_formatted }}{{ .size_formatted }}{{ else }}{{
                 .image.Size }}{{ end }}</strong></div>
@@ -146,6 +166,7 @@
                 <button class="btn-copy" onclick="copyDigest(event)" aria-label="Copy digest">Copy</button>
               </div>
             </div>
+            {{ if lt .report_count .report_threshold }}
             <div class="sidebar-item digest-row"><span>Download</span>
               <div class="digest-wrap" style="margin-top:8px;">
                 <code class="digest-clip"
@@ -154,7 +175,9 @@
                 <button class="btn-copy" onclick="copyCommand(event)" aria-label="Copy pull command">Copy</button>
               </div>
             </div>
+            {{ end }}
           </div>
+          {{ if lt .report_count .report_threshold }}
           <div class="sidebar-actions">
             <a class="btn-primary" href="#"
               style="width:100%; border-radius:6px; position:relative; padding-left:36px;">
@@ -168,6 +191,7 @@
             </a>
             <p class="sidebar-note">Requires Qube Desktop 1.00.0 or later.</p>
           </div>
+          {{ end }}
           <h4>Recent tags</h4>
           <div id="recentTags" class="sidebar-tags">
             {{ if .recent_tags }}
@@ -305,12 +329,14 @@
         const user = JSON.parse(userStr);
         if (user && user.username && owner && user.username.toLowerCase() === owner.toLowerCase()) {
           editBtn.style.display = 'inline-block';
-          if (deleteBtn) deleteBtn.style.display = 'inline-block';
           // toggle edit mode
           function setEditMode(on) {
             panel.style.display = on ? 'block' : 'none';
-            saveBtn.style.display = on ? 'inline-block' : 'none';
-            cancelBtn.style.display = on ? 'inline-block' : 'none';
+            editBtn.style.display = on ? 'none' : 'inline-block';
+            const editActionsGroup = document.getElementById('editActionsGroup');
+            if (editActionsGroup) {
+              editActionsGroup.style.display = on ? 'flex' : 'none';
+            }
             descView.style.display = on ? 'none' : 'block';
           }
           editBtn.addEventListener('click', function (e) { e.preventDefault(); setEditMode(true); });

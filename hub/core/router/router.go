@@ -21,11 +21,18 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 		AllowCredentials: true,
 	}))
 
+	// Middleware to inject admin_email into all templates
+	r.Use(func(c *gin.Context) {
+		c.Set("admin_email", cfg.AdminEmail)
+		c.Next()
+	})
+
 	r.Static("/static", "./static")
 	r.LoadHTMLGlob("templates/*")
 
 	authHandler := handlers.NewAuthHandler(db, cfg)
 	imageHandler := handlers.NewImageHandler(db, cfg)
+	reportHandler := handlers.NewReportHandler(db, cfg)
 
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(200, "index.html", gin.H{
@@ -68,6 +75,13 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 
 	r.GET("/download/:user/:image", imageHandler.DownloadByUser)
 
+	// Reports page (client-side will check admin access)
+	r.GET("/reports", func(c *gin.Context) {
+		c.HTML(200, "reports.html", gin.H{
+			"title": "Reports",
+		})
+	})
+
 	api := r.Group("/api")
 	{
 		api.POST("/auth/register", authHandler.Register)
@@ -84,7 +98,7 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 
 		// Protected routes
 		protected := api.Group("")
-		protected.Use(middleware.AuthMiddleware(cfg))
+		protected.Use(middleware.AuthMiddlewareWithDB(cfg, db))
 		{
 			// Auth
 			protected.GET("/auth/profile", authHandler.GetProfile)
@@ -98,6 +112,13 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 			protected.DELETE("/image-id/:id/star", imageHandler.Unstar)
 			protected.GET("/image-id/:id/star", imageHandler.StarStatus)
 			protected.POST("/images/by-name/:name/:tag", imageHandler.UpdateImage)
+
+			// Reports
+			protected.POST("/reports/:id", reportHandler.SubmitReport)
+			protected.GET("/reports", reportHandler.GetReports)
+			protected.DELETE("/reports/image/:id", reportHandler.DeleteReportedImage)
+			protected.DELETE("/reports/user/:id", reportHandler.BanUser)
+			protected.DELETE("/reports/dismiss/:id", reportHandler.DismissReports)
 		}
 	}
 
