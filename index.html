@@ -37,7 +37,7 @@
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             color: #333;
-            background-color: var(--qube-bg);
+            background-color: #0a0a0f;
             line-height: 1.5;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
@@ -117,7 +117,7 @@
 
         /* Header - qube Style */
         header {
-            background-color: rgb(0, 0, 0);
+            background-color: #0a0a0f;
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -207,7 +207,7 @@
         /* Hero Section - qube Style */
         .hero {
             padding: 100px 0 120px;
-            background: linear-gradient(135deg, #000000 0%, #000000 100%);
+            background: linear-gradient(135deg, #0a0a0f 0%, #0a0a0f 100%);
             position: relative;
             overflow: hidden;
         }
@@ -219,7 +219,7 @@
             right: -20%;
             width: 70%;
             height: 200%;
-            background: var(--qube-gradient-light);
+            background: linear-gradient(135deg, rgba(52, 58, 62, 0.1) 0%, rgb(15, 16, 17) 100%);
             border-radius: 50%;
             z-index: 0;
         }
@@ -283,7 +283,7 @@
 
         .terminal-window {
             width: 500px;
-            background: var(--qube-dark);
+            background: #0f1113;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
@@ -296,7 +296,7 @@
         }
 
         .terminal-header {
-            background: var(--qube-dark-light);
+            background: #161b25;
             padding: 14px 20px;
             display: flex;
             align-items: center;
@@ -358,7 +358,7 @@
         /* Features Section */
         .features {
             padding: 100px 0;
-            background: rgb(0, 0, 0);
+            background: #0a0a0f;
         }
 
         .section-header {
@@ -397,7 +397,7 @@
         }
 
         .feature-card {
-            background: #1b263b;
+            background: #12121a;
             border-radius: 12px;
             padding: 40px;
             box-shadow: var(--qube-shadow);
@@ -455,7 +455,7 @@
         /* qube Comparison Section */
         .security-highlights {
             padding: 100px 0;
-            background: linear-gradient(135deg, #000000 0%, #000000 100%);
+            background: linear-gradient(135deg, #0a0a0f 0%, #0a0a0f 100%);
         }
 
         .security-features-grid {
@@ -466,7 +466,7 @@
         }
 
         .security-feature-card {
-            background: #1b263b;
+            background: #12121a;
             border-radius: 12px;
             padding: 36px 32px 32px 32px;
             box-shadow: var(--qube-shadow);
@@ -525,9 +525,8 @@
             flex-wrap: wrap;
         }
 
-        /* Footer - qube Style */
         footer {
-            background: var(--qube-dark);
+            background: #0a0a0f;
             color: var(--qube-white);
             padding: 80px 0 40px;
         }
@@ -667,16 +666,18 @@
         }
 
         @media (max-width: 768px) {
-                        .hero-actions {
-                            flex-direction: column;
-                            gap: 10px;
-                            align-items: stretch;
-                        }
-                        .hero-actions .btn {
-                            width: 100%;
-                            justify-content: center;
-                            margin: 0;
-                        }
+            .hero-actions {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+                justify-content: center;
+                margin: 0;
+            }
+
             .header-actions .btn {
                 padding: 8px 14px;
                 font-size: 14px;
@@ -715,6 +716,62 @@
             }
         }
     </style>
+    <style>
+        .btn-secondary-alt {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: white !important;
+        }
+        .membership-section {
+            padding: 4rem 2rem;
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .membership-container {
+            display: flex;
+            background: url("./footer.png") center/cover no-repeat;
+            border-radius: 15px;
+            height: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .membership-content {
+            margin-left: auto;
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .membership-content h4 {
+            font-size: 1rem;
+            letter-spacing: 2px;
+            margin: 0;
+            color: #01faff;
+        }
+
+        .membership-content h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+            text-align: left;
+            color: #fff;
+        }
+
+        .enquire-btn {
+            background: #0078D7;
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+            margin-top: 1rem;
+        }
+    </style>
 </head>
 
 <body>
@@ -730,18 +787,16 @@
 
             <nav>
                 <ul class="nav-links">
-                    <li><a href="#" class="active">Products</a></li>
-                    <li><a href="#">Developers</a></li>
-                    <li><a href="#">Pricing</a></li>
-                    <li><a href="#">Blog</a></li>
-                    <li><a href="#">Docs</a></li>
+                    <li><a href="#" class="active">Home</a></li>
+                    <li><a href="https://github.com/Voyrox/Qube">Developers</a></li>
+                    <li><a href="https://github.com/Voyrox/Qube">Docs</a></li>
                 </ul>
 
                 <div class="header-actions">
                     <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn btn-light">
                         <i class="fab fa-github btn-icon"></i> GitHub
                     </a>
-                    <a href="#get-started" class="btn btn-primary">
+                    <a href="https://hub.qubecloud.org/" class="btn btn-primary">
                         Get Started
                     </a>
                 </div>
@@ -765,7 +820,7 @@
                     Built for developers who need simplicity without sacrificing power.
                 </p>
                 <div class="hero-actions">
-                    <a href="#get-started" class="btn btn-primary">
+                    <a href="https://hub.qubecloud.org/" class="btn btn-primary">
                         <i class="fas fa-rocket btn-icon"></i> Get Started
                     </a>
                     <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn btn-secondary">
@@ -926,20 +981,12 @@
         </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="cta">
-        <div class="container">
-            <h2 class="cta-title">Ready to speed up your workflow?</h2>
-            <p class="cta-description">
-                Join thousands of developers who have already switched to Qube for faster,
-                simpler container management.
-            </p>
-            <div class="cta-buttons">
-                <a href="https://github.com/Voyrox/Qube#installation" target="_blank" class="btn btn-light">
-                    <i class="fas fa-download btn-icon"></i> Install Qube
-                </a>
-                <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn btn-secondary"
-                    style="background: rgba(255, 255, 255, 0.1); border-color: white;">
+    <section id="membership" class="membership-section">
+        <div class="membership-container">
+            <div class="membership-content">
+                <h4>Ready to speed up your workflow?</h4>
+                <h2>Join developers switching to Qube for faster, simpler containers.</h2>
+                <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn enquire-btn">
                     <i class="fab fa-github btn-icon"></i> Star on GitHub
                 </a>
             </div>
@@ -1025,11 +1072,9 @@
     </footer>
 
     <script>
-        // Simple interactive terminal animation
         document.addEventListener('DOMContentLoaded', function () {
             const terminalLines = document.querySelectorAll('.terminal-line');
 
-            // Animate terminal lines on scroll
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach((entry, index) => {
                     if (entry.isIntersecting) {
@@ -1041,7 +1086,6 @@
                 });
             }, { threshold: 0.5 });
 
-            // Set initial state for animation
             terminalLines.forEach(line => {
                 line.style.opacity = '0';
                 line.style.transform = 'translateY(10px)';
@@ -1049,7 +1093,6 @@
                 observer.observe(line);
             });
 
-            // Header scroll effect
             window.addEventListener('scroll', function () {
                 const header = document.querySelector('header');
                 if (window.scrollY > 10) {
