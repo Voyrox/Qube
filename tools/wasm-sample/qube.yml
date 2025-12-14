@@ -1,6 +1,6 @@
 container:
   # The base system image to use for the container.
-  system: Ubuntu24_NODE
+  system: Voyrox:nodejs:25.2.0
 
   # Ports to be exposed by the container.
   ports:

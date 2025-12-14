@@ -142,7 +142,10 @@ func runFromQML() {
 	ports := strings.Join(config.Container.Ports, ",")
 	cwd, _ := os.Getwd()
 
-	if err := container.RunContainer("", cwd, config.Container.Cmd, config.Container.Debug, config.Container.System, ports, config.Container.Isolated, volumes, envVars); err != nil {
+	cmdStr := strings.Join(config.Container.Cmd, " && ")
+	cmdArray := []string{cmdStr}
+
+	if err := container.RunContainer("", cwd, cmdArray, config.Container.Debug, config.Container.System, ports, config.Container.Isolated, volumes, envVars); err != nil {
 		color.Red("Failed to run container: %v", err)
 		os.Exit(1)
 	}

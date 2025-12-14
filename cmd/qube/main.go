@@ -119,7 +119,7 @@ func printUsage() {
 
 	fmt.Println()
 	color.New(color.FgYellow, color.Bold).Println("EXAMPLES:")
-	fmt.Println("  qube run --image Ubuntu24_NODE --ports 3000 --cmd \"npm install && npm start\"")
+	fmt.Println("  qube run --image Voyrox:nodejs:25.2.0 --ports 3000 --cmd \"npm install && npm start\"")
 	fmt.Println("  qube list")
 	fmt.Println("  qube info myapp")
 	fmt.Println("  qube stop myapp")

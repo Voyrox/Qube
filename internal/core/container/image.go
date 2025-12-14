@@ -50,7 +50,7 @@ func ExtractRootfsTar(cid, image string) error {
 		return err
 	}
 
-	cmd := exec.Command("tar", "-xzf", imagePath, "-C", rootfs)
+	cmd := exec.Command("tar", "--numeric-owner", "-xzf", imagePath, "-C", rootfs)
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to extract the image %s: %w", imagePath, err)
 	}

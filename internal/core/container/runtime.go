@@ -74,13 +74,16 @@ func RunContainer(existingName, workDir string, userCmd []string, debug bool, im
 	}
 
 	cmd := exec.Command("/proc/self/exe", "__container_init__")
-	cmd.Env = append(os.Environ(),
+	cmd.Env = []string{
+		"HOME=/root",
+		"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+		"TERM=xterm",
 		fmt.Sprintf("QUBE_CONTAINER_ID=%s", containerID),
 		fmt.Sprintf("QUBE_ROOTFS=%s", rootfs),
 		fmt.Sprintf("QUBE_CMD=%s", userCmd[0]),
 		fmt.Sprintf("QUBE_ISOLATED=%t", isolated),
 		fmt.Sprintf("QUBE_PIPE_FD=%d", w.Fd()),
-	)
+	}
 
 	for i, arg := range userCmd {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("QUBE_ARG_%d=%s", i, arg))
@@ -96,6 +99,11 @@ func RunContainer(existingName, workDir string, userCmd []string, debug bool, im
 
 	if isolated {
 		cmd.SysProcAttr.Cloneflags |= syscall.CLONE_NEWNET
+	}
+
+	if debug {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
 	}
 
 	cmd.ExtraFiles = []*os.File{w}
@@ -164,6 +172,19 @@ func ContainerInit() error {
 	if err := syscall.Chroot(rootfs); err != nil {
 		return fmt.Errorf("failed to chroot: %w", err)
 	}
+
+	if err := syscall.Setgid(0); err != nil {
+		return fmt.Errorf("failed to setgid: %w", err)
+	}
+	if err := syscall.Setuid(0); err != nil {
+		return fmt.Errorf("failed to setuid: %w", err)
+	}
+
+	os.RemoveAll("/root/.npm")
+	os.RemoveAll("/root/.cache")
+	os.MkdirAll("/root/.npm", 0777)
+	os.MkdirAll("/root/.cache", 0777)
+	os.MkdirAll("/tmp", 0777)
 
 	if err := os.Chdir("/workspace"); err != nil {
 		if err := os.Chdir("/"); err != nil {

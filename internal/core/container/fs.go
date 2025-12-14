@@ -35,12 +35,14 @@ func CopyDirectoryIntoHome(cid, workDir string) error {
 		return err
 	}
 
-	rsyncCmd := exec.Command("rsync", "-a", "--exclude=.git", workDir+"/", workspacePath+"/")
+	rsyncCmd := exec.Command("rsync", "-rlptD", "--exclude=.git", "--exclude=node_modules", workDir+"/", workspacePath+"/")
 	if err := rsyncCmd.Run(); err == nil {
+		exec.Command("chown", "-R", "0:0", workspacePath).Run()
+		exec.Command("chmod", "-R", "777", workspacePath).Run()
 		return nil
 	}
 
-	cpCmd := exec.Command("sh", "-c", fmt.Sprintf("cp -rT %s %s", workDir, workspacePath))
+	cpCmd := exec.Command("sh", "-c", fmt.Sprintf("cp -rT %s %s && chown -R 0:0 %s && chmod -R 777 %s", workDir, workspacePath, workspacePath, workspacePath))
 	if err := cpCmd.Run(); err != nil {
 		return fmt.Errorf("failed to copy %s -> %s: %w", workDir, workspacePath, err)
 	}

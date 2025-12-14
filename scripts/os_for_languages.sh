@@ -2,6 +2,12 @@
 
 set -e  # Exit on any error
 
+# Check if running as root
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root (use sudo)" 
+   exit 1
+fi
+
 ROOTFS="ubuntu-24.04-server-cloudimg-amd64-root.tar.xz"
 MOUNT_DIR="/mnt/rootfs"
 LOG_FILE="/tmp/install_log.txt"
@@ -13,11 +19,11 @@ fi
 
 cleanup() {
     echo "Cleaning up..."
-    sudo umount "$MOUNT_DIR/dev" 2>/dev/null || true
-    sudo umount "$MOUNT_DIR/proc" 2>/dev/null || true
-    sudo umount "$MOUNT_DIR/sys" 2>/dev/null || true
-    sudo umount "$MOUNT_DIR/run" 2>/dev/null || true
-    sudo rm -rf "$MOUNT_DIR"
+    umount "$MOUNT_DIR/dev" 2>/dev/null || true
+    umount "$MOUNT_DIR/proc" 2>/dev/null || true
+    umount "$MOUNT_DIR/sys" 2>/dev/null || true
+    umount "$MOUNT_DIR/run" 2>/dev/null || true
+    rm -rf "$MOUNT_DIR"
 }
 
 create_rootfs_for_language() {
@@ -30,18 +36,18 @@ create_rootfs_for_language() {
 
     cleanup
 
-    sudo mkdir -p "$MOUNT_DIR"
+    mkdir -p "$MOUNT_DIR"
 
     echo "Extracting root filesystem..."
-    sudo tar -xJf "$ROOTFS" -C "$MOUNT_DIR"
+    tar -xJf "$ROOTFS" -C "$MOUNT_DIR"
 
     echo "Mounting necessary filesystems..."
-    sudo mount --bind /dev "$MOUNT_DIR/dev"
-    sudo mount --bind /proc "$MOUNT_DIR/proc"
-    sudo mount --bind /sys "$MOUNT_DIR/sys"
-    sudo mount --bind /run "$MOUNT_DIR/run"
+    mount --bind /dev "$MOUNT_DIR/dev"
+    mount --bind /proc "$MOUNT_DIR/proc"
+    mount --bind /sys "$MOUNT_DIR/sys"
+    mount --bind /run "$MOUNT_DIR/run"
 
-    sudo chroot "$MOUNT_DIR" /bin/bash <<EOF
+    chroot "$MOUNT_DIR" /bin/bash <<EOF
 set -e
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
@@ -57,6 +63,8 @@ if [[ "$LANGUAGE" == "NODE" ]]; then
     node -v
     echo "npm version:"
     npm -v
+    # Clean npm cache to avoid permission issues
+    npm cache clean --force
 fi
 
 if [[ "$LANGUAGE" == "RUST" ]]; then
@@ -93,20 +101,30 @@ fi
 # Cleanup
 apt-get clean
 rm -rf /var/lib/apt/lists/*
+rm -rf /root/.npm
+rm -rf /root/.cache
+rm -rf /tmp/*
 EOF
 
     echo "Unmounting filesystems..."
-    sudo umount "$MOUNT_DIR/dev"
-    sudo umount "$MOUNT_DIR/proc"
-    sudo umount "$MOUNT_DIR/sys"
-    sudo umount "$MOUNT_DIR/run"
+    umount "$MOUNT_DIR/dev"
+    umount "$MOUNT_DIR/proc"
+    umount "$MOUNT_DIR/sys"
+    umount "$MOUNT_DIR/run"
+
+    echo "Setting all files to be owned by root..."
+    chown -R 0:0 "$MOUNT_DIR"
+    chmod -R u+rwX,go+rX "$MOUNT_DIR"
 
     echo "Creating new root filesystem tarball at $OUTPUT_TAR..."
-    sudo tar -czf "$OUTPUT_TAR" -C "$MOUNT_DIR" .
-    sudo chown $USER:$USER "$OUTPUT_TAR"
+    tar --numeric-owner -czf "$OUTPUT_TAR" -C "$MOUNT_DIR" .
+    
+    if [[ -n "$SUDO_USER" ]]; then
+        chown $SUDO_USER:$SUDO_USER "$OUTPUT_TAR"
+    fi
 
     echo "Removing old rootfs directory..."
-    sudo rm -rf "$MOUNT_DIR"
+    rm -rf "$MOUNT_DIR"
 
     echo "Root filesystem tarball for $LANGUAGE created: $OUTPUT_TAR"
     echo "Size: $(du -h "$OUTPUT_TAR" | cut -f1)"
