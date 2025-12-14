@@ -23,3 +23,5 @@ ubuntu24default.tar.xz
 /docs/_site
 /docs/.jekyll-cache
 scripts/ubuntu-24.04-server-cloudimg-amd64-root.tar.xz
+*.tar
+*.gz

@@ -86,13 +86,13 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 		return
 	}
 
-	if !strings.HasSuffix(file.Filename, ".tar") {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Only .tar files are allowed"})
+	if !strings.HasSuffix(file.Filename, ".tar.gz") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Only .tar.gz files are allowed"})
 		return
 	}
 
 	imageID := gocql.TimeUUID()
-	filename := fmt.Sprintf("%s_%s.tar", req.Name, req.Tag)
+	filename := fmt.Sprintf("%s_%s.tar.gz", req.Name, req.Tag)
 	filePath := filepath.Join(h.cfg.StoragePath, imageID.String(), filename)
 
 	if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
@@ -249,8 +249,8 @@ func (h *ImageHandler) Download(c *gin.Context) {
 
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Content-Transfer-Encoding", "binary")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s_%s.tar", image.Name, image.Tag))
-	c.Header("Content-Type", "application/x-tar")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s_%s.tar.gz", image.Name, image.Tag))
+	c.Header("Content-Type", "application/gzip")
 	c.File(image.FilePath)
 }
 

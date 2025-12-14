@@ -25,7 +25,7 @@ func EnsureImageExists(image string) (string, error) {
 	parts := strings.Split(image, ":")
 	user, imgName, version := parts[0], parts[1], parts[2]
 
-	imageFilename := fmt.Sprintf("%s_%s_%s.tar", user, imgName, version)
+	imageFilename := fmt.Sprintf("%s_%s_%s.tar.gz", user, imgName, version)
 	imagePath := filepath.Join(imagesDir, imageFilename)
 
 	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
@@ -50,7 +50,7 @@ func ExtractRootfsTar(cid, image string) error {
 		return err
 	}
 
-	cmd := exec.Command("tar", "-xf", imagePath, "-C", rootfs)
+	cmd := exec.Command("tar", "-xzf", imagePath, "-C", rootfs)
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to extract the image %s: %w", imagePath, err)
 	}
@@ -72,8 +72,8 @@ func ListImages() ([]string, error) {
 
 	var images []string
 	for _, file := range files {
-		if !file.IsDir() && strings.HasSuffix(file.Name(), ".tar") {
-			imageName := strings.TrimSuffix(file.Name(), ".tar")
+		if !file.IsDir() && strings.HasSuffix(file.Name(), ".tar.gz") {
+			imageName := strings.TrimSuffix(file.Name(), ".tar.gz")
 			images = append(images, imageName)
 		}
 	}
@@ -84,7 +84,7 @@ func ListImages() ([]string, error) {
 func PullImageFromHub(user, image, version string) error {
 	imagesDir := filepath.Join(config.QubeContainersBase, "images")
 
-	imageFilename := fmt.Sprintf("%s_%s_%s.tar", user, image, version)
+	imageFilename := fmt.Sprintf("%s_%s_%s.tar.gz", user, image, version)
 	imagePath := filepath.Join(imagesDir, imageFilename)
 
 	if err := os.MkdirAll(imagesDir, 0755); err != nil {
