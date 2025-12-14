@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/Voyrox/Qube/hub/core/cache"
 	"github.com/Voyrox/Qube/hub/core/config"
 	"github.com/Voyrox/Qube/hub/core/database"
 	"github.com/Voyrox/Qube/hub/core/handlers"
@@ -9,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
+func Setup(db *database.ScyllaDB, cfg *config.Config, cacheManager *cache.CacheManager) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
 
@@ -30,8 +31,8 @@ func Setup(db *database.ScyllaDB, cfg *config.Config) *gin.Engine {
 	r.Static("/static", "./static")
 	r.LoadHTMLGlob("templates/*")
 
-	authHandler := handlers.NewAuthHandler(db, cfg)
-	imageHandler := handlers.NewImageHandler(db, cfg)
+	authHandler := handlers.NewAuthHandler(db, cfg, cacheManager.Users)
+	imageHandler := handlers.NewImageHandler(db, cfg, cacheManager.Images)
 	reportHandler := handlers.NewReportHandler(db, cfg)
 
 	r.GET("/", func(c *gin.Context) {

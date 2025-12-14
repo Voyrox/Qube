@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Voyrox/Qube/hub/core/cache"
 	"github.com/Voyrox/Qube/hub/core/config"
 	"github.com/Voyrox/Qube/hub/core/database"
 	"github.com/Voyrox/Qube/hub/core/middleware"
@@ -26,12 +27,13 @@ import (
 )
 
 type ImageHandler struct {
-	db  *database.ScyllaDB
-	cfg *config.Config
+	db         *database.ScyllaDB
+	cfg        *config.Config
+	imageCache *cache.ImageCache
 }
 
-func NewImageHandler(db *database.ScyllaDB, cfg *config.Config) *ImageHandler {
-	return &ImageHandler{db: db, cfg: cfg}
+func NewImageHandler(db *database.ScyllaDB, cfg *config.Config, imageCache *cache.ImageCache) *ImageHandler {
+	return &ImageHandler{db: db, cfg: cfg, imageCache: imageCache}
 }
 
 func (h *ImageHandler) Upload(c *gin.Context) {
@@ -166,6 +168,9 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 			fmt.Printf("Warning: Failed to insert extra tag '%s': %v\n", t, err)
 		}
 	}
+
+	// Invalidate image list cache
+	h.imageCache.InvalidateImagesList()
 
 	c.JSON(http.StatusCreated, image)
 }
@@ -1117,6 +1122,8 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 		return
 	}
 
+	h.imageCache.InvalidateImage(image.ID, image.Name)
+
 	c.JSON(http.StatusOK, gin.H{"message": "Image updated", "image": image})
 }
 
@@ -1245,46 +1252,56 @@ func (h *ImageHandler) List(c *gin.Context) {
 
 	var images []models.Image
 
-	if query != "" {
-		iter := h.db.Session().Query(
-			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
-			 FROM images WHERE name = ? LIMIT ? ALLOW FILTERING`,
-			query, limit,
-		).Iter()
-
-		var image models.Image
-		for iter.Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
-			&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.Category, &image.IsPublic, &image.FilePath, &image.LogoPath,
-			&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated) {
-			if image.IsPublic {
-				images = append(images, image)
-			}
-		}
-
-		if err := iter.Close(); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch images"})
-			return
-		}
+	// Try cache first
+	cacheKey := fmt.Sprintf("list_%s_%d", query, limit)
+	if cachedImages, found := h.imageCache.GetImages(cacheKey); found {
+		images = cachedImages
 	} else {
-		iter := h.db.Session().Query(
-			`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
-			 FROM images LIMIT ? ALLOW FILTERING`,
-			limit,
-		).Iter()
+		// Fetch from database
+		if query != "" {
+			iter := h.db.Session().Query(
+				`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+				 FROM images WHERE name = ? LIMIT ? ALLOW FILTERING`,
+				query, limit,
+			).Iter()
 
-		var image models.Image
-		for iter.Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
-			&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.Category, &image.IsPublic, &image.FilePath, &image.LogoPath,
-			&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated) {
-			if image.IsPublic {
-				images = append(images, image)
+			var image models.Image
+			for iter.Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
+				&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.Category, &image.IsPublic, &image.FilePath, &image.LogoPath,
+				&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated) {
+				if image.IsPublic {
+					images = append(images, image)
+				}
+			}
+
+			if err := iter.Close(); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch images"})
+				return
+			}
+		} else {
+			iter := h.db.Session().Query(
+				`SELECT id, name, tag, owner_id, description, digest, size, downloads, pulls, stars, category, is_public, file_path, logo_path, created_at, updated_at, last_updated 
+				 FROM images LIMIT ? ALLOW FILTERING`,
+				limit,
+			).Iter()
+
+			var image models.Image
+			for iter.Scan(&image.ID, &image.Name, &image.Tag, &image.OwnerID, &image.Description, &image.Digest,
+				&image.Size, &image.Downloads, &image.Pulls, &image.Stars, &image.Category, &image.IsPublic, &image.FilePath, &image.LogoPath,
+				&image.CreatedAt, &image.UpdatedAt, &image.LastUpdated) {
+				if image.IsPublic {
+					images = append(images, image)
+				}
+			}
+
+			if err := iter.Close(); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch images"})
+				return
 			}
 		}
 
-		if err := iter.Close(); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch images"})
-			return
-		}
+		// Cache the results
+		h.imageCache.SetImages(cacheKey, images)
 	}
 
 	// Deduplicate: only show latest version of each image name
@@ -1442,6 +1459,9 @@ func (h *ImageHandler) Delete(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete image"})
 		return
 	}
+
+	// Invalidate image cache on deletion
+	h.imageCache.InvalidateImage(imageID, image.Name)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Image deleted successfully"})
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Voyrox/Qube/hub/core/cache"
 	"github.com/Voyrox/Qube/hub/core/config"
 	"github.com/Voyrox/Qube/hub/core/database"
 	"github.com/Voyrox/Qube/hub/core/models"
@@ -17,12 +18,13 @@ import (
 )
 
 type AuthHandler struct {
-	db  *database.ScyllaDB
-	cfg *config.Config
+	db        *database.ScyllaDB
+	cfg       *config.Config
+	userCache *cache.UserCache
 }
 
-func NewAuthHandler(db *database.ScyllaDB, cfg *config.Config) *AuthHandler {
-	return &AuthHandler{db: db, cfg: cfg}
+func NewAuthHandler(db *database.ScyllaDB, cfg *config.Config, userCache *cache.UserCache) *AuthHandler {
+	return &AuthHandler{db: db, cfg: cfg, userCache: userCache}
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -73,6 +75,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	h.userCache.SetUser(user.ID, &user)
+
 	token, err := h.generateToken(user.ID.String(), user.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
@@ -93,23 +97,32 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	var user models.User
-	err := h.db.Session().Query(
-		`SELECT id, username, email, password_hash, created_at, updated_at 
-		 FROM users WHERE username = ? LIMIT 1 ALLOW FILTERING`,
-		req.Identifier,
-	).Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
 
-	if err != nil {
-		err = h.db.Session().Query(
+	if cachedUser, found := h.userCache.GetUserByUsername(req.Identifier); found {
+		user = *cachedUser
+	} else if cachedUser, found := h.userCache.GetUserByEmail(req.Identifier); found {
+		user = *cachedUser
+	} else {
+		err := h.db.Session().Query(
 			`SELECT id, username, email, password_hash, created_at, updated_at 
-			 FROM users WHERE email = ? LIMIT 1 ALLOW FILTERING`,
+			 FROM users WHERE username = ? LIMIT 1 ALLOW FILTERING`,
 			req.Identifier,
 		).Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
-	}
 
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-		return
+		if err != nil {
+			err = h.db.Session().Query(
+				`SELECT id, username, email, password_hash, created_at, updated_at 
+				 FROM users WHERE email = ? LIMIT 1 ALLOW FILTERING`,
+				req.Identifier,
+			).Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
+		}
+
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+			return
+		}
+
+		h.userCache.SetUser(user.ID, &user)
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
@@ -131,9 +144,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 func (h *AuthHandler) GetProfile(c *gin.Context) {
 	userID, _ := c.Get("user_id")
+	uuid, _ := gocql.ParseUUID(userID.(string))
+
+	if user, found := h.userCache.GetUser(uuid); found {
+		c.JSON(http.StatusOK, user)
+		return
+	}
 
 	var user models.User
-	uuid, _ := gocql.ParseUUID(userID.(string))
 	if err := h.db.Session().Query(
 		`SELECT id, username, email, created_at, updated_at 
 		 FROM users WHERE id = ?`,
@@ -142,6 +160,8 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
+
+	h.userCache.SetUser(user.ID, &user)
 
 	c.JSON(http.StatusOK, user)
 }
@@ -230,6 +250,9 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
 		return
 	}
+
+	// Invalidate user cache on update
+	h.userCache.InvalidateUser(user.ID, user.Username, user.Email)
 
 	token, err := h.generateToken(user.ID.String(), user.Username)
 	if err != nil {

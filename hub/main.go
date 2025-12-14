@@ -3,7 +3,9 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
+	"github.com/Voyrox/Qube/hub/core/cache"
 	"github.com/Voyrox/Qube/hub/core/config"
 	"github.com/Voyrox/Qube/hub/core/database"
 	"github.com/Voyrox/Qube/hub/core/router"
@@ -37,7 +39,10 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	r := router.Setup(db, cfg)
+	// Initialize cache manager with 15 minute TTL
+	cacheManager := cache.NewCacheManager(15 * time.Minute)
+
+	r := router.Setup(db, cfg, cacheManager)
 
 	log.Printf("Starting QubeCloud on %s", cfg.Addr)
 	if err := r.Run(cfg.Addr); err != nil {

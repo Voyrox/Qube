@@ -20,7 +20,6 @@ func NewReportHandler(db *database.ScyllaDB, cfg *config.Config) *ReportHandler 
 	return &ReportHandler{db: db, cfg: cfg}
 }
 
-// SubmitReport allows users to report an image
 func (h *ReportHandler) SubmitReport(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
