@@ -109,35 +109,6 @@ The app stores settings in:
 - **Auto-refresh**: Enable/disable automatic container list updates
 - **Refresh interval**: Set update frequency (default: 1000ms)
 
-## Architecture
-
-```
-desktop/
-├── main.js           # Main Electron process
-├── preload.js        # Secure preload script
-├── package.json      # Dependencies & build config
-├── renderer/         # Frontend files
-│   ├── index.html    # Main dashboard
-│   ├── console.html  # Container console
-│   ├── script.js     # Dashboard logic
-│   └── console.js    # Console logic
-└── assets/           # Icons & resources
-```
-
-## Security
-
-- Content Security Policy (CSP) enabled
-- Context isolation enabled
-- Node integration disabled in renderer
-- Secure IPC communication only
-
-## Keyboard Shortcuts
-
-- `Ctrl/Cmd + R` - Reload window
-- `Ctrl/Cmd + Shift + I` - Toggle DevTools
-- `Ctrl/Cmd + ,` - Preferences (coming soon)
-- `Ctrl/Cmd + Q` - Quit application
-
 ## Troubleshooting
 
 ### Cannot connect to Qube API

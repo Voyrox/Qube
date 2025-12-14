@@ -5,6 +5,66 @@ if (window.electron) {
   window.electron.getApiBase().then(base => {
     if (base) apiBase = base;
   });
+  
+  // Listen for deep link events
+  window.electron.onDeepLink((data) => {
+    console.log('Deep link received:', data);
+    handleDeepLink(data);
+  });
+}
+
+// Handle deep link navigation
+function handleDeepLink(data) {
+  const { action, param, query, fullUrl } = data;
+  
+  console.log('Handling deep link - Action:', action, 'Param:', param, 'Query:', query);
+  
+  switch (action) {
+    case 'container':
+      // Open specific container (e.g., qube://container/mycontainer)
+      if (param) {
+        showToast(`Opening container: ${param}`, 'info');
+        // Navigate to container details or console
+        showContainerConsole(param);
+      }
+      break;
+      
+    case 'image':
+      // Open specific image (e.g., qube://image/alpine)
+      if (param) {
+        showToast(`Opening image: ${param}`, 'info');
+        // Navigate to images page and highlight this image
+        loadDashboard(); // You can enhance this to filter/highlight specific image
+      }
+      break;
+      
+    case 'open':
+      // Navigate to specific page (e.g., qube://open?page=containers)
+      if (query.page) {
+        showToast(`Navigating to ${query.page}`, 'info');
+        if (query.page === 'containers' || query.page === 'images') {
+          loadDashboard();
+        } else if (query.page === 'settings') {
+          showSettings();
+        }
+      }
+      break;
+      
+    case 'action':
+      // Perform specific actions (e.g., qube://action/create?name=test&image=alpine)
+      if (param === 'create' && query.name && query.image) {
+        showToast(`Creating container ${query.name} from ${query.image}`, 'info');
+        // Trigger container creation
+      } else if (param === 'pull' && query.image) {
+        showToast(`Pulling image: ${query.image}`, 'info');
+        // Trigger image pull
+      }
+      break;
+      
+    default:
+      console.warn('Unknown deep link action:', action);
+      showToast('Unknown action: ' + action, 'error');
+  }
 }
 
 function showToast(message, type = 'info') {

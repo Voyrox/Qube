@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Qube Desktop
+Comment=Container Management GUI
+Exec=/usr/local/bin/qube-desktop %u
+Icon=qube-desktop
+Terminal=false
+Categories=Development;
+MimeType=x-scheme-handler/qube;
+StartupNotify=true

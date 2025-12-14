@@ -6,9 +6,9 @@ const { spawn } = require('child_process');
 const store = new Store();
 
 let mainWindow;
-let evalProcesses = {}; // { containerName: { proc, inputLines } }
+let evalProcesses = {};
+let deeplinkingUrl;
 
-// Fixed window size like Docker Desktop
 const WINDOW_WIDTH = 1380;
 const WINDOW_HEIGHT = 800;
 const MIN_WIDTH = 1024;
@@ -34,31 +34,34 @@ function createWindow() {
     autoHideMenuBar: true
   });
 
-  // Restore window position if saved
   const windowBounds = store.get('windowBounds');
   if (windowBounds) {
     mainWindow.setBounds(windowBounds);
   }
 
-  // Load the index.html
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
-  // Show window when ready
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+    
+    if (deeplinkingUrl) {
+      if (typeof deeplinkingUrl === 'string') {
+        handleDeepLink(deeplinkingUrl);
+      } else {
+        mainWindow.webContents.send('deep-link', deeplinkingUrl);
+      }
+      deeplinkingUrl = null;
+    }
   });
 
-  // Save window position on close
   mainWindow.on('close', () => {
     store.set('windowBounds', mainWindow.getBounds());
   });
 
-  // Open DevTools in development mode
   if (process.argv.includes('--dev')) {
     mainWindow.webContents.openDevTools();
   }
 
-  // Hide application menu
   Menu.setApplicationMenu(null);
 }
 
@@ -133,7 +136,6 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-// IPC handlers for renderer process
 ipcMain.handle('get-api-base', () => {
   return store.get('apiBase', 'http://127.0.0.1:3030');
 });
@@ -160,11 +162,10 @@ ipcMain.handle('set-settings', (event, settings) => {
 
 ipcMain.handle('start-eval-process', async (event, containerName) => {
   if (evalProcesses[containerName]) {
-    return containerName; // Already running
+    return containerName;
   }
 
   return new Promise((resolve, reject) => {
-    // Use 'qube' directly without sudo - assumes qube binary has setuid or is in sudoers
     const proc = spawn('qube', ['eval', containerName], {
       stdio: ['pipe', 'pipe', 'pipe'],
       shell: true
@@ -195,7 +196,6 @@ ipcMain.handle('start-eval-process', async (event, containerName) => {
 });
 
 ipcMain.handle('send-eval-command', async (event, command) => {
-  // Get the container name from the renderer window's current URL
   const containerName = event.sender.getURL().match(/name=([^&]+)/)?.[1];
   
   if (!containerName || !evalProcesses[containerName]) {
@@ -216,11 +216,9 @@ ipcMain.handle('send-eval-command', async (event, command) => {
       commandOutput += data.toString();
     };
     
-    // Listen for output from this command
     proc.stdout.on('data', onData);
     proc.stderr.on('data', onData);
     
-    // Send command with newline
     try {
       proc.stdin.write(command + '\n', (err) => {
       if (err) {
@@ -247,16 +245,72 @@ ipcMain.handle('send-eval-command', async (event, command) => {
   });
 });
 
-// App lifecycle
-app.whenReady().then(() => {
-  createWindow();
+const PROTOCOL = 'qube';
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
-  });
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);
+  }
+} else {
+  app.setAsDefaultProtocolClient(PROTOCOL);
+}
+
+app.on('second-instance', (event, commandLine, workingDirectory) => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  }
+
+  const url = commandLine.find(arg => arg.startsWith(`${PROTOCOL}://`));
+  if (url) {
+    handleDeepLink(url);
+  }
 });
+
+function handleDeepLink(url) {
+  if (!url) return;
+  
+  console.log('Deep link received:', url);
+  
+  // Parse the URL: qube://container/name or qube://image/id or qube://open?page=containers
+  try {
+    const urlObj = new URL(url);
+    const action = urlObj.hostname;
+    const param = urlObj.pathname.replace('/', '');
+    const query = Object.fromEntries(urlObj.searchParams);
+
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('deep-link', { action, param, query, fullUrl: url });
+    } else {
+      deeplinkingUrl = { action, param, query, fullUrl: url };
+    }
+  } catch (error) {
+    console.error('Failed to parse deep link URL:', error);
+  }
+}
+
+if (process.platform === 'linux' || process.platform === 'win32') {
+  const url = process.argv.find(arg => arg.startsWith(`${PROTOCOL}://`));
+  if (url) {
+    deeplinkingUrl = url;
+  }
+}
+
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.whenReady().then(() => {
+    createWindow();
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+      }
+    });
+  });
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -264,7 +318,6 @@ app.on('window-all-closed', () => {
   }
 });
 
-// Handle errors
 process.on('uncaughtException', (error) => {
   console.error('Uncaught exception:', error);
 });
