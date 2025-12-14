@@ -378,8 +378,8 @@ func (h *ImageHandler) DownloadByUser(c *gin.Context) {
 
 		c.Header("Content-Description", "File Transfer")
 		c.Header("Content-Transfer-Encoding", "binary")
-		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s_%s.tar", latest.Name, latest.Tag))
-		c.Header("Content-Type", "application/x-tar")
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s_%s.tar.gz", latest.Name, latest.Tag))
+		c.Header("Content-Type", "application/gzip")
 		c.File(latest.FilePath)
 		return
 	}
@@ -484,8 +484,8 @@ func (h *ImageHandler) DownloadByUser(c *gin.Context) {
 
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Content-Transfer-Encoding", "binary")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s_%s.tar", image.Name, image.Tag))
-	c.Header("Content-Type", "application/x-tar")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s_%s.tar.gz", image.Name, image.Tag))
+	c.Header("Content-Type", "application/gzip")
 	c.File(image.FilePath)
 }
 
@@ -541,8 +541,8 @@ func (h *ImageHandler) DownloadLatest(c *gin.Context) {
 
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Content-Transfer-Encoding", "binary")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s_%s.tar", latest.Name, latest.Tag))
-	c.Header("Content-Type", "application/x-tar")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s_%s.tar.gz", latest.Name, latest.Tag))
+	c.Header("Content-Type", "application/gzip")
 	c.File(latest.FilePath)
 }
 
