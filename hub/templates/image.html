@@ -4,7 +4,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ .title }}</title>
+  <title>{{ .image.Name }} {{ .image.Tag }} - Qube Hub</title>
+  
+  <!-- Meta Description -->
+  <meta name="description" content="{{ .image.Description }}">
+  <meta name="keywords" content="container, docker, lightweight, {{ .image.Name }}, qube">
+  
+  <!-- Open Graph Tags -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://hub.qubecloud.org/images/{{ .image.Name }}/{{ .image.Tag }}">
+  <meta property="og:title" content="{{ .image.Name }} - Qube Hub">
+  <meta property="og:description" content="{{ .image.Description }}">
+  <meta property="og:image" content="https://hub.qubecloud.org/static/img/{{ .image.Name }}-logo.png">
+  <meta property="og:site_name" content="Qube Hub">
+  
+  <!-- Twitter Card Tags -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{{ .image.Name }} {{ .image.Tag }} - Qube Hub">
+  <meta name="twitter:description" content="{{ .image.Description }}">
+  <meta name="twitter:image" content="https://hub.qubecloud.org/static/img/{{ .image.Name }}-logo.png">
+  
+  <!-- Stylesheets -->
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

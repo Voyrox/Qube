@@ -36,12 +36,8 @@ sudo apt-get install -y build-essential tar rsync
 git clone https://github.com/Voyrox/Qube
 cd Qube
 
-# Build and install (Recommended for all users)
+# Build and install
 make install
-
-# Or use build scripts
-./scripts/build-go.fish --install  # Fish shell
-./scripts/build-go.sh --install    # Bash
 ```
 
 ### Quick Example
@@ -51,13 +47,13 @@ make install
 sudo systemctl start qubed
 
 # Run a Node.js container
-sudo qube run --image Voyrox:nodejs:1.0.0 --ports 3000 --cmd "npm install && npm start"
+sudo qube run --image Voyrox:nodejs:25.2.0 --ports 3000 --cmd "npm install && npm start"
 
 # List running containers
 sudo qube list
 
 # Pull an image
-sudo qube pull Voyrox:nodejs:1.0.0
+sudo qube pull Voyrox:nodejs:25.2.0
 
 # View container info
 sudo qube info <container_name>
@@ -89,13 +85,13 @@ make release  # Build for multiple platforms
 sudo qube run --image <image> --cmd "<command>"
 
 # With ports and network isolation
-sudo qube run --image Voyrox:nodejs:1.0.0 --ports 3000 --isolated --cmd "node server.js"
+sudo qube run --image Voyrox:nodejs:25.2.0 --ports 3000 --isolated --cmd "node server.js"
 
 # With environment variables
-sudo qube run --image Voyrox:python:1.0.0 --env "DEBUG=true" --cmd "python app.py"
+sudo qube run --image Voyrox:python:3.12.3 --env "DEBUG=true" --cmd "python app.py"
 
 # With volume mounts
-sudo qube run --image Voyrox:rust:1.0.0 --volume /host/path:/container/path --cmd "cargo run"
+sudo qube run --image Voyrox:rust:1.92.0 --volume /host/path:/container/path --cmd "cargo run"
 ```
 
 ### Using QML Configuration
@@ -104,7 +100,7 @@ Create `qube.yml`:
 
 ```yaml
 container:
-  system: Voyrox:nodejs:1.0.0
+  system: Voyrox:nodejs:25.2.0
   ports:
     - "3000"
   cmd:
@@ -136,6 +132,7 @@ qube delete <id>   # Delete container
 qube eval <id>     # Execute command in container
 qube info <id>     # Show container info
 qube snapshot <id> # Create snapshot
+qube pull <image>  # Pull image
 ```
 
 ### Prebuilt Images
@@ -224,7 +221,6 @@ See LICENSE file
 ## Credits
 
 - Qube team (Voyrox and contributors)
-- Originally written in Rust, rewritten in Go for improved development experience
 
 ## Links
 
