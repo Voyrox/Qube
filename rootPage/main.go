@@ -8,7 +8,11 @@ import (
 
 func main() {
 	r := gin.Default()
-	r.Static("/", "./rootPage")
+	r.Static("/static", "./static")
+
+	r.GET("/", func(c *gin.Context) {
+		c.File("index.html")
+	})
 
 	port := os.Getenv("PORT")
 	if port == "" {
