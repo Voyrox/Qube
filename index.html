@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Qube | The Container Runtime for Modern Development</title>
+    <link rel="icon" type="image/x-icon" href="https://hub.qubecloud.org/static/favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap"
@@ -69,7 +70,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 12px 28px;
+            padding: 6px 20px;
             border-radius: 6px;
             font-weight: 600;
             font-size: 16px;
@@ -153,6 +154,12 @@
             justify-content: center;
             margin-right: 12px;
             font-size: 20px;
+        }
+
+        /* Image-based logo sizing */
+        .logo img {
+            height: 50px;
+            display: block;
         }
 
         nav {
@@ -587,6 +594,12 @@
             font-size: 18px;
         }
 
+        /* Image-based footer logo sizing */
+        .footer-logo img {
+            height: 36px;
+            display: block;
+        }
+
         .footer-social {
             display: flex;
             gap: 16px;
@@ -778,11 +791,8 @@
     <!-- Header -->
     <header>
         <div class="container header-container">
-            <a href="#" class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-cube"></i>
-                </div>
-                Qube
+            <a href="#" class="logo" aria-label="Qube Home">
+                <img src="https://hub.qubecloud.org/static/logo.png" alt="Qube Logo" class="logo-image">
             </a>
 
             <nav>
@@ -999,10 +1009,7 @@
             <div class="footer-grid">
                 <div class="footer-column">
                     <div class="footer-logo">
-                        <div class="footer-logo-icon">
-                            <i class="fas fa-cube"></i>
-                        </div>
-                        Qube
+                        <img src="https://hub.qubecloud.org/static/logo.png" alt="Qube Logo" class="footer-logo-image">
                     </div>
                     <p style="color: var(--qube-gray-light); margin-bottom: 20px;">
                         The lightweight container runtime for modern development.
