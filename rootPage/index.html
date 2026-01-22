@@ -12,21 +12,30 @@
         rel="stylesheet">
     <style>
         :root {
-            --qube-blue: #2496ed;
-            --qube-blue-dark: #1c7ed6;
-            --qube-blue-light: #4da8ff;
-            --qube-gradient: linear-gradient(135deg, #2496ed 0%, #1c7ed6 100%);
-            --qube-gradient-light: linear-gradient(135deg, rgba(36, 150, 237, 0.1) 0%, rgba(28, 126, 214, 0.1) 100%);
-            --qube-dark: #0d1b2a;
-            --qube-dark-light: #1b263b;
-            --qube-gray: #415a77;
-            --qube-gray-light: #778da9;
-            --qube-white: #e0e1dd;
-            --qube-bg: #f8f9fa;
-            --qube-card: #ffffff;
-            --qube-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            --qube-shadow-hover: 0 10px 40px rgba(0, 0, 0, 0.12);
+            --bg: #0a0a0f;
+            --card: #12121acc;
+            --border: #1f2937;
+            --text: #f3f4f6;
+            --muted: #9ca3af;
+            --brand: #22d3ee;
+            --blue: #3b82f6;
+            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        ::-webkit-scrollbar {
+            width: 1em;
+        }
+
+        body::-webkit-scrollbar-track {
+            box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--blue);
+            border-radius: 20px;
+            border: 6px solid transparent;
+            background-clip: content-box;
         }
 
         * {
@@ -35,21 +44,23 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            color: #333;
-            background-color: #0a0a0f;
-            line-height: 1.5;
-            overflow-x: hidden;
+        html {
+            font-size: 16px;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            scroll-behavior: smooth;
         }
 
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6 {
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
             font-weight: 600;
             line-height: 1.2;
         }
@@ -57,6 +68,7 @@
         a {
             text-decoration: none;
             color: inherit;
+            transition: var(--transition);
         }
 
         .container {
@@ -70,59 +82,72 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 6px 20px;
-            border-radius: 6px;
+            padding: 12px 24px;
+            border-radius: 10px;
             font-weight: 600;
-            font-size: 16px;
+            font-size: 15px;
             cursor: pointer;
             transition: var(--transition);
-            border: none;
+            border: 1px solid var(--border);
             white-space: nowrap;
+            gap: 8px;
         }
 
         .btn-primary {
-            background: var(--qube-gradient);
+            background: var(--blue);
             color: white;
-            box-shadow: 0 4px 12px rgba(36, 150, 237, 0.25);
+            border-color: var(--blue);
         }
 
         .btn-primary:hover {
+            background: #2563eb;
+            border-color: #2563eb;
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(36, 150, 237, 0.35);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
         }
 
         .btn-secondary {
             background: transparent;
-            color: #fff;
-            border: 2px solid var(--qube-blue);
+            color: var(--text);
+            border-color: var(--border);
         }
 
         .btn-secondary:hover {
-            background: rgba(36, 150, 237, 0.05);
-        }
-
-        .btn-light {
-            background: #1b263b;
-            color: var(--qube-blue);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .btn-light:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--muted);
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
         }
 
-        .btn-icon {
-            margin-right: 8px;
+        .btn-dark {
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text);
+            border-color: var(--border);
         }
 
-        /* Header - qube Style */
+        .btn-dark:hover {
+            background: rgba(15, 23, 42, 1);
+            border-color: var(--blue);
+            transform: translateY(-2px);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--muted);
+            border-color: transparent;
+        }
+
+        .btn-ghost:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Header */
         header {
-            background-color: #0a0a0f;
+            background-color: #000013;
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid var(--border);
             height: 72px;
             display: flex;
             align-items: center;
@@ -140,25 +165,10 @@
             align-items: center;
             font-size: 24px;
             font-weight: 700;
-            color: var(--qube-blue);
         }
 
-        .logo-icon {
-            background: var(--qube-gradient);
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 12px;
-            font-size: 20px;
-        }
-
-        /* Image-based logo sizing */
         .logo img {
-            height: 50px;
+            height: 40px;
             display: block;
         }
 
@@ -170,28 +180,23 @@
         .nav-links {
             display: flex;
             list-style: none;
+            gap: 32px;
             margin-right: 32px;
-        }
-
-        .nav-links li {
-            margin: 0 16px;
         }
 
         .nav-links a {
             font-weight: 500;
             font-size: 15px;
-            color: #cac1c1;
-            transition: var(--transition);
+            color: var(--muted);
             position: relative;
         }
 
         .nav-links a:hover {
-            color: var(--qube-blue);
+            color: var(--text);
         }
 
         .nav-links a.active {
-            color: var(--qube-blue);
-            font-weight: 600;
+            color: var(--blue);
         }
 
         .nav-links a.active::after {
@@ -201,7 +206,7 @@
             left: 0;
             width: 100%;
             height: 3px;
-            background: var(--qube-gradient);
+            background: var(--blue);
             border-radius: 2px;
         }
 
@@ -211,10 +216,10 @@
             gap: 16px;
         }
 
-        /* Hero Section - qube Style */
+        /* Hero Section */
         .hero {
-            padding: 100px 0 120px;
-            background: linear-gradient(135deg, #0a0a0f 0%, #0a0a0f 100%);
+            padding: 120px 0;
+            background: #050714;
             position: relative;
             overflow: hidden;
         }
@@ -226,28 +231,42 @@
             right: -20%;
             width: 70%;
             height: 200%;
-            background: linear-gradient(135deg, rgba(52, 58, 62, 0.1) 0%, rgb(15, 16, 17) 100%);
+            background: #050714;
             border-radius: 50%;
             z-index: 0;
         }
 
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: #050714;
+            z-index: 1;
+        }
+
         .hero-container {
             position: relative;
-            z-index: 1;
-            display: flex;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
             align-items: center;
-            justify-content: space-between;
         }
 
         .hero-content {
-            flex: 1;
             max-width: 600px;
         }
 
         .hero-badge {
-            display: inline-block;
-            background: var(--qube-gradient);
-            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--blue);
+            color: var(--blue);
             padding: 6px 16px;
             border-radius: 20px;
             font-size: 14px;
@@ -256,7 +275,7 @@
         }
 
         .hero-title {
-            font-size: 48px;
+            font-size: 52px;
             font-weight: 700;
             line-height: 1.1;
             color: #fff;
@@ -264,16 +283,17 @@
         }
 
         .hero-title span {
-            background: linear-gradient(90deg, var(--qube-blue) 0%, var(--qube-blue-dark) 100%);
+            background: linear-gradient(90deg, var(--blue) 0%, #60a5fa 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .hero-description {
             font-size: 20px;
-            color: #d5dce3;
+            color: var(--muted);
             margin-bottom: 40px;
-            max-width: 520px;
+            line-height: 1.7;
         }
 
         .hero-actions {
@@ -282,32 +302,27 @@
             flex-wrap: wrap;
         }
 
-        .hero-image {
-            flex: 1;
-            display: flex;
-            justify-content: flex-end;
+        .hero-terminal {
+            position: relative;
         }
 
         .terminal-window {
-            width: 500px;
-            background: #0f1113;
-            border-radius: 12px;
+            background: #0a0a16;
+            border-radius: 14px;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            transform: perspective(1000px) rotateY(-5deg);
-            transition: var(--transition);
-        }
-
-        .terminal-window:hover {
-            transform: perspective(1000px) rotateY(0deg);
+            box-shadow:
+                0 0 0 1px #3d3d3d,
+                0 8px 40px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
         .terminal-header {
-            background: #161b25;
-            padding: 14px 20px;
+            background: #000013;
+            padding: 12px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            border-bottom: 1px solid #4d4d4d;
         }
 
         .terminal-buttons {
@@ -316,56 +331,131 @@
         }
 
         .terminal-button {
-            width: 14px;
-            height: 14px;
+            width: 13px;
+            height: 13px;
             border-radius: 50%;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
-        .terminal-button.red {
-            background: #ff5f56;
-        }
-
-        .terminal-button.yellow {
-            background: #ffbd2e;
-        }
-
-        .terminal-button.green {
-            background: #27ca3f;
-        }
+        .terminal-button.red { background: #ff5f57; }
+        .terminal-button.yellow { background: #febc2e; }
+        .terminal-button.green { background: #28c840; }
 
         .terminal-title {
-            font-family: 'Source Code Pro', monospace;
-            font-size: 14px;
-            color: var(--qube-white);
-            font-weight: 500;
+            font-family: 'Source Code Pro', 'SF Mono', 'Consolas', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: #8d8d8d;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .terminal-title .title-prompt {
+            color: #fff;
+        }
+
+        .terminal-title .title-separator {
+            color: #8d8d8d;
+        }
+
+        .terminal-title .title-path {
+            color: #5eb3e5;
         }
 
         .terminal-body {
             padding: 24px;
-            font-family: 'Source Code Pro', monospace;
+            font-family: 'Source Code Pro', 'SF Mono', 'Consolas', monospace;
             font-size: 15px;
-            line-height: 1.6;
-            color: var(--qube-white);
+            line-height: 1.8;
+            color: #e0e0e0;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .terminal-line {
+            opacity: 1;
+            transform: translateY(0);
+            margin-bottom: 2px;
         }
 
         .terminal-prompt {
-            color: #27ca3f;
-            margin-right: 8px;
+            color: #4ae54a;
+            margin-right: 0;
+        }
+
+        .terminal-prompt .hostname {
+            color: #4ae54a;
+        }
+
+        .terminal-prompt .separator {
+            color: #8d8d8d;
+        }
+
+        .terminal-prompt .path {
+            color: #5eb3e5;
         }
 
         .terminal-command {
-            color: white;
+            color: #ffffff;
         }
 
-        .terminal-comment {
-            color: var(--qube-gray-light);
-            font-style: italic;
+        .terminal-output {
+            color: #b0b0b0;
+            padding-left: 20px;
+            display: block;
         }
 
-        /* Features Section */
-        .features {
+        .terminal-cursor {
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: #ffffffdb;
+            vertical-align: middle;
+            margin-left: 2px;
+            border-radius: 2px;
+            animation: cursor-blink 1s step-end infinite;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes cursor-blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .terminal-status {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #3d3d3d;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #6d6d6d;
+        }
+
+        .terminal-status .status-left {
+            display: flex;
+            gap: 20px;
+        }
+
+        .terminal-status .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .terminal-status .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28c840;
+            box-shadow: 0 0 6px rgba(40, 200, 64, 0.5);
+        }
+
+        /* Section Styles */
+        .section {
             padding: 100px 0;
-            background: #0a0a0f;
+            background: #050714;
         }
 
         .section-header {
@@ -374,12 +464,13 @@
             margin: 0 auto 60px;
         }
 
-        .section-subtitle {
-            color: #d5dce3;
+        .section-label {
+            display: inline-block;
+            color: var(--blue);
             font-weight: 600;
-            font-size: 16px;
+            font-size: 14px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
             margin-bottom: 16px;
         }
 
@@ -392,137 +483,467 @@
 
         .section-description {
             font-size: 18px;
-            color: #d5dce3;
-            line-height: 1.6;
+            color: var(--muted);
+            line-height: 1.7;
         }
 
+        /* Install Section */
+        .install-section {
+            background: #050714;
+        }
+
+        .install-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .install-content h3 {
+            font-size: 28px;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .install-content p {
+            color: var(--muted);
+            margin-bottom: 24px;
+            font-size: 17px;
+        }
+
+        .code-block {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 15px;
+            position: relative;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .code-block code {
+            color: #e5e7eb;
+            display: block;
+            white-space: pre;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 10px;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--muted);
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .copy-btn:hover {
+            background: var(--blue);
+            border-color: var(--blue);
+            color: #fff;
+        }
+
+        .copy-btn.copied {
+            background: #22c55e;
+            border-color: #22c55e;
+            color: #fff;
+        }
+
+        /* Platform Grid */
+        .platforms-section {
+            position: relative;
+        }
+
+        .platforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-top: 60px;
+        }
+
+        .platform-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 28px 20px;
+            text-align: center;
+            transition: var(--transition);
+            cursor: default;
+        }
+
+        .platform-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--blue);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+        }
+
+        .platform-card i {
+            font-size: 36px;
+            color: var(--blue);
+            margin-bottom: 16px;
+        }
+
+        .platform-card h4 {
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .platform-card span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* Features Grid */
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 32px;
+            grid-template-columns: repeat(2, minmax(350px, 1fr));
+            gap: 24px;
             margin-top: 60px;
         }
 
         .feature-card {
-            background: #12121a;
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: var(--qube-shadow);
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 32px;
             transition: var(--transition);
-            border: 1px solid transparent;
         }
 
         .feature-card:hover {
             transform: translateY(-8px);
-            box-shadow: var(--qube-shadow-hover);
-            border-color: var(--qube-blue-light);
+            border-color: var(--blue);
+            box-shadow: var(--shadow);
         }
 
         .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: var(--qube-gradient-light);
+            width: 56px;
+            height: 56px;
+            background: rgba(59, 130, 246, 0.1);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 24px;
-            color: var(--qube-blue);
+            margin-bottom: 20px;
+            color: var(--blue);
             font-size: 24px;
         }
 
         .feature-card h3 {
-            font-size: 22px;
-            margin-bottom: 16px;
+            font-size: 20px;
+            margin-bottom: 12px;
             color: #fff;
         }
 
         .feature-card p {
-            color: #d5dce3;
-            margin-bottom: 24px;
-        }
-
-        .feature-link {
-            color: var(--qube-blue);
-            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 16px;
             font-size: 15px;
-            display: inline-flex;
-            align-items: center;
         }
 
-        .feature-link i {
-            margin-left: 6px;
-            transition: var(--transition);
+        /* Benchmarks Section */
+        .benchmarks-section {
+            background: #050714;
         }
 
-        .feature-link:hover i {
-            transform: translateX(4px);
-        }
-
-        /* qube Comparison Section */
-        .security-highlights {
-            padding: 100px 0;
-            background: linear-gradient(135deg, #0a0a0f 0%, #0a0a0f 100%);
-        }
-
-        .security-features-grid {
+        .benchmarks-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 32px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
             margin-top: 60px;
         }
 
-        .security-feature-card {
-            background: #12121a;
-            border-radius: 12px;
-            padding: 36px 32px 32px 32px;
-            box-shadow: var(--qube-shadow);
-            border: 1px solid transparent;
+        .benchmark-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 28px;
+            text-align: center;
             transition: var(--transition);
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            min-height: 220px;
         }
 
-        .security-feature-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--qube-shadow-hover);
-            border-color: var(--qube-blue-light);
+        .benchmark-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--blue);
         }
 
-        .security-feature-card h3 {
-            font-size: 20px;
-            color: #fff;
-            margin-bottom: 14px;
+        .benchmark-value {
+            font-size: 48px;
             font-weight: 700;
+            color: var(--blue);
+            margin-bottom: 8px;
         }
 
-        .security-feature-card p {
-            color: #d5dce3;
+        .benchmark-value span {
+            font-size: 20px;
+            color: var(--muted);
+        }
+
+        .benchmark-label {
             font-size: 16px;
+            color: #fff;
+            margin-bottom: 16px;
+        }
+
+        .benchmark-comparison {
+            font-size: 13px;
+            color: var(--muted);
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .benchmark-comparison strong {
+            color: #22c55e;
+        }
+
+        /* Use Cases */
+        .usecases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 60px;
+        }
+
+        .usecase-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 28px;
+            transition: var(--transition);
+        }
+
+        .usecase-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--blue);
+        }
+
+        .usecase-card i {
+            font-size: 28px;
+            color: var(--blue);
+            margin-bottom: 16px;
+        }
+
+        .usecase-card h4 {
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .usecase-card p {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* Getting Started */
+        .getting-started-section {
+            background: var(--card);
+            border-top: 1px solid var(--border);
+        }
+
+        .steps-container {
+            max-width: 800px;
+            margin: 60px auto 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 48px;
+            position: relative;
+        }
+
+        .step:last-child {
             margin-bottom: 0;
         }
 
+        .step-number {
+            width: 48px;
+            height: 48px;
+            background: var(--blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+            padding-top: 4px;
+        }
+
+        .step-content h3 {
+            font-size: 22px;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .step-content p {
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+
+        /* Security Section */
+        .security-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-top: 60px;
+        }
+
+        .security-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 28px;
+            transition: var(--transition);
+        }
+
+        .security-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--blue);
+            box-shadow: var(--shadow);
+        }
+
+        .security-card i {
+            font-size: 28px;
+            color: var(--blue);
+            margin-bottom: 16px;
+        }
+
+        .security-card h4 {
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .security-card p {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* Documentation Section */
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 60px;
+        }
+
+        .doc-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            transition: var(--transition);
+        }
+
+        .doc-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--blue);
+        }
+
+        .doc-card i {
+            font-size: 24px;
+            color: var(--blue);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .doc-card h4 {
+            font-size: 16px;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .doc-card p {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* Community Section */
+        .community-section {
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 60px;
+        }
+
+        .community-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 32px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .community-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--blue);
+        }
+
+        .community-card i {
+            font-size: 36px;
+            color: var(--blue);
+            margin-bottom: 16px;
+        }
+
+        .community-card h4 {
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .community-card p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
         /* CTA Section */
-        .cta {
-            padding: 40px 0;
-            background: var(--qube-gradient);
-            color: white;
+        .cta-section {
+            padding: 100px 0;
+            background: #050714;
             text-align: center;
         }
 
+        .cta-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
         .cta-title {
-            font-size: 40px;
+            font-size: 42px;
             font-weight: 700;
-            margin-bottom: 24px;
+            color: #fff;
+            margin-bottom: 20px;
         }
 
         .cta-description {
-            font-size: 20px;
-            max-width: 700px;
-            margin: 0 auto 40px;
-            opacity: 0.9;
+            font-size: 18px;
+            color: var(--muted);
+            margin-bottom: 40px;
+            line-height: 1.7;
         }
 
         .cta-buttons {
@@ -532,26 +953,61 @@
             flex-wrap: wrap;
         }
 
+        /* Footer */
         footer {
-            background: #0a0a0f;
-            color: var(--qube-white);
+            background: #050714;
+            color: var(--text);
             padding: 80px 0 40px;
+            border-top: 1px solid var(--border);
         }
 
         .footer-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 40px;
+            grid-template-columns: 2fr repeat(3, 1fr);
+            gap: 60px;
             margin-bottom: 60px;
         }
 
+        .footer-brand p {
+            color: var(--muted);
+            margin: 16px 0 24px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 12px;
+        }
+
+        .footer-social a {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            transition: var(--transition);
+            border: 1px solid var(--border);
+            font-size: 18px;
+        }
+
+        .footer-social a:hover {
+            background: var(--blue);
+            border-color: var(--blue);
+            color: #fff;
+            transform: translateY(-3px);
+        }
+
         .footer-column h4 {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
-            margin-bottom: 24px;
-            color: white;
+            color: #fff;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
         }
 
         .footer-links {
@@ -563,77 +1019,26 @@
         }
 
         .footer-links a {
-            color: var(--qube-gray-light);
+            color: var(--muted);
             font-size: 15px;
-            transition: var(--transition);
         }
 
         .footer-links a:hover {
-            color: white;
-        }
-
-        .footer-logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: white;
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .footer-logo-icon {
-            background: var(--qube-gradient);
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 12px;
-            font-size: 18px;
-        }
-
-        /* Image-based footer logo sizing */
-        .footer-logo img {
-            height: 36px;
-            display: block;
-        }
-
-        .footer-social {
-            display: flex;
-            gap: 16px;
-            margin-top: 24px;
-        }
-
-        .footer-social a {
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            transition: var(--transition);
-        }
-
-        .footer-social a:hover {
-            background: var(--qube-blue);
-            transform: translateY(-3px);
+            color: var(--blue);
         }
 
         .footer-bottom {
             padding-top: 40px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
+            gap: 20px;
         }
 
         .footer-copyright {
-            color: var(--qube-gray-light);
+            color: var(--muted);
             font-size: 14px;
         }
 
@@ -643,168 +1048,162 @@
         }
 
         .footer-legal a {
-            color: var(--qube-gray-light);
+            color: var(--muted);
             font-size: 14px;
-            transition: var(--transition);
         }
 
         .footer-legal a:hover {
-            color: white;
+            color: var(--blue);
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         /* Responsive */
-        @media (max-width: 992px) {
+        @media (max-width: 1024px) {
             .hero-container {
-                flex-direction: column;
+                grid-template-columns: 1fr;
                 text-align: center;
             }
 
             .hero-content {
-                margin-bottom: 60px;
+                max-width: 100%;
             }
 
-            .terminal-window {
-                width: 100%;
+            .hero-actions {
+                justify-content: center;
+            }
+
+            .hero-terminal {
                 max-width: 500px;
-                transform: none;
+                margin: 0 auto;
             }
 
-            .security-features-grid {
+            .install-grid {
                 grid-template-columns: 1fr;
+                gap: 40px;
             }
 
-            .nav-links {
-                display: none;
+            .footer-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 40px;
             }
         }
 
         @media (max-width: 768px) {
-            .hero-actions {
-                flex-direction: column;
-                gap: 10px;
-                align-items: stretch;
-            }
-
-            .hero-actions .btn {
-                width: 100%;
-                justify-content: center;
-                margin: 0;
-            }
-
-            .header-actions .btn {
-                padding: 8px 14px;
-                font-size: 14px;
-                min-width: 0;
-            }
-
-            .header-actions {
-                gap: 8px;
-            }
-
-            .security-feature-card {
-                padding: 28px 16px 24px 16px;
+            .nav-links {
+                display: none;
             }
 
             .hero-title {
                 font-size: 36px;
             }
 
+            .hero-description {
+                font-size: 17px;
+            }
+
             .section-title {
                 font-size: 32px;
             }
 
-            .features-grid {
+            .features-grid,
+            .benchmarks-grid,
+            .usecases-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-grid {
                 grid-template-columns: 1fr;
             }
 
             .footer-bottom {
                 flex-direction: column;
-                gap: 20px;
                 text-align: center;
             }
 
             .footer-legal {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .step {
                 flex-direction: column;
-                gap: 12px;
+                gap: 16px;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+                justify-content: center;
             }
         }
-    </style>
-    <style>
-        .btn-secondary-alt {
-            background: rgba(255, 255, 255, 0.1) !important;
-            border-color: white !important;
-        }
-        .membership-section {
-            padding: 4rem 2rem;
-            width: 100%;
-            max-width: 1280px;
-            margin: 0 auto;
-        }
 
-        .membership-container {
-            display: flex;
-            background: url("https://hub.qubecloud.org/static/footer.png") center/cover no-repeat;
-            border-radius: 15px;
-            height: 300px;
-            position: relative;
-            overflow: hidden;
-        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 16px;
+            }
 
-        .membership-content {
-            margin-left: auto;
-            width: 50%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 2rem;
-        }
+            .hero {
+                padding: 80px 0;
+            }
 
-        .membership-content h4 {
-            font-size: 1rem;
-            letter-spacing: 2px;
-            margin: 0;
-            color: #01faff;
-        }
+            .hero-title {
+                font-size: 32px;
+            }
 
-        .membership-content h2 {
-            font-size: 2rem;
-            font-weight: bold;
-            margin: 0.5rem 0;
-            text-align: left;
-            color: #fff;
-        }
+            .section {
+                padding: 60px 0;
+            }
 
-        .enquire-btn {
-            background: #0078D7;
-            color: #fff;
-            padding: 0.8rem 1.5rem;
-            border-radius: 4px;
-            text-decoration: none;
-            text-align: center;
-            display: inline-block;
-            margin-top: 1rem;
+            .section-title {
+                font-size: 28px;
+            }
+
+            .terminal-window {
+                font-size: 13px;
+            }
+
+            .terminal-body {
+                padding: 16px;
+                font-size: 13px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <!-- Header -->
     <header>
         <div class="container header-container">
             <a href="#" class="logo" aria-label="Qube Home">
-                <img src="https://hub.qubecloud.org/static/logo.png" alt="Qube Logo" class="logo-image">
+                <img src="https://hub.qubecloud.org/static/logo.png" alt="Qube Logo">
             </a>
 
             <nav>
                 <ul class="nav-links">
                     <li><a href="#" class="active">Home</a></li>
-                    <li><a href="https://github.com/Voyrox/Qube">Developers</a></li>
-                    <li><a href="https://github.com/Voyrox/Qube">Docs</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#benchmarks">Performance</a></li>
+                    <li><a href="#getting-started">Docs</a></li>
+                    <li><a href="https://github.com/Voyrox/Qube">GitHub</a></li>
                 </ul>
 
                 <div class="header-actions">
-                    <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn btn-light">
-                        <i class="fab fa-github btn-icon"></i> GitHub
+                    <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn btn-ghost">
+                        <i class="fab fa-github btn-icon"></i> Star
                     </a>
                     <a href="https://hub.qubecloud.org/" class="btn btn-primary">
                         Get Started
@@ -814,24 +1213,23 @@
         </div>
     </header>
 
-    <!-- Hero Section -->
     <section class="hero">
         <div class="container hero-container">
-            <div class="hero-content">
+            <div class="hero-content fade-in">
                 <div class="hero-badge">
                     <i class="fas fa-bolt"></i> Now in Beta
                 </div>
                 <h1 class="hero-title">
-                    The container runtime<br>
-                    <span>for modern development</span>
+                    The Container Runtime<br>
+                    <span>for Modern Development</span>
                 </h1>
                 <p class="hero-description">
                     Qube is a lightweight, performant container runtime written in Go.
-                    Built for developers who need simplicity without sacrificing power.
+                    Build, run, and manage containers with simplicity and speed.
                 </p>
                 <div class="hero-actions">
-                    <a href="https://hub.qubecloud.org/" class="btn btn-primary">
-                        <i class="fas fa-rocket btn-icon"></i> Get Started
+                    <a href="#getting-started" class="btn btn-primary">
+                        <i class="fas fa-download btn-icon"></i> Install Qube
                     </a>
                     <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn btn-secondary">
                         <i class="fab fa-github btn-icon"></i> View on GitHub
@@ -839,7 +1237,7 @@
                 </div>
             </div>
 
-            <div class="hero-image">
+            <div class="hero-terminal fade-in">
                 <div class="terminal-window">
                     <div class="terminal-header">
                         <div class="terminal-buttons">
@@ -847,39 +1245,54 @@
                             <div class="terminal-button yellow"></div>
                             <div class="terminal-button green"></div>
                         </div>
-                        <div class="terminal-title">qube-cli</div>
-                        <div></div>
+                        <div class="terminal-title">
+                            <span class="title-prompt">user@qube</span><span class="title-separator">:</span><span class="title-path">~</span>
+                        </div>
                     </div>
                     <div class="terminal-body">
                         <div class="terminal-line">
-                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-prompt"><span class="hostname">user@qube</span><span class="separator">:</span><span class="path">~$</span></span>
                             <span class="terminal-command">qube run --image Voyrox:nodejs:25.2.0</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="terminal-comment"># Pulling image...</span>
+                            <span class="terminal-output">Pulling image...</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="terminal-comment"># Creating container with isolated namespaces</span>
+                            <span class="terminal-output">Creating container with isolated namespaces</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="terminal-comment"># Container started in 0.12s</span>
+                            <span class="terminal-output">Container started in 0.12s</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-prompt"><span class="hostname">user@qube</span><span class="separator">:</span><span class="path">~$</span></span>
                             <span class="terminal-command">qube list</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="terminal-comment"># CONTAINER ID IMAGE STATUS PORTS</span>
+                            <span class="terminal-output">  CONTAINER ID   IMAGE                   STATUS    PORTS</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="terminal-comment"># Qube-j9sn487 Voyrox:nodejs:25.2.0 Running 3000:3000</span>
+                            <span class="terminal-output">  Qube-j9sn487  Voyrox:nodejs:25.2.0  Running   3000:3000</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="terminal-prompt">$</span>
-                            <span class="terminal-command">qube eval Qube-j9sn487 node --version</span>
+                            <span class="terminal-prompt"><span class="hostname">user@qube</span><span class="separator">:</span><span class="path">~$</span></span>
+                            <span class="terminal-command">qube eval Qube-j9sn487 node --version</span><span class="terminal-cursor"></span>
                         </div>
                         <div class="terminal-line">
-                            <span class="terminal-comment"># v18.15.0</span>
+                            <span class="terminal-output">v18.15.0</span>
+                        </div>
+                        <div class="terminal-status">
+                            <div class="status-left">
+                                <div class="status-item">
+                                    <span class="status-dot"></span>
+                                    <span>Running</span>
+                                </div>
+                                <div class="status-item">
+                                    <span>voyrox/nodejs:25.2.0</span>
+                                </div>
+                            </div>
+                            <div class="status-right">
+                                <span id="terminal-time"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -887,132 +1300,352 @@
         </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="features">
+    <section class="section install-section" id="getting-started">
         <div class="container">
-            <div class="section-header">
-                <div class="section-subtitle">Why Qube?</div>
-                <h2 class="section-title">Built for speed and simplicity</h2>
+            <div class="install-grid">
+                <div class="install-content fade-in">
+                    <span class="section-label">Getting Started</span>
+                    <h3>Install Qube in Minutes</h3>
+                    <p>
+                        Qube works on Linux, macOS, and Windows. Clone the repository and build from source using Make.
+                    </p>
+                    <div class="code-block">
+                        <code id="install-code">git clone https://github.com/Voyrox/Qube.git
+cd Qube
+make install</code>
+                        <button class="copy-btn" onclick="copyCode(this, 'git clone https://github.com/Voyrox/Qube.git\ncd Qube\nmake install')">Copy</button>
+                    </div>
+                </div>
+                <div class="fade-in">
+                    <div class="features-grid" style="margin-top: 0;">
+                        <div class="feature-card" style="padding: 20px;">
+                            <div class="feature-icon" style="width: 48px; height: 48px; font-size: 20px;">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <h4 style="font-size: 16px; margin-bottom: 8px;">Go 1.21+ Required</h4>
+                            <p style="font-size: 14px; margin-bottom: 0;">Make sure you have Go installed on your system.</p>
+                        </div>
+                        <div class="feature-card" style="padding: 20px;">
+                            <div class="feature-icon" style="width: 48px; height: 48px; font-size: 20px;">
+                                <i class="fab fa-linux"></i>
+                            </div>
+                            <h4 style="font-size: 16px; margin-bottom: 8px;">Linux</h4>
+                            <p style="font-size: 14px; margin-bottom: 0;">Full support for all major Linux distributions.</p>
+                        </div>
+                        <div class="feature-card" style="padding: 20px;">
+                            <div class="feature-icon" style="width: 48px; height: 48px; font-size: 20px;">
+                                <i class="fab fa-apple"></i>
+                            </div>
+                            <h4 style="font-size: 16px; margin-bottom: 8px;">macOS</h4>
+                            <p style="font-size: 14px; margin-bottom: 0;">Works on Intel and Apple Silicon Macs.</p>
+                        </div>
+                        <div class="feature-card" style="padding: 20px;">
+                            <div class="feature-icon" style="width: 48px; height: 48px; font-size: 20px;">
+                                <i class="fab fa-windows"></i>
+                            </div>
+                            <h4 style="font-size: 16px; margin-bottom: 8px;">Windows</h4>
+                            <p style="font-size: 14px; margin-bottom: 0;">Via WSL2 or native compilation.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section platforms-section">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-label">Platforms</span>
+                <h2 class="section-title">Runs Everywhere</h2>
                 <p class="section-description">
-                    Qube provides a qube-like workflow with a fraction of the overhead,
-                    perfect for development environments and CI/CD pipelines.
+                    Qube is designed to work across different environments and platforms.
+                </p>
+            </div>
+
+            <div class="platforms-grid">
+                <div class="platform-card fade-in">
+                    <i class="fab fa-linux"></i>
+                    <h4>Linux</h4>
+                    <span>Full Support</span>
+                </div>
+                <div class="platform-card fade-in">
+                    <i class="fab fa-apple"></i>
+                    <h4>macOS</h4>
+                    <span>Intel & Apple Silicon</span>
+                </div>
+                <div class="platform-card fade-in">
+                    <i class="fab fa-windows"></i>
+                    <h4>Windows</h4>
+                    <span>WSL2 Support</span>
+                </div>
+                <div class="platform-card fade-in">
+                    <i class="fab fa-docker"></i>
+                    <h4>Docker</h4>
+                    <span>Container Integration</span>
+                </div>
+                <div class="platform-card fade-in">
+                    <i class="fas fa-microchip"></i>
+                    <h4>Raspberry Pi</h4>
+                    <span>ARM Support</span>
+                </div>
+                <div class="platform-card fade-in">
+                    <i class="fas fa-cloud"></i>
+                    <h4>Cloud</h4>
+                    <span>Any Cloud Provider</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section features-section" id="features">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-label">Features</span>
+                <h2 class="section-title">Why Choose Qube?</h2>
+                <p class="section-description">
+                    Built from the ground up for developers who need performance and simplicity.
                 </p>
             </div>
 
             <div class="features-grid">
-                <div class="feature-card">
+                <div class="feature-card fade-in">
                     <div class="feature-icon">
                         <i class="fas fa-bolt"></i>
                     </div>
                     <h3>Lightning Fast</h3>
                     <p>
-                        Written in Go for minimal overhead and sub-second container startup times.
-                        Perfect for rapid development iterations.
+                        Written in Go for minimal overhead. Sub-second container startup times mean you can iterate faster.
                     </p>
-                    <a href="#" class="feature-link">
-                        Learn more <i class="fas fa-arrow-right"></i>
-                    </a>
                 </div>
 
-                <div class="feature-card">
+                <div class="feature-card fade-in">
                     <div class="feature-icon">
                         <i class="fas fa-shield-alt"></i>
                     </div>
                     <h3>Secure Isolation</h3>
                     <p>
-                        Leverages Linux namespaces and cgroups v2 for strong isolation
-                        without the complexity of traditional container runtimes.
+                        Leverages Linux namespaces and cgroups v2 for strong isolation without the complexity of traditional container runtimes.
                     </p>
-                    <a href="#" class="feature-link">
-                        Security details <i class="fas fa-arrow-right"></i>
-                    </a>
                 </div>
 
-                <div class="feature-card">
+                <div class="feature-card fade-in">
                     <div class="feature-icon">
                         <i class="fas fa-plug"></i>
                     </div>
                     <h3>REST API</h3>
                     <p>
-                        Full programmatic control via HTTP API with WebSocket support
-                        for real-time container management and monitoring.
+                        Full programmatic control via HTTP API with WebSocket support for real-time container management and monitoring.
                     </p>
-                    <a href="#" class="feature-link">
-                        API documentation <i class="fas fa-arrow-right"></i>
+                </div>
+
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa feather-alt"></i>
+                    </div>
+                    <h3>Minimal Footprint</h3>
+                    <p>
+                        Small binary size and low memory usage. Qube starts with only 8MB RAM compared to 45MB for Docker.
+                    </p>
+                </div>
+
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3>Cross-Platform</h3>
+                    <p>
+                        Develop on any platform and deploy anywhere. Consistent experience across Linux, macOS, and Windows.
+                    </p>
+                </div>
+
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>Developer Friendly</h3>
+                    <p>
+                        Simple, intuitive CLI with great developer experience. Get started in minutes, not hours.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section benchmarks-section" id="benchmarks">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-label">Performance</span>
+                <h2 class="section-title">Benchmarks</h2>
+                <p class="section-description">
+                    See how Qube compares to traditional container runtimes.
+                </p>
+            </div>
+
+            <div class="benchmarks-grid">
+                <div class="benchmark-card fade-in">
+                    <div class="benchmark-value">0.12s <span>/ vs 1.8s</span></div>
+                    <div class="benchmark-label">Startup Time</div>
+                    <div class="benchmark-comparison">
+                        <strong>15x faster</strong> than Docker
+                    </div>
+                </div>
+
+                <div class="benchmark-card fade-in">
+                    <div class="benchmark-value">8MB <span>/ vs 45MB</span></div>
+                    <div class="benchmark-label">Memory Usage</div>
+                    <div class="benchmark-comparison">
+                        <strong>5.6x smaller</strong> footprint
+                    </div>
+                </div>
+
+                <div class="benchmark-card fade-in">
+                    <div class="benchmark-value">12MB <span>/ vs 85MB</span></div>
+                    <div class="benchmark-label">Binary Size</div>
+                    <div class="benchmark-comparison">
+                        <strong>7x smaller</strong> installation
+                    </div>
+                </div>
+
+                <div class="benchmark-card fade-in">
+                    <div class="benchmark-value">45MB <span>/ vs 350MB</span></div>
+                    <div class="benchmark-label">Disk Footprint</div>
+                    <div class="benchmark-comparison">
+                        <strong>7.8x smaller</strong> on disk
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-label">Use Cases</span>
+                <h2 class="section-title">Perfect For Every Scenario</h2>
+                <p class="section-description">
+                    Whether you're building locally or deploying to production, Qube has you covered.
+                </p>
+            </div>
+
+            <div class="usecases-grid">
+                <div class="usecase-card fade-in">
+                    <i class="fas fa-code"></i>
+                    <h4>Local Development</h4>
+                    <p>Spin up containers instantly for local development. No more waiting for Docker to start.</p>
+                </div>
+
+                <div class="usecase-card fade-in">
+                    <i class="fas fa-sync"></i>
+                    <h4>CI/CD Pipelines</h4>
+                    <p>Fast, reliable containers for testing and deployment. Reduce pipeline times significantly.</p>
+                </div>
+
+                <div class="usecase-card fade-in">
+                    <i class="fas fa-flask"></i>
+                    <h4>Testing Environments</h4>
+                    <p>Create isolated test environments quickly. Perfect for integration and unit tests.</p>
+                </div>
+
+                <div class="usecase-card fade-in">
+                    <i class="fas fa-server"></i>
+                    <h4>Edge Computing</h4>
+                    <p>Lightweight containers ideal for edge deployments with limited resources.</p>
+                </div>
+
+                <div class="usecase-card fade-in">
+                    <i class="fas fa-cubes"></i>
+                    <h4>Microservices</h4>
+                    <p>Build and run microservices with minimal overhead. Scale efficiently.</p>
+                </div>
+
+                <div class="usecase-card fade-in">
+                    <i class="fas fa-history"></i>
+                    <h4>Legacy Applications</h4>
+                    <p>Expose old applications to the web easily without complex configuration.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-label">Security</span>
+                <h2 class="section-title">Secure By Default</h2>
+                <p class="section-description">
+                    Qube implements industry-standard security features to keep your containers safe.
+                </p>
+            </div>
+
+            <div class="security-grid">
+                <div class="security-card fade-in">
+                    <i class="fas fa-box"></i>
+                    <h4>Container Isolation</h4>
+                    <p>Uses Linux namespaces to provide complete isolation between containers and the host system.</p>
+                </div>
+
+                <div class="security-card fade-in">
+                    <i class="fas fa-microchip"></i>
+                    <h4>Resource Limits</h4>
+                    <p>Cgroups v2 support for CPU, memory, and I/O limits. Prevent containers from consuming excessive resources.</p>
+                </div>
+
+                <div class="security-card fade-in">
+                    <i class="fas fa-key"></i>
+                    <h4>Capabilities Management</h4>
+                    <p>Fine-grained control over Linux capabilities. Grant only what's needed, nothing more.</p>
+                </div>
+
+                <div class="security-card fade-in">
+                    <i class="fas fa-shield-alt"></i>
+                    <h4>Seccomp Profiles</h4>
+                    <p>System call filtering to reduce the attack surface. Block dangerous syscalls by default.</p>
+                </div>
+
+                <div class="security-card fade-in">
+                    <i class="fas fa-lock"></i>
+                    <h4>AppArmor/SELinux</h4>
+                    <p>Mandatory access control support for enhanced security policies on supported systems.</p>
+                </div>
+
+                <div class="security-card fade-in">
+                    <i class="fas fa-file-contract"></i>
+                    <h4>Image Signing</h4>
+                    <p>Verify container image integrity with cryptographic signatures before running.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content fade-in">
+                <h2 class="cta-title">Ready to Get Started?</h2>
+                <p class="cta-description">
+                    Install Qube today and experience the future of container runtimes.
+                </p>
+                <div class="cta-buttons">
+                    <a href="#getting-started" class="btn btn-primary">
+                        <i class="fas fa-download btn-icon"></i> Install Qube
+                    </a>
+                    <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn btn-secondary">
+                        <i class="fab fa-github btn-icon"></i> Star on GitHub
                     </a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- qube Comparison Section -->
-    <section class="security-highlights" id="get-started">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-subtitle">Start Secure, Stay Secure</div>
-                <h2 class="section-title">Security & Simplicity, By Default</h2>
-                <p class="section-description">
-                    Qube images and builds are designed for minimal attack surface, rapid CVE response, and
-                    enterprise-grade provenance.
-                </p>
-            </div>
-            <div class="security-features-grid">
-                <div class="security-feature-card">
-                    <h3>Up to 97% reduction in attack surface</h3>
-                    <p>Shrink your image footprint and attack risk with ultra-minimal, Debian- and Alpine-compatible
-                        builds, with a one line update to your qubefile.</p>
-                </div>
-                <div class="security-feature-card">
-                    <h3>Up to 99% CVE reduction</h3>
-                    <p>Eliminate vulnerabilities before they reach production with continuously rebuilt images from
-                        Qube’s hardened pipeline and verified SBOMs.</p>
-                </div>
-                <div class="security-feature-card">
-                    <h3>7-day SLA for critical CVE remediation</h3>
-                    <p>Every image is built from trusted sources meeting SLSA Build Level 3 specifications with full
-                        SBOMs and verifiable provenance.</p>
-                </div>
-                <div class="security-feature-card">
-                    <h3>1000+ images and applications</h3>
-                    <p>Continuously growing catalog of FIPS and STIG ready languages, frameworks, databases, application
-                        images and Helm charts, all signed and verified with SLA-backed security.</p>
-                </div>
-                <div class="security-feature-card">
-                    <h3>Start secure, add what you need</h3>
-                    <p>Images with your own packages, certificates, scripts, or settings inherit Qube’s hardening and
-                        secure build.</p>
-                </div>
-                <div class="security-feature-card">
-                    <h3>30 days of free access</h3>
-                    <p>Secure, minimal, hardened images shouldn’t be hard to adopt. Whether you’re a startup or an
-                        enterprise, Qube has a program for you.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="membership" class="membership-section">
-        <div class="membership-container">
-            <div class="membership-content">
-                <h4>Ready to speed up your workflow?</h4>
-                <h2>Join developers switching to Qube for faster, simpler containers.</h2>
-                <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn enquire-btn">
-                    <i class="fab fa-github btn-icon"></i> Star on GitHub
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
     <footer>
         <div class="container">
             <div class="footer-grid">
-                <div class="footer-column">
-                    <div class="footer-logo">
-                        <img src="https://hub.qubecloud.org/static/logo.png" alt="Qube Logo" class="footer-logo-image">
-                    </div>
-                    <p style="color: var(--qube-gray-light); margin-bottom: 20px;">
-                        The lightweight container runtime for modern development.
+                <div class="footer-brand">
+                    <a href="#" class="logo">
+                        <img src="https://hub.qubecloud.org/static/logo.png" alt="Qube Logo">
+                    </a>
+                    <p>
+                        Qube is a lightweight, performant container runtime written in Go.
+                        Built for developers who need simplicity without sacrificing power.
                     </p>
                     <div class="footer-social">
                         <a href="https://github.com/Voyrox/Qube" target="_blank" aria-label="GitHub">
@@ -1024,42 +1657,36 @@
                         <a href="#" aria-label="Discord">
                             <i class="fab fa-discord"></i>
                         </a>
-                        <a href="#" aria-label="YouTube">
-                            <i class="fab fa-youtube"></i>
-                        </a>
                     </div>
                 </div>
 
                 <div class="footer-column">
                     <h4>Product</h4>
                     <ul class="footer-links">
-                        <li><a href="#">Features</a></li>
-                        <li><a href="#">Enterprise</a></li>
-                        <li><a href="#">Pricing</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#benchmarks">Performance</a></li>
                         <li><a href="#">Roadmap</a></li>
                         <li><a href="#">Changelog</a></li>
                     </ul>
                 </div>
 
                 <div class="footer-column">
-                    <h4>Developers</h4>
+                    <h4>Documentation</h4>
                     <ul class="footer-links">
-                        <li><a href="#">Documentation</a></li>
-                        <li><a href="#">API Reference</a></li>
-                        <li><a href="#">Guides</a></li>
+                        <li><a href="#getting-started">Getting Started</a></li>
                         <li><a href="#">CLI Reference</a></li>
-                        <li><a href="#">Community</a></li>
+                        <li><a href="#">API Docs</a></li>
+                        <li><a href="#">Best Practices</a></li>
                     </ul>
                 </div>
 
                 <div class="footer-column">
-                    <h4>Company</h4>
+                    <h4>Community</h4>
                     <ul class="footer-links">
-                        <li><a href="#">About</a></li>
-                        <li><a href="#">Blog</a></li>
-                        <li><a href="#">Careers</a></li>
-                        <li><a href="#">Contact</a></li>
-                        <li><a href="#">Press</a></li>
+                        <li><a href="https://github.com/Voyrox/Qube">GitHub</a></li>
+                        <li><a href="#">Contributing</a></li>
+                        <li><a href="#">Discord</a></li>
+                        <li><a href="#">Twitter</a></li>
                     </ul>
                 </div>
             </div>
@@ -1072,41 +1699,80 @@
                     <a href="https://github.com/Voyrox/Qube/blob/main/LICENSE" target="_blank">License</a>
                     <a href="#">Privacy Policy</a>
                     <a href="#">Terms of Service</a>
-                    <a href="#">Cookie Policy</a>
                 </div>
             </div>
         </div>
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const terminalLines = document.querySelectorAll('.terminal-line');
+        // Copy to clipboard functionality
+        function copyCode(button, code) {
+            navigator.clipboard.writeText(code).then(function() {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                setTimeout(function() {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Failed to copy:', err);
+            });
+        }
 
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach((entry, index) => {
+        // Terminal animation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update terminal time
+            function updateTerminalTime() {
+                const timeElement = document.getElementById('terminal-time');
+                if (timeElement) {
+                    const now = new Date();
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    timeElement.textContent = hours + ':' + minutes;
+                }
+            }
+            updateTerminalTime();
+            setInterval(updateTerminalTime, 60000);
+
+            // Scroll animations
+            const fadeElements = document.querySelectorAll('.fade-in');
+
+            const fadeObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        setTimeout(() => {
-                            entry.target.style.opacity = '1';
-                            entry.target.style.transform = 'translateY(0)';
-                        }, index * 100);
+                        entry.target.classList.add('visible');
                     }
                 });
-            }, { threshold: 0.5 });
-
-            terminalLines.forEach(line => {
-                line.style.opacity = '0';
-                line.style.transform = 'translateY(10px)';
-                line.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                observer.observe(line);
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
             });
 
-            window.addEventListener('scroll', function () {
-                const header = document.querySelector('header');
-                if (window.scrollY > 10) {
-                    header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
+            fadeElements.forEach(el => fadeObserver.observe(el));
+
+            // Header shadow on scroll
+            const header = document.querySelector('header');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 20) {
+                    header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
                 } else {
-                    header.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                    header.style.boxShadow = 'none';
                 }
+            });
+
+            // Smooth scroll for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
             });
         });
     </script>
