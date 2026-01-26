@@ -70,15 +70,15 @@
         <!-- Stats Bar -->
         <div class="stats-bar">
             <div class="stat-item">
-                <div class="stat-number">2.5K+</div>
+                <div id="statImages" class="stat-number">—</div>
                 <div class="stat-label">Images</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number">150K+</div>
+                <div id="statPulls" class="stat-number">—</div>
                 <div class="stat-label">Pulls</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number">1.2K+</div>
+                <div id="statUsers" class="stat-number">—</div>
                 <div class="stat-label">Users</div>
             </div>
         </div>
@@ -427,6 +427,38 @@
     </div>
 
     <script src="/static/js/app.js"></script>
+    <script>
+        // Load hub stats (images, pulls, users)
+        function formatCompact(n) {
+            if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B+';
+            if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M+';
+            if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K+';
+            return String(n);
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                if (!res.ok) throw new Error('Failed to load stats');
+
+                const images = typeof data.images === 'number' ? data.images : 0;
+                const pulls = typeof data.pulls === 'number' ? data.pulls : 0;
+                const users = typeof data.users === 'number' ? data.users : 0;
+
+                const elImages = document.getElementById('statImages');
+                const elPulls = document.getElementById('statPulls');
+                const elUsers = document.getElementById('statUsers');
+                if (elImages) elImages.textContent = formatCompact(images);
+                if (elPulls) elPulls.textContent = formatCompact(pulls);
+                if (elUsers) elUsers.textContent = formatCompact(users);
+            } catch (e) {
+                console.error('Error loading stats:', e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadStats);
+    </script>
     <script>
         // Load category containers
         async function loadCategoryContainers() {

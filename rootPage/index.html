@@ -82,7 +82,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 12px 24px;
+            padding: 8px 20px;
             border-radius: 10px;
             font-weight: 600;
             font-size: 15px;
@@ -94,9 +94,9 @@
         }
 
         .btn-primary {
-            background: var(--blue);
+            background: #6366f1;
             color: white;
-            border-color: var(--blue);
+            border-color: #6366f1;
         }
 
         .btn-primary:hover {
@@ -143,7 +143,7 @@
 
         /* Header */
         header {
-            background-color: #000013;
+            background-color: rgb(5, 6, 16);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -170,6 +170,9 @@
         .logo img {
             height: 40px;
             display: block;
+        }
+        .logo .logo-text {
+            margin-left: 12px;
         }
 
         nav {
@@ -1190,6 +1193,7 @@
         <div class="container header-container">
             <a href="#" class="logo" aria-label="Qube Home">
                 <img src="https://hub.qubecloud.org/static/logo.png" alt="Qube Logo">
+                <span class="logo-text">QubeCloud</span>
             </a>
 
             <nav>

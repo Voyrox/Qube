@@ -22,7 +22,6 @@ func Setup(db *database.ScyllaDB, cfg *config.Config, cacheManager *cache.CacheM
 		AllowCredentials: true,
 	}))
 
-	// Middleware to inject admin_email into all templates
 	r.Use(func(c *gin.Context) {
 		c.Set("admin_email", cfg.AdminEmail)
 		c.Next()
@@ -34,6 +33,7 @@ func Setup(db *database.ScyllaDB, cfg *config.Config, cacheManager *cache.CacheM
 	authHandler := handlers.NewAuthHandler(db, cfg, cacheManager.Users)
 	imageHandler := handlers.NewImageHandler(db, cfg, cacheManager.Images)
 	reportHandler := handlers.NewReportHandler(db, cfg)
+	statsHandler := handlers.NewStatsHandler(db, cfg, cacheManager.General)
 
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(200, "index.html", gin.H{
@@ -76,7 +76,6 @@ func Setup(db *database.ScyllaDB, cfg *config.Config, cacheManager *cache.CacheM
 
 	r.GET("/download/:user/:image", imageHandler.DownloadByUser)
 
-	// Reports page (client-side will check admin access)
 	r.GET("/reports", func(c *gin.Context) {
 		c.HTML(200, "reports.html", gin.H{
 			"title": "Reports",
@@ -85,11 +84,12 @@ func Setup(db *database.ScyllaDB, cfg *config.Config, cacheManager *cache.CacheM
 
 	api := r.Group("/api")
 	{
+		api.GET("/stats", statsHandler.GetStats)
+
 		api.POST("/auth/register", authHandler.Register)
 		api.POST("/auth/login", authHandler.Login)
 		api.POST("/auth/update", middleware.AuthMiddleware(cfg), authHandler.UpdateProfile)
 
-		// Image public routes (with optional auth)
 		api.GET("/images", imageHandler.List)
 		api.GET("/images/:name", imageHandler.GetByName)
 		api.GET("/images/:name/:tag/download", imageHandler.Download)
@@ -97,7 +97,6 @@ func Setup(db *database.ScyllaDB, cfg *config.Config, cacheManager *cache.CacheM
 		api.GET("/download/:name", imageHandler.DownloadLatest)
 		api.GET("/files/:filename", imageHandler.DownloadFile)
 
-		// Protected routes
 		protected := api.Group("")
 		protected.Use(middleware.AuthMiddlewareWithDB(cfg, db))
 		{
@@ -108,7 +107,7 @@ func Setup(db *database.ScyllaDB, cfg *config.Config, cacheManager *cache.CacheM
 			protected.POST("/images/upload", imageHandler.Upload)
 			protected.GET("/images/my", imageHandler.GetMyImages)
 			protected.DELETE("/images/:id", imageHandler.Delete)
-			// Use /image-id to avoid conflict with /images/:name
+
 			protected.POST("/image-id/:id/star", imageHandler.Star)
 			protected.DELETE("/image-id/:id/star", imageHandler.Unstar)
 			protected.GET("/image-id/:id/star", imageHandler.StarStatus)

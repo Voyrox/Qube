@@ -11,8 +11,8 @@
     --primary: #6366f1;
     --primary-hover: #4f46e5;
     --primary-light: rgba(99, 102, 241, 0.1);
-    --bg-primary: #0a0a0f;
-    --bg-secondary: #12121a;
+    --bg-primary: rgb(5, 7, 20);
+    --bg-secondary: rgb(10, 15, 31);
     --bg-tertiary: #1a1a27;
     --border: rgba(255, 255, 255, 0.08);
     --border-hover: rgba(99, 102, 241, 0.3);
