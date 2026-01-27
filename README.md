@@ -6,15 +6,17 @@
   <img src="./docs/assets/images/logo.png" width="450">
 </p>
 
-## Features
-- ✨ Lightweight and fast container runtime
-- 🔒 Linux namespace isolation (PID, Mount, Network, IPC, UTS)
-- 📊 CGroups v2 resource management (memory, CPU)
-- 🚀 Simple CLI interface
-- 🌐 REST API with WebSocket support
-- 🐳 Docker-like workflow
-- 📦 Prebuilt container images
-- 🔧 QML configuration file support
+# 🚀 Features
+> [!TIP]
+> - Lightweight and fast container runtime
+> - Linux namespace isolation (PID, Mount, Network, IPC, UTS)
+> - CGroups v2 resource management (memory, CPU)
+> - Simple CLI interface
+> - REST API with WebSocket support
+> - Docker-like workflow
+> - Prebuilt container images
+> - QML configuration file support
+> 
 
 ## Quick Start
 
