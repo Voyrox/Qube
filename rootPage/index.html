@@ -60,7 +60,12 @@
             overflow-x: hidden;
         }
 
-        h1, h2, h3, h4, h5, h6 {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
             font-weight: 600;
             line-height: 1.2;
         }
@@ -171,6 +176,7 @@
             height: 40px;
             display: block;
         }
+
         .logo .logo-text {
             margin-left: 12px;
         }
@@ -340,9 +346,17 @@
             box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
-        .terminal-button.red { background: #ff5f57; }
-        .terminal-button.yellow { background: #febc2e; }
-        .terminal-button.green { background: #28c840; }
+        .terminal-button.red {
+            background: #ff5f57;
+        }
+
+        .terminal-button.yellow {
+            background: #febc2e;
+        }
+
+        .terminal-button.green {
+            background: #28c840;
+        }
 
         .terminal-title {
             font-family: 'Source Code Pro', 'SF Mono', 'Consolas', monospace;
@@ -422,8 +436,16 @@
         }
 
         @keyframes cursor-blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
+
+            0%,
+            50% {
+                opacity: 1;
+            }
+
+            51%,
+            100% {
+                opacity: 0;
+            }
         }
 
         .terminal-status {
@@ -1250,12 +1272,14 @@
                             <div class="terminal-button green"></div>
                         </div>
                         <div class="terminal-title">
-                            <span class="title-prompt">user@qube</span><span class="title-separator">:</span><span class="title-path">~</span>
+                            <span class="title-prompt">user@qube</span><span class="title-separator">:</span><span
+                                class="title-path">~</span>
                         </div>
                     </div>
                     <div class="terminal-body">
                         <div class="terminal-line">
-                            <span class="terminal-prompt"><span class="hostname">user@qube</span><span class="separator">:</span><span class="path">~$</span></span>
+                            <span class="terminal-prompt"><span class="hostname">user@qube</span><span
+                                    class="separator">:</span><span class="path">~$</span></span>
                             <span class="terminal-command">qube run --image Voyrox:nodejs:25.2.0</span>
                         </div>
                         <div class="terminal-line">
@@ -1268,18 +1292,21 @@
                             <span class="terminal-output">Container started in 0.12s</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="terminal-prompt"><span class="hostname">user@qube</span><span class="separator">:</span><span class="path">~$</span></span>
+                            <span class="terminal-prompt"><span class="hostname">user@qube</span><span
+                                    class="separator">:</span><span class="path">~$</span></span>
                             <span class="terminal-command">qube list</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="terminal-output">  CONTAINER ID   IMAGE                   STATUS    PORTS</span>
+                            <span class="terminal-output"> CONTAINER ID IMAGE STATUS PORTS</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="terminal-output">  Qube-j9sn487  Voyrox:nodejs:25.2.0  Running   3000:3000</span>
+                            <span class="terminal-output"> Qube-j9sn487 Voyrox:nodejs:25.2.0 Running 3000:3000</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="terminal-prompt"><span class="hostname">user@qube</span><span class="separator">:</span><span class="path">~$</span></span>
-                            <span class="terminal-command">qube eval Qube-j9sn487 node --version</span><span class="terminal-cursor"></span>
+                            <span class="terminal-prompt"><span class="hostname">user@qube</span><span
+                                    class="separator">:</span><span class="path">~$</span></span>
+                            <span class="terminal-command">qube eval Qube-j9sn487 node --version</span><span
+                                class="terminal-cursor"></span>
                         </div>
                         <div class="terminal-line">
                             <span class="terminal-output">v18.15.0</span>
@@ -1317,7 +1344,8 @@
                         <code id="install-code">git clone https://github.com/Voyrox/Qube.git
 cd Qube
 make install</code>
-                        <button class="copy-btn" onclick="copyCode(this, 'git clone https://github.com/Voyrox/Qube.git\ncd Qube\nmake install')">Copy</button>
+                        <button class="copy-btn"
+                            onclick="copyCode(this, 'git clone https://github.com/Voyrox/Qube.git\ncd Qube\nmake install')">Copy</button>
                     </div>
                 </div>
                 <div class="fade-in">
@@ -1327,21 +1355,23 @@ make install</code>
                                 <i class="fas fa-check"></i>
                             </div>
                             <h4 style="font-size: 16px; margin-bottom: 8px;">Go 1.21+ Required</h4>
-                            <p style="font-size: 14px; margin-bottom: 0;">Make sure you have Go installed on your system.</p>
+                            <p style="font-size: 14px; margin-bottom: 0;">Make sure you have Go installed on your
+                                system.</p>
                         </div>
                         <div class="feature-card" style="padding: 20px;">
                             <div class="feature-icon" style="width: 48px; height: 48px; font-size: 20px;">
                                 <i class="fab fa-linux"></i>
                             </div>
                             <h4 style="font-size: 16px; margin-bottom: 8px;">Linux</h4>
-                            <p style="font-size: 14px; margin-bottom: 0;">Full support for all major Linux distributions.</p>
+                            <p style="font-size: 14px; margin-bottom: 0;">Full support for all major Linux
+                                distributions.</p>
                         </div>
                         <div class="feature-card" style="padding: 20px;">
                             <div class="feature-icon" style="width: 48px; height: 48px; font-size: 20px;">
-                                <i class="fab fa-apple"></i>
+                                <i class="fas fa-cloud"></i>
                             </div>
-                            <h4 style="font-size: 16px; margin-bottom: 8px;">macOS</h4>
-                            <p style="font-size: 14px; margin-bottom: 0;">Works on Intel and Apple Silicon Macs.</p>
+                            <h4 style="font-size: 16px; margin-bottom: 8px;">Cloud</h4>
+                            <p style="font-size: 14px; margin-bottom: 0;">Any Cloud Provider</p>
                         </div>
                         <div class="feature-card" style="padding: 20px;">
                             <div class="feature-icon" style="width: 48px; height: 48px; font-size: 20px;">
@@ -1413,7 +1443,8 @@ make install</code>
                     </div>
                     <h3>Lightning Fast</h3>
                     <p>
-                        Written in Go for minimal overhead. Sub-second container startup times mean you can iterate faster.
+                        Written in Go for minimal overhead. Sub-second container startup times mean you can iterate
+                        faster.
                     </p>
                 </div>
 
@@ -1423,7 +1454,8 @@ make install</code>
                     </div>
                     <h3>Secure Isolation</h3>
                     <p>
-                        Leverages Linux namespaces and cgroups v2 for strong isolation without the complexity of traditional container runtimes.
+                        Leverages Linux namespaces and cgroups v2 for strong isolation without the complexity of
+                        traditional container runtimes.
                     </p>
                 </div>
 
@@ -1433,7 +1465,8 @@ make install</code>
                     </div>
                     <h3>REST API</h3>
                     <p>
-                        Full programmatic control via HTTP API with WebSocket support for real-time container management and monitoring.
+                        Full programmatic control via HTTP API with WebSocket support for real-time container management
+                        and monitoring.
                     </p>
                 </div>
 
@@ -1443,7 +1476,8 @@ make install</code>
                     </div>
                     <h3>Minimal Footprint</h3>
                     <p>
-                        Small binary size and low memory usage. Qube starts with only 8MB RAM compared to 45MB for Docker.
+                        Small binary size and low memory usage. Qube starts with only 8MB RAM compared to 45MB for
+                        Docker.
                     </p>
                 </div>
 
@@ -1453,7 +1487,8 @@ make install</code>
                     </div>
                     <h3>Cross-Platform</h3>
                     <p>
-                        Develop on any platform and deploy anywhere. Consistent experience across Linux, macOS, and Windows.
+                        Develop on any platform and deploy anywhere. Consistent experience across Linux, macOS, and
+                        Windows.
                     </p>
                 </div>
 
@@ -1586,7 +1621,8 @@ make install</code>
                 <div class="security-card fade-in">
                     <i class="fas fa-microchip"></i>
                     <h4>Resource Limits</h4>
-                    <p>Cgroups v2 support for CPU, memory, and I/O limits. Prevent containers from consuming excessive resources.</p>
+                    <p>Cgroups v2 support for CPU, memory, and I/O limits. Prevent containers from consuming excessive
+                        resources.</p>
                 </div>
 
                 <div class="security-card fade-in">
@@ -1706,21 +1742,21 @@ make install</code>
     <script>
         // Copy to clipboard functionality
         function copyCode(button, code) {
-            navigator.clipboard.writeText(code).then(function() {
+            navigator.clipboard.writeText(code).then(function () {
                 const originalText = button.textContent;
                 button.textContent = 'Copied!';
                 button.classList.add('copied');
-                setTimeout(function() {
+                setTimeout(function () {
                     button.textContent = originalText;
                     button.classList.remove('copied');
                 }, 2000);
-            }).catch(function(err) {
+            }).catch(function (err) {
                 console.error('Failed to copy:', err);
             });
         }
 
         // Terminal animation
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Update terminal time
             function updateTerminalTime() {
                 const timeElement = document.getElementById('terminal-time');
@@ -1752,7 +1788,7 @@ make install</code>
 
             // Header shadow on scroll
             const header = document.querySelector('header');
-            window.addEventListener('scroll', function() {
+            window.addEventListener('scroll', function () {
                 if (window.scrollY > 20) {
                     header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
                 } else {
@@ -1762,7 +1798,7 @@ make install</code>
 
             // Smooth scroll for anchor links
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
+                anchor.addEventListener('click', function (e) {
                     e.preventDefault();
                     const target = document.querySelector(this.getAttribute('href'));
                     if (target) {
