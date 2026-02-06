@@ -45,7 +45,7 @@ clean:
 # Run tests
 test:
 	@echo "Running tests..."
-	@$(GO) test -v ./...
+	@$(GO) test -v -covermode=count -coverprofile=coverage.out ./...
 
 # Run the daemon in debug mode
 daemon: build

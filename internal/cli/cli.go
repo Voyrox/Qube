@@ -15,6 +15,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var (
+	runContainerFn       = container.RunContainer
+	validateImageFn      = container.ValidateImage
+	convertAndRunFn      = container.ConvertAndRun
+	pullImageFromHubFn   = container.PullImageFromHub
+	getAllTrackedEntries = tracking.GetAllTrackedEntries
+	getProcessUptimeFn   = tracking.GetProcessUptime
+	stopContainerFn      = container.StopContainer
+	deleteContainerFn    = container.DeleteContainer
+)
+
 type QMLConfig struct {
 	Container struct {
 		System      string              `yaml:"system"`

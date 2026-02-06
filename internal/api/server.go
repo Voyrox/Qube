@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 
+	"github.com/Voyrox/Qube/internal/config"
 	"github.com/Voyrox/Qube/internal/core/cgroup"
 	"github.com/Voyrox/Qube/internal/core/container"
 	"github.com/Voyrox/Qube/internal/core/tracking"
@@ -20,6 +22,17 @@ var upgrader = websocket.Upgrader{
 		return true
 	},
 }
+
+var (
+	getTrackedEntries = tracking.GetAllTrackedEntries
+	stopContainer     = container.StopContainer
+	startContainer    = container.StartContainer
+	deleteContainer   = container.DeleteContainer
+	evalCommand       = container.EvalCommand
+	memoryStats       = cgroup.GetMemoryStats
+	memoryFromProc    = cgroup.GetMemoryFromProc
+	cpuFromProc       = cgroup.GetCPUFromProc
+)
 
 type ContainerInfo struct {
 	Name        string      `json:"name"`
@@ -86,7 +99,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 }
 
 func listContainersHandler(w http.ResponseWriter, r *http.Request) {
-	entries := tracking.GetAllTrackedEntries()
+	entries := getTrackedEntries()
 
 	var containers []ContainerInfo
 	for _, entry := range entries {
@@ -104,15 +117,15 @@ func listContainersHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if entry.PID > 0 {
-			if stats, err := cgroup.GetMemoryStats(entry.Name); err == nil {
+			if stats, err := memoryStats(entry.Name); err == nil {
 				mb := stats.CurrentMB()
 				info.MemoryMB = &mb
-			} else if mem, err := cgroup.GetMemoryFromProc(entry.PID); err == nil && mem > 0 {
+			} else if mem, err := memoryFromProc(entry.PID); err == nil && mem > 0 {
 				mb := float64(mem) / (1024.0 * 1024.0)
 				info.MemoryMB = &mb
 			}
 
-			cpu, err := cgroup.GetCPUFromProc(entry.PID)
+			cpu, err := cpuFromProc(entry.PID)
 			if err == nil {
 				info.CPUPercent = &cpu
 			} else {
@@ -124,104 +137,90 @@ func listContainersHandler(w http.ResponseWriter, r *http.Request) {
 		containers = append(containers, info)
 	}
 
-	response := Response{Containers: containers}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	writeJSON(w, http.StatusOK, Response{Containers: containers})
 }
 
 func stopContainerHandler(w http.ResponseWriter, r *http.Request) {
 	var params CommandParams
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	pid, err := strconv.Atoi(params.ContainerID)
 	if err != nil {
-		http.Error(w, "Invalid container ID", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "Invalid container ID")
 		return
 	}
 
-	if err := container.StopContainer(pid); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := stopContainer(pid); err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to stop container: %v", err))
 		return
 	}
 
-	response := Response{
-		Containers: []ContainerInfo{{
-			Name: "Container stopped",
-			PID:  pid,
-		}},
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	writeJSON(w, http.StatusOK, map[string]string{"status": "success"})
 }
 
 func stopContainerByNameHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	entries := tracking.GetAllTrackedEntries()
+	entries := getTrackedEntries()
 	for _, entry := range entries {
 		if entry.Name == name {
-			if err := container.StopContainer(entry.PID); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+			if err := stopContainer(entry.PID); err != nil {
+				writeError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to stop container: %v", err))
 				return
 			}
 
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+			writeJSON(w, http.StatusOK, map[string]string{"status": "success"})
 			return
 		}
 	}
 
-	http.Error(w, "Container not found", http.StatusNotFound)
+	writeError(w, http.StatusNotFound, "Container not found")
 }
 
 func startContainerHandler(w http.ResponseWriter, r *http.Request) {
 	var params CommandParams
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	if err := container.StartContainer(params.ContainerID); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := startContainer(params.ContainerID); err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to start container: %v", err))
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+	writeJSON(w, http.StatusOK, map[string]string{"status": "success"})
 }
 
 func startContainerByNameHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	if err := container.StartContainer(name); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := startContainer(name); err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to start container: %v", err))
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+	writeJSON(w, http.StatusOK, map[string]string{"status": "success"})
 }
 
 func deleteContainerHandler(w http.ResponseWriter, r *http.Request) {
 	var params CommandParams
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	if err := container.DeleteContainer(params.ContainerID); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := deleteContainer(params.ContainerID); err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to delete container: %v", err))
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+	writeJSON(w, http.StatusOK, map[string]string{"status": "success"})
 }
 
 func containerInfoHandler(w http.ResponseWriter, r *http.Request) {
@@ -231,7 +230,7 @@ func containerInfoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entries := tracking.GetAllTrackedEntries()
+	entries := getTrackedEntries()
 	for _, entry := range entries {
 		if entry.Name == params.ContainerID || fmt.Sprintf("%d", entry.PID) == params.ContainerID {
 			info := ContainerInfo{
@@ -248,20 +247,18 @@ func containerInfoHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if entry.PID > 0 {
-				if stats, err := cgroup.GetMemoryStats(entry.Name); err == nil {
+				if stats, err := memoryStats(entry.Name); err == nil {
 					mb := stats.CurrentMB()
 					info.MemoryMB = &mb
 				}
 			}
 
-			response := Response{Containers: []ContainerInfo{info}}
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response)
+			writeJSON(w, http.StatusOK, Response{Containers: []ContainerInfo{info}})
 			return
 		}
 	}
 
-	http.Error(w, "Container not found", http.StatusNotFound)
+	writeError(w, http.StatusNotFound, "Container not found")
 }
 
 type ImageInfo struct {
@@ -271,29 +268,34 @@ type ImageInfo struct {
 }
 
 func listImagesHandler(w http.ResponseWriter, r *http.Request) {
-	imagesDir := "/var/tmp/Qube_containers/images"
+	imagesDir := imagesDir()
 	var images []ImageInfo
 
-	if entries, err := os.ReadDir(imagesDir); err == nil {
-		for _, entry := range entries {
-			if !entry.IsDir() {
-				info, err := entry.Info()
-				if err != nil {
-					continue
-				}
-
-				sizeMB := float64(info.Size()) / 1048576.0
-				images = append(images, ImageInfo{
-					Name:   entry.Name(),
-					SizeMB: sizeMB,
-					Path:   imagesDir + "/" + entry.Name(),
-				})
-			}
-		}
+	entries, err := os.ReadDir(imagesDir)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to list images")
+		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(images)
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+
+		sizeMB := float64(info.Size()) / 1048576.0
+		images = append(images, ImageInfo{
+			Name:   entry.Name(),
+			SizeMB: sizeMB,
+			Path:   filepath.Join(imagesDir, entry.Name()),
+		})
+	}
+
+	writeJSON(w, http.StatusOK, images)
 }
 
 type VolumeInfo struct {
@@ -304,7 +306,7 @@ type VolumeInfo struct {
 }
 
 func listVolumesHandler(w http.ResponseWriter, r *http.Request) {
-	entries := tracking.GetAllTrackedEntries()
+	entries := getTrackedEntries()
 	var volumes []VolumeInfo
 
 	for _, entry := range entries {
@@ -318,13 +320,19 @@ func listVolumesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(volumes)
+	writeJSON(w, http.StatusOK, volumes)
 }
 
 func evalWebSocketHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	containerName := vars["container"]
+	entries := getTrackedEntries()
+
+	targetPID := findPIDByName(entries, containerName)
+	if targetPID == 0 {
+		writeError(w, http.StatusNotFound, "Container not found")
+		return
+	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -332,20 +340,6 @@ func evalWebSocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer conn.Close()
-
-	entries := tracking.GetAllTrackedEntries()
-	var targetPID int
-	for _, entry := range entries {
-		if entry.Name == containerName {
-			targetPID = entry.PID
-			break
-		}
-	}
-
-	if targetPID == 0 {
-		conn.WriteMessage(websocket.TextMessage, []byte("Container not found or not running"))
-		return
-	}
 
 	for {
 		_, message, err := conn.ReadMessage()
@@ -358,11 +352,34 @@ func evalWebSocketHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		output, err := container.EvalCommand(targetPID, cmd)
+		output, err := evalCommand(targetPID, cmd)
 		if err != nil {
 			conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Error: %v", err)))
 		} else {
 			conn.WriteMessage(websocket.TextMessage, []byte(output))
 		}
 	}
+}
+
+func writeJSON(w http.ResponseWriter, status int, body interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(body)
+}
+
+func writeError(w http.ResponseWriter, status int, msg string) {
+	writeJSON(w, status, map[string]string{"error": msg})
+}
+
+func imagesDir() string {
+	return filepath.Join(config.QubeContainersBase, "images")
+}
+
+func findPIDByName(entries []tracking.ContainerEntry, name string) int {
+	for _, entry := range entries {
+		if entry.Name == name {
+			return entry.PID
+		}
+	}
+	return 0
 }

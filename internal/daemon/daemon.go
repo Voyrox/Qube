@@ -22,6 +22,14 @@ var running = true
 var restartTimestamps = make(map[string]time.Time)
 var restartCounts = make(map[string]int)
 
+var (
+	getAllTrackedEntries = tracking.GetAllTrackedEntries
+	restartContainerFn   = restartContainer
+	removeCgroupFn       = cgroup.RemoveCgroup
+	osStat               = os.Stat
+	readDir              = ioutil.ReadDir
+)
+
 func StartDaemon(debug bool) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
@@ -58,7 +66,7 @@ func StartDaemon(debug bool) {
 }
 
 func cleanupOrphanedContainers() {
-	trackedContainers := tracking.GetAllTrackedEntries()
+	trackedContainers := getAllTrackedEntries()
 	trackedNames := make(map[string]bool)
 
 	for _, entry := range trackedContainers {
@@ -66,11 +74,11 @@ func cleanupOrphanedContainers() {
 	}
 
 	containersPath := config.QubeContainersBase
-	if _, err := os.Stat(containersPath); os.IsNotExist(err) {
+	if _, err := osStat(containersPath); os.IsNotExist(err) {
 		return
 	}
 
-	entries, err := ioutil.ReadDir(containersPath)
+	entries, err := readDir(containersPath)
 	if err != nil {
 		return
 	}
@@ -114,18 +122,18 @@ func cleanupOrphanedContainers() {
 }
 
 func monitorAndRestartContainers(debug bool) {
-	entries := tracking.GetAllTrackedEntries()
+	entries := getAllTrackedEntries()
 
 	for _, entry := range entries {
 		if entry.PID > 0 {
 			procPath := fmt.Sprintf("/proc/%d", entry.PID)
-			if _, err := os.Stat(procPath); os.IsNotExist(err) {
+			if _, err := osStat(procPath); os.IsNotExist(err) {
 				if debug {
 					color.Yellow("Container %s (PID: %d) has exited, restarting...", entry.Name, entry.PID)
 				}
 				tracking.UpdateContainerPID(entry.Name, -1, entry.Dir, entry.Command, entry.Image, entry.Ports, entry.Isolated, entry.Volumes, entry.EnvVars)
 
-				go restartContainer(&entry, debug)
+				go restartContainerFn(&entry, debug)
 			} else if debug {
 				//if stats, err := cgroup.GetMemoryStats(entry.Name); err == nil {
 				//	fmt.Printf("[Monitor] %s: Memory=%.1fMB\n", entry.Name, stats.CurrentMB())
@@ -154,13 +162,13 @@ func monitorAndRestartContainers(debug bool) {
 
 			restartTimestamps[entry.Name] = time.Now()
 			restartCounts[entry.Name]++
-			go restartContainer(&entry, debug)
+			go restartContainerFn(&entry, debug)
 		}
 	}
 
 	cgroupRoot := config.CgroupRoot
-	if _, err := os.Stat(cgroupRoot); err == nil {
-		cgroupDirs, err := ioutil.ReadDir(cgroupRoot)
+	if _, err := osStat(cgroupRoot); err == nil {
+		cgroupDirs, err := readDir(cgroupRoot)
 		if err == nil {
 			trackedNames := make(map[string]bool)
 			for _, entry := range entries {
@@ -172,7 +180,7 @@ func monitorAndRestartContainers(debug bool) {
 					if debug {
 						color.Yellow("Removing orphaned cgroup: %s", dir.Name())
 					}
-					cgroup.RemoveCgroup(dir.Name())
+					removeCgroupFn(dir.Name())
 				}
 			}
 		}

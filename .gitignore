@@ -27,3 +27,4 @@ scripts/ubuntu-24.04-server-cloudimg-amd64-root.tar.xz
 *.gz
 qube
 qube
+coverage.out

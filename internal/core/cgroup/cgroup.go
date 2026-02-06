@@ -13,6 +13,8 @@ import (
 	"github.com/fatih/color"
 )
 
+var readFile = os.ReadFile
+
 type cpuCache struct {
 	totalTime uint64
 	timestamp time.Time
@@ -112,7 +114,7 @@ func GetMemoryStats(containerName string) (*MemoryStats, error) {
 
 func GetMemoryFromProc(pid int) (uint64, error) {
 	statusPath := fmt.Sprintf("/proc/%d/status", pid)
-	content, err := ioutil.ReadFile(statusPath)
+	content, err := readFile(statusPath)
 	if err != nil {
 		return 0, err
 	}
@@ -135,7 +137,7 @@ func GetMemoryFromProc(pid int) (uint64, error) {
 
 func GetCPUFromProc(pid int) (float64, error) {
 	statPath := fmt.Sprintf("/proc/%d/stat", pid)
-	content, err := ioutil.ReadFile(statPath)
+	content, err := readFile(statPath)
 	if err != nil {
 		delete(cpuCacheMap, pid)
 		return 0, err
@@ -162,7 +164,7 @@ func GetCPUFromProc(pid int) (float64, error) {
 	}
 
 	timeDelta := now.Sub(cached.timestamp).Seconds()
-	if timeDelta < 0.1 {
+	if timeDelta < 0.05 {
 		return 0.0, nil
 	}
 
