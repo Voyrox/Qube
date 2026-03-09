@@ -1,63 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Qube Hub - Lightweight Container Images for Developers</title>
-    
+
     <!-- Meta Description -->
-    <meta name="description" content="Discover, share, and deploy lightweight container images with Qube. Fast, efficient container runtime for Node.js, Python, Rust, Go, Java and more.">
+    <meta name="description"
+        content="Discover, share, and deploy lightweight container images with Qube. Fast, efficient container runtime for Node.js, Python, Rust, Go, Java and more.">
     <meta name="keywords" content="container, docker, lightweight, runtime, qube, nodejs, python, rust, golang, java">
     <meta name="author" content="Qube Team">
     <meta name="theme-color" content="#000000">
-    
+
     <!-- Open Graph Tags -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://hub.qubecloud.org">
     <meta property="og:title" content="Qube Hub - Lightweight Container Images">
-    <meta property="og:description" content="Discover, share, and deploy container images with the Qube ecosystem. Lightweight, fast, and developer-friendly.">
+    <meta property="og:description"
+        content="Discover, share, and deploy container images with the Qube ecosystem. Lightweight, fast, and developer-friendly.">
     <meta property="og:image" content="https://hub.qubecloud.org/static/img/og-image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:site_name" content="Qube Hub">
     <meta property="og:locale" content="en_US">
-    
+
     <!-- Twitter Card Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://hub.qubecloud.org">
     <meta name="twitter:title" content="Qube Hub - Container Images Simplified">
-    <meta name="twitter:description" content="Fast & lightweight container runtime. Deploy Node.js, Python, Rust, Go, Java images with ease.">
+    <meta name="twitter:description"
+        content="Fast & lightweight container runtime. Deploy Node.js, Python, Rust, Go, Java images with ease.">
     <meta name="twitter:image" content="https://hub.qubecloud.org/static/img/twitter-image.png">
     <meta name="twitter:creator" content="@qubecloud">
-    
+
     <!-- Favicon & Apple Touch Icon -->
     <link rel="icon" type="image/png" href="/static/img/favicon.png">
     <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
-    
+
     <!-- Stylesheets -->
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     {{ template "topbar" . }}
 
     <div class="hero">
         <div class="container">
-            <div class="hero-badge">
+            <div class="heroBadge">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
                 </svg>
                 <span>Built for developers</span>
             </div>
             <h1>Container Images,<br>Simplified</h1>
             <p>Discover, share, and deploy container images with the Qube ecosystem</p>
-            <div class="search-box">
+            <div class="searchBox">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="m21 21-4.35-4.35"/>
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
                 </svg>
                 <input type="text" id="searchInput" placeholder="Search for images...">
                 <button id="searchBtn">Search</button>
@@ -66,37 +71,36 @@
     </div>
 
 
-    <div class="container main-content">
-        <!-- Stats Bar -->
-        <div class="stats-bar">
-            <div class="stat-item">
-                <div id="statImages" class="stat-number">—</div>
-                <div class="stat-label">Images</div>
+    <div class="container mainContent">
+        <div class="statsBar">
+            <div class="statItem">
+                <div id="statImages" class="statNumber">—</div>
+                <div class="statLabel">Images</div>
             </div>
-            <div class="stat-item">
-                <div id="statPulls" class="stat-number">—</div>
-                <div class="stat-label">Pulls</div>
+            <div class="statItem">
+                <div id="statPulls" class="statNumber">—</div>
+                <div class="statLabel">Pulls</div>
             </div>
-            <div class="stat-item">
-                <div id="statUsers" class="stat-number">—</div>
-                <div class="stat-label">Users</div>
+            <div class="statItem">
+                <div id="statUsers" class="statNumber">—</div>
+                <div class="statLabel">Users</div>
             </div>
         </div>
 
         <section class="section">
-            <div class="section-header">
+            <div class="sectionHeader">
                 <div>
                     <h2>Popular Images</h2>
-                    <p class="section-subtitle">Most starred this month</p>
+                    <p class="sectionSubtitle">Most starred this month</p>
                 </div>
-                <a href="#" class="view-all">
+                <a href="#" class="viewAll">
                     <span>View All</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="9 18 15 12 9 6"/>
+                        <polyline points="9 18 15 12 9 6" />
                     </svg>
                 </a>
             </div>
-            <div id="mostPulledList" class="images-grid">
+            <div id="mostPulledList" class="imagesGrid">
                 <div class="loading">
                     <div class="spinner"></div>
                     <span>Loading images...</span>
@@ -104,21 +108,20 @@
             </div>
         </section>
 
-        <!-- Trending This Week -->
         <section class="section">
-            <div class="section-header">
+            <div class="sectionHeader">
                 <div>
                     <h2>Trending Now</h2>
-                    <p class="section-subtitle">Most pulled this week</p>
+                    <p class="sectionSubtitle">Most pulled this week</p>
                 </div>
-                <a href="#" class="view-all">
+                <a href="#" class="viewAll">
                     <span>View All</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="9 18 15 12 9 6"/>
+                        <polyline points="9 18 15 12 9 6" />
                     </svg>
                 </a>
             </div>
-            <div id="trendingList" class="images-grid">
+            <div id="trendingList" class="imagesGrid">
                 <div class="loading">
                     <div class="spinner"></div>
                     <span>Loading images...</span>
@@ -126,60 +129,64 @@
             </div>
         </section>
 
-        <!-- Categories -->
         <section class="section">
-            <div class="section-header">
+            <div class="sectionHeader">
                 <div>
                     <h2>Browse by Category</h2>
-                    <p class="section-subtitle">Find what you need</p>
+                    <p class="sectionSubtitle">Find what you need</p>
                 </div>
             </div>
-            <div class="categories-grid">
-                <div class="category-card" onclick="filterByCategory('programming')">
-                    <div class="category-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="16 18 22 12 16 6"/>
-                            <polyline points="8 6 2 12 8 18"/>
+            <div class="categoriesGrid">
+                <div class="categoryCard" onclick="filterByCategory('programming')">
+                    <div class="categoryIcon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="16 18 22 12 16 6" />
+                            <polyline points="8 6 2 12 8 18" />
                         </svg>
                     </div>
                     <h3>Programming Languages</h3>
                     <p>Node.js, Go, Python, Rust</p>
                 </div>
-                <div class="category-card" onclick="filterByCategory('database')">
-                    <div class="category-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <ellipse cx="12" cy="5" rx="9" ry="3"/>
-                            <path d="M3 5V19C3 20.6569 7.02944 22 12 22C16.9706 22 21 20.6569 21 19V5"/>
-                            <path d="M3 12C3 13.6569 7.02944 15 12 15C16.9706 15 21 13.6569 21 12"/>
+                <div class="categoryCard" onclick="filterByCategory('database')">
+                    <div class="categoryIcon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <ellipse cx="12" cy="5" rx="9" ry="3" />
+                            <path d="M3 5V19C3 20.6569 7.02944 22 12 22C16.9706 22 21 20.6569 21 19V5" />
+                            <path d="M3 12C3 13.6569 7.02944 15 12 15C16.9706 15 21 13.6569 21 12" />
                         </svg>
                     </div>
                     <h3>Databases</h3>
                     <p>PostgreSQL, Redis, MongoDB</p>
                 </div>
-                <div class="category-card" onclick="filterByCategory('ml')">
-                    <div class="category-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                            <path d="M16 3L12 7L8 3"/>
+                <div class="categoryCard" onclick="filterByCategory('ml')">
+                    <div class="categoryIcon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                            <path d="M16 3L12 7L8 3" />
                         </svg>
                     </div>
                     <h3>AI & ML</h3>
                     <p>TensorFlow, PyTorch, Jupyter</p>
                 </div>
-                <div class="category-card" onclick="filterByCategory('monitoring')">
-                    <div class="category-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                <div class="categoryCard" onclick="filterByCategory('monitoring')">
+                    <div class="categoryIcon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                         </svg>
                     </div>
                     <h3>Monitoring</h3>
                     <p>Prometheus, Grafana, ELK</p>
                 </div>
-                <div class="category-card" onclick="filterByCategory('devtools')">
-                    <div class="category-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="16 18 22 12 16 6"/>
-                            <polyline points="8 6 2 12 8 18"/>
+                <div class="categoryCard" onclick="filterByCategory('devtools')">
+                    <div class="categoryIcon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="16 18 22 12 16 6" />
+                            <polyline points="8 6 2 12 8 18" />
                         </svg>
                     </div>
                     <h3>Dev Tools</h3>
@@ -188,186 +195,176 @@
             </div>
         </section>
 
-        <!-- Programming Languages Category -->
         <section class="section">
-            <div class="section-header">
+            <div class="sectionHeader">
                 <div>
                     <h2>💻 Programming Languages</h2>
-                    <p class="section-subtitle">Node.js, Go, Python, Rust & more</p>
+                    <p class="sectionSubtitle">Node.js, Go, Python, Rust & more</p>
                 </div>
-                <a href="/explore?category=programming-languages" class="view-all">
+                <a href="/explore?category=programming-languages" class="viewAll">
                     <span>View All</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="9 18 15 12 9 6"/>
+                        <polyline points="9 18 15 12 9 6" />
                     </svg>
                 </a>
             </div>
-            <div id="programminglangsList" class="images-grid">
+            <div id="programminglangsList" class="imagesGrid">
                 <div class="loading"><span>Loading...</span></div>
             </div>
         </section>
 
-        <!-- Databases Category -->
         <section class="section">
-            <div class="section-header">
+            <div class="sectionHeader">
                 <div>
                     <h2>📦 Databases</h2>
-                    <p class="section-subtitle">PostgreSQL, Redis, MongoDB & more</p>
+                    <p class="sectionSubtitle">PostgreSQL, Redis, MongoDB & more</p>
                 </div>
-                <a href="/explore?category=databases" class="view-all">
+                <a href="/explore?category=databases" class="viewAll">
                     <span>View All</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="9 18 15 12 9 6"/>
+                        <polyline points="9 18 15 12 9 6" />
                     </svg>
                 </a>
             </div>
-            <div id="databasesList" class="images-grid">
+            <div id="databasesList" class="imagesGrid">
                 <div class="loading"><span>Loading...</span></div>
             </div>
         </section>
 
-        <!-- AI & ML Category -->
         <section class="section">
-            <div class="section-header">
+            <div class="sectionHeader">
                 <div>
                     <h2>🤖 AI & Machine Learning</h2>
-                    <p class="section-subtitle">TensorFlow, PyTorch, Jupyter & more</p>
+                    <p class="sectionSubtitle">TensorFlow, PyTorch, Jupyter & more</p>
                 </div>
-                <a href="/explore?category=ai-ml" class="view-all">
+                <a href="/explore?category=ai-ml" class="viewAll">
                     <span>View All</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="9 18 15 12 9 6"/>
+                        <polyline points="9 18 15 12 9 6" />
                     </svg>
                 </a>
             </div>
-            <div id="aimlList" class="images-grid">
+            <div id="aimlList" class="imagesGrid">
                 <div class="loading"><span>Loading...</span></div>
             </div>
         </section>
 
-        <!-- Monitoring Category -->
         <section class="section">
-            <div class="section-header">
+            <div class="sectionHeader">
                 <div>
                     <h2>📊 Monitoring & Observability</h2>
-                    <p class="section-subtitle">Prometheus, Grafana, ELK & more</p>
+                    <p class="sectionSubtitle">Prometheus, Grafana, ELK & more</p>
                 </div>
-                <a href="/explore?category=monitoring" class="view-all">
+                <a href="/explore?category=monitoring" class="viewAll">
                     <span>View All</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="9 18 15 12 9 6"/>
+                        <polyline points="9 18 15 12 9 6" />
                     </svg>
                 </a>
             </div>
-            <div id="monitoringList" class="images-grid">
+            <div id="monitoringList" class="imagesGrid">
                 <div class="loading"><span>Loading...</span></div>
             </div>
         </section>
 
-        <!-- Dev Tools Category -->
         <section class="section">
-            <div class="section-header">
+            <div class="sectionHeader">
                 <div>
                     <h2>⚙️ Developer Tools</h2>
-                    <p class="section-subtitle">Node.js, Go, Rust & more</p>
+                    <p class="sectionSubtitle">Node.js, Go, Rust & more</p>
                 </div>
-                <a href="/explore?category=dev-tools" class="view-all">
+                <a href="/explore?category=dev-tools" class="viewAll">
                     <span>View All</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="9 18 15 12 9 6"/>
+                        <polyline points="9 18 15 12 9 6" />
                     </svg>
                 </a>
             </div>
-            <div id="devtoolsList" class="images-grid">
+            <div id="devtoolsList" class="imagesGrid">
                 <div class="loading"><span>Loading...</span></div>
             </div>
         </section>
     </div>
 
 
-    <!-- Login Modal -->
     <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modalContent">
+            <div class="modalHeader">
                 <h2>Welcome Back</h2>
                 <span class="close">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                 </span>
             </div>
             <form id="loginForm">
-                <div class="form-group">
+                <div class="formGroup">
                     <label>Username</label>
-                        <input type="text" id="loginUsername" placeholder="you@example.com or username" required>
+                    <input type="text" id="loginUsername" placeholder="you@example.com or username" required>
                 </div>
-                <div class="form-group">
+                <div class="formGroup">
                     <label>Password</label>
                     <input type="password" id="loginPassword" placeholder="Enter your password" required>
                 </div>
-                <button type="submit" class="btn-submit">Sign In</button>
+                <button type="submit" class="btnSubmit">Sign In</button>
             </form>
         </div>
     </div>
 
-    <!-- Register Modal -->
     <div id="registerModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modalContent">
+            <div class="modalHeader">
                 <h2>Create Account</h2>
                 <span class="close">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                 </span>
             </div>
             <form id="registerForm">
-                <div class="form-group">
+                <div class="formGroup">
                     <label>Username</label>
                     <input type="text" id="registerUsername" placeholder="Choose a username" required minlength="3">
                 </div>
-                <div class="form-group">
+                <div class="formGroup">
                     <label>Email</label>
                     <input type="email" id="registerEmail" placeholder="Enter your email" required>
                 </div>
-                <div class="form-group">
+                <div class="formGroup">
                     <label>Password</label>
                     <input type="password" id="registerPassword" placeholder="Create a password" required minlength="8">
                 </div>
-                <button type="submit" class="btn-submit">Create Account</button>
+                <button type="submit" class="btnSubmit">Create Account</button>
             </form>
         </div>
     </div>
 
-    <!-- Upload Modal (single instance) -->
-
     <footer>
         <div class="container">
-            <div class="footer-content">
+            <div class="footerContent">
                 <p>&copy; 2026 Qube Hub. Built with ❤️ for the Qube community.</p>
             </div>
         </div>
     </footer>
 
-    <!-- Upload Modal -->
     <div id="uploadModal" class="modal">
-        <div class="modal-content upload-modal">
-            <div class="modal-header">
+        <div class="modalContent uploadModal">
+            <div class="modalHeader">
                 <h2>Upload Container Image</h2>
                 <button class="close">&times;</button>
             </div>
             <form id="uploadForm">
-                <div class="upload-columns">
+                <div class="uploadColumns">
                     <div class="column">
-                        <div class="form-group">
+                        <div class="formGroup">
                             <label for="uploadName">Image Name *</label>
                             <input type="text" id="uploadName" name="name" placeholder="e.g., nodejs, my-app" required>
                             <small>Image names must be unique across the platform</small>
                         </div>
 
-                        <div class="form-group">
+                        <div class="formGroup">
                             <label for="uploadCategory">Category</label>
                             <select id="uploadCategory" name="category">
                                 <option value="">None</option>
@@ -379,48 +376,50 @@
                             </select>
                         </div>
 
-                        <div class="form-group">
+                        <div class="formGroup">
                             <label for="uploadTag">Version/Tag *</label>
-                            <input type="text" id="uploadTag" name="tag" placeholder="e.g. 1.0.0, 2.5.0, 21.0.0" value="1.0.0" pattern="[0-9.]+" required>
+                            <input type="text" id="uploadTag" name="tag" placeholder="e.g. 1.0.0, 2.5.0, 21.0.0"
+                                value="1.0.0" pattern="[0-9.]+" required>
                             <small>Use numbers and dots only (e.g., 1.0.0, 2.5.0, 21.0.0) - defaults to 1.0.0</small>
                         </div>
                     </div>
 
                     <div class="column">
-                        <div class="form-group">
+                        <div class="formGroup">
                             <label for="uploadLogo">Logo (PNG, optional)</label>
-                            <div class="file-input-wrapper">
+                            <div class="fileInputWrapper">
                                 <input type="file" id="uploadLogo" name="logo" accept=".png">
-                                <div class="file-input-label">Click to select logo</div>
+                                <div class="fileInputLabel">Click to select logo</div>
                             </div>
                         </div>
 
-                        <div class="form-group">
+                        <div class="formGroup">
                             <label for="uploadFile">Container File (.tar.gz) *</label>
-                            <div class="file-input-wrapper">
+                            <div class="fileInputWrapper">
                                 <input type="file" id="uploadFile" name="file" accept=".tar.gz" required>
-                                <div class="file-input-label">Click to select or drag and drop</div>
+                                <div class="fileInputLabel">Click to select or drag and drop</div>
                             </div>
                             <small>Maximum 1GB (compressed .tar.gz files)</small>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group full-width">
+                <div class="formGroup fullWidth">
                     <label for="uploadDescription">Description</label>
-                    <textarea id="uploadDescription" name="description" placeholder="Describe your container image..." rows="4"></textarea>
+                    <textarea id="uploadDescription" name="description" placeholder="Describe your container image..."
+                        rows="4"></textarea>
                 </div>
 
-                <div class="form-group checkbox-group full-width">
-                    <label class="checkbox-label">
+                <div class="formGroup checkboxGroup fullWidth">
+                    <label class="checkboxLabel">
                         <input type="checkbox" id="uploadPublic" name="is_public" checked>
                         <span>Make this image public</span>
                     </label>
                 </div>
 
-                <div class="form-actions full-width">
-                    <button type="button" class="btn-secondary close-modal">Cancel</button>
-                    <button type="submit" class="btn-primary">Upload Image</button>
+                <div class="formActions fullWidth">
+                    <button type="button" class="btnSecondary closeModal">Cancel</button>
+                    <button type="submit" class="btnPrimary">Upload Image</button>
                 </div>
             </form>
         </div>
@@ -428,7 +427,6 @@
 
     <script src="/static/js/app.js"></script>
     <script>
-        // Load hub stats (images, pulls, users)
         function formatCompact(n) {
             if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B+';
             if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M+';
@@ -460,7 +458,6 @@
         document.addEventListener('DOMContentLoaded', loadStats);
     </script>
     <script>
-        // Load category containers
         async function loadCategoryContainers() {
             try {
                 const response = await fetch('/api/images');
@@ -468,24 +465,18 @@
                 if (!response.ok || !data.images) return;
 
                 const images = data.images;
-
-                // Programming Languages - filter by exact category
                 const programming = images.filter(img => img.category === 'programming-languages').slice(0, 6);
                 displayImages(programming, false, 'programminglangsList');
 
-                // Databases - filter by exact category
                 const databases = images.filter(img => img.category === 'databases').slice(0, 6);
                 displayImages(databases, false, 'databasesList');
 
-                // AI & ML - filter by exact category
                 const aiml = images.filter(img => img.category === 'ai-ml').slice(0, 6);
                 displayImages(aiml, false, 'aimlList');
 
-                // Monitoring - filter by exact category
                 const monitoring = images.filter(img => img.category === 'monitoring').slice(0, 6);
                 displayImages(monitoring, false, 'monitoringList');
 
-                // Dev Tools - filter by exact category
                 const devtools = images.filter(img => img.category === 'dev-tools').slice(0, 6);
                 displayImages(devtools, false, 'devtoolsList');
             } catch (error) {
@@ -493,12 +484,10 @@
             }
         }
 
-        // Call on page load
         document.addEventListener('DOMContentLoaded', loadCategoryContainers);
     </script>
     <script>
-        // Search functionality
-        document.getElementById('searchBtn').addEventListener('click', function() {
+        document.getElementById('searchBtn').addEventListener('click', function () {
             const query = document.getElementById('searchInput').value.trim();
             if (query) {
                 window.location.href = '/explore?q=' + encodeURIComponent(query);
@@ -507,20 +496,19 @@
             }
         });
 
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        document.getElementById('searchInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 document.getElementById('searchBtn').click();
             }
         });
 
-        // View All buttons
-        document.querySelectorAll('.view-all').forEach(btn => {
-            btn.addEventListener('click', function(e) {
+        document.querySelectorAll('.viewAll').forEach(btn => {
+            btn.addEventListener('click', function (e) {
                 e.preventDefault();
                 const section = this.closest('.section');
                 const isPopular = section.querySelector('#mostPulledList');
                 const isTrending = section.querySelector('#trendingList');
-                
+
                 if (isPopular) {
                     window.location.href = '/explore?sort=stars';
                 } else if (isTrending) {
@@ -529,8 +517,7 @@
             });
         });
 
-        // Category card filter
-        window.filterByCategory = function(category) {
+        window.filterByCategory = function (category) {
             const categoryMap = {
                 'programming': 'programming-languages',
                 'database': 'databases',
@@ -543,5 +530,5 @@
         };
     </script>
 </body>
-</html>
 
+</html>

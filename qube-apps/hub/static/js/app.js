@@ -22,7 +22,7 @@ function updateNavbar() {
     const navUser = document.getElementById('navUser');
 
     if (!navAuth || !navUser) {
-        return; // Page without navbar; skip
+        return;
     }
 
     if (token && currentUser) {
@@ -48,7 +48,7 @@ function setupEventListeners() {
     }
 
     const navToggle = document.getElementById('navToggle');
-    const navMenu = document.querySelector('.nav-menu');
+    const navMenu = document.querySelector('.navMenu');
     if (navToggle && navMenu) {
         navToggle.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -82,7 +82,7 @@ function setupEventListeners() {
         });
     }
 
-    document.querySelectorAll('.close, .close-modal').forEach(btn => {
+    document.querySelectorAll('.close, .closeModal').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             const modal = btn.closest('.modal');
@@ -102,8 +102,8 @@ function setupEventListeners() {
     const fileInputs = document.querySelectorAll('input[type="file"]');
     fileInputs.forEach(input => {
         const wrapper = input.parentElement;
-        if (wrapper && wrapper.classList.contains('file-input-wrapper')) {
-            const label = wrapper.querySelector('.file-input-label');
+        if (wrapper && wrapper.classList.contains('fileInputWrapper')) {
+            const label = wrapper.querySelector('.fileInputLabel');
             label.addEventListener('click', () => input.click());
             wrapper.addEventListener('dragover', (e) => {
                 e.preventDefault();
@@ -149,7 +149,6 @@ async function handleUpload(e) {
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalBtnText = submitBtn.textContent;
 
-    // Prevent spam clicking
     if (submitBtn.disabled) return;
 
     const name = document.getElementById('uploadName').value.trim();
@@ -168,7 +167,6 @@ async function handleUpload(e) {
         return;
     }
 
-    // Disable button and show loading state
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner" style="width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; display: inline-block; animation: spin 0.8s linear infinite; margin-right: 8px;"></span>Uploading...';
 
@@ -219,7 +217,6 @@ async function handleUpload(e) {
         console.error('Upload error:', error);
         showNotification('Upload error. See console for details.', 'error');
     } finally {
-        // Re-enable button
         submitBtn.disabled = false;
         submitBtn.textContent = originalBtnText;
     }
@@ -266,7 +263,6 @@ async function loadTrending() {
         const response = await fetch(`${API_BASE}/images`);
         const data = await response.json();
         if (response.ok && data.images) {
-            // Trending: by most pulls
             const trending = data.images
                 .sort((a, b) => (b.pulls || 0) - (a.pulls || 0))
                 .slice(0, 6);
@@ -290,27 +286,25 @@ function displayImages(images, showDelete = false, containerId = 'imagesList') {
     container.innerHTML = images.map(image => {
         const tagStr = String(image.tag || '').trim();
 
-        // Determine version: use tag if it's a valid version (numbers and dots), otherwise default to 1.0.0
         let version = tagStr;
         if (!tagStr || !/^[0-9.]+$/.test(tagStr)) {
             version = '1.0.0';
         }
 
-        // Display version as "# v1.0.0"
         const versionHtml = `<span class="tag"># v${escapeHtml(version)}</span>`;
 
         return `
-        <div class="image-card" onclick="viewImage('${escapeHtml(image.name)}', '${escapeHtml(version)}')">
-            <div class="image-header">
-                ${image.logo_path ? `<img src="${image.logo_path}" alt="${escapeHtml(image.name)} logo" class="image-logo">` : '<div class="image-logo-placeholder">🧊</div>'}
-                <div class="image-title">
+        <div class="imageCard" onclick="viewImage('${escapeHtml(image.name)}', '${escapeHtml(version)}')">
+            <div class="imageHeader">
+                ${image.logo_path ? `<img src="${image.logo_path}" alt="${escapeHtml(image.name)} logo" class="imageLogo">` : '<div class="imageLogoPlaceholder">🧊</div>'}
+                <div class="imageTitle">
                     <h3>${escapeHtml((image.owner_username || image.owner_username_fallback || image.owner || 'user'))}/${escapeHtml(image.name)}</h3>
                     <div class="tags">${versionHtml}</div>
                 </div>
             </div>
             <p>${escapeHtml((image.description || 'No description')).slice(0, 30)}</p>
             <div class="separator"></div>
-            <div class="stats stats-row">
+            <div class="stats statsRow">
                 <span>Pulls: ${image.pulls || 0}</span>
                 <span>Stars: ${image.stars || 0}</span>
                 <span>Last updated: ${formatDate(image.last_updated || image.updated_at)}</span>
@@ -393,16 +387,15 @@ function handleSearch() {
 }
 
 function showNotification(message, type = 'success') {
-    // Create or get toast container
-    let container = document.getElementById('toast-container');
+    let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
-        container.id = 'toast-container';
+        container.id = 'toastContainer';
         document.body.appendChild(container);
     }
     
     const notification = document.createElement('div');
-    notification.className = `toast-notification ${type}`;
+    notification.className = `toastNotification ${type}`;
     
     const icons = {
         success: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fill="currentColor"/></svg>',
@@ -419,28 +412,27 @@ function showNotification(message, type = 'success') {
     };
     
     notification.innerHTML = `
-        <div class="toast-icon">${icons[type] || icons.success}</div>
-        <div class="toast-content">
-            <div class="toast-title">${titles[type] || titles.success}</div>
-            <div class="toast-message">${escapeHtml(message)}</div>
+        <div class="toastIcon">${icons[type] || icons.success}</div>
+        <div class="toastContent">
+            <div class="toastTitle">${titles[type] || titles.success}</div>
+            <div class="toastMessage">${escapeHtml(message)}</div>
         </div>
-        <button class="toast-close" onclick="this.parentElement.remove()">
+        <button class="toastClose" onclick="this.parentElement.remove()">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
         </button>
-        <div class="toast-progress"></div>
+        <div class="toastProgress"></div>
     `;
     
     container.appendChild(notification);
-    // Trigger animation
     requestAnimationFrame(() => {
         notification.classList.add('show');
     });
 
     const duration = 4000;
-    const progressBar = notification.querySelector('.toast-progress');
-    progressBar.style.animation = `toast-progress ${duration}ms linear forwards`;
+    const progressBar = notification.querySelector('.toastProgress');
+    progressBar.style.animation = `toastProgress ${duration}ms linear forwards`;
 
     const timeout = setTimeout(() => {
         notification.classList.remove('show');
@@ -449,7 +441,6 @@ function showNotification(message, type = 'success') {
         }, 300);
     }, duration);
 
-    // Pause on hover
     notification.addEventListener('mouseenter', () => {
         progressBar.style.animationPlayState = 'paused';
         clearTimeout(timeout);

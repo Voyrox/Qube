@@ -1,85 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Explore Container Images - Qube Hub</title>
-    
+
     <!-- Meta Description -->
-    <meta name="description" content="Explore thousands of lightweight container images on Qube Hub. Find Node.js, Python, Rust, Go, Java, and more.">
+    <meta name="description"
+        content="Explore thousands of lightweight container images on Qube Hub. Find Node.js, Python, Rust, Go, Java, and more.">
     <meta name="keywords" content="container, docker, lightweight, runtime, qube, explore, images">
-    
+
     <!-- Open Graph Tags -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://hub.qubecloud.org/explore">
     <meta property="og:title" content="Explore Container Images - Qube Hub">
     <meta property="og:description" content="Discover lightweight container images for your projects.">
     <meta property="og:image" content="https://hub.qubecloud.org/static/img/og-image.png">
-    
+
     <!-- Twitter Card Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Explore Container Images - Qube Hub">
     <meta name="twitter:description" content="Discover lightweight container images for your projects.">
     <meta name="twitter:image" content="https://hub.qubecloud.org/static/img/twitter-image.png">
-    
+
     <!-- Stylesheets -->
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     {{ template "topbar" . }}
 
-    <div class="container main-content">
+    <div class="container mainContent">
         <section class="section">
-            <div class="section-header">
+            <div class="sectionHeader">
                 <div>
                     <h2>Explore Containers</h2>
-                    <p class="section-subtitle">Browse featured images from the QubeCloud community</p>
+                    <p class="sectionSubtitle">Browse featured images from the QubeCloud community</p>
                 </div>
             </div>
 
-            <!-- Two-column layout: floating sidebar (left) + grid (right) -->
-            <div class="settings-layout">
-                <aside class="settings-sidebar filters-panel">
+            <div class="settingsLayout">
+                <aside class="settingsSidebar filtersPanel">
                     <h2>Filters</h2>
-                    <div class="filter-section">
-                        <input type="text" id="searchFilter" class="filter-input" placeholder="Search by name...">
+                    <div class="filterSection">
+                        <input type="text" id="searchFilter" class="filterInput" placeholder="Search by name...">
                     </div>
 
-                    <div class="filter-section">
-                        <h3 class="filter-title">Categories</h3>
-                        <ul class="filter-list">
-                            <li class="filter-item active" data-filter="all">All Containers</li>
-                            <li class="filter-item" data-filter="databases">Databases</li>
-                            <li class="filter-item" data-filter="ai-ml">AI &amp; ML</li>
-                            <li class="filter-item" data-filter="monitoring">Monitoring</li>
-                            <li class="filter-item" data-filter="dev-tools">Dev Tools</li>
-                            <li class="filter-item" data-filter="networking">Networking</li>
+                    <div class="filterSection">
+                        <h3 class="filterTitle">Categories</h3>
+                        <ul class="filterList">
+                            <li class="filterItem active" data-filter="all">All Containers</li>
+                            <li class="filterItem" data-filter="databases">Databases</li>
+                            <li class="filterItem" data-filter="ai-ml">AI &amp; ML</li>
+                            <li class="filterItem" data-filter="monitoring">Monitoring</li>
+                            <li class="filterItem" data-filter="dev-tools">Dev Tools</li>
+                            <li class="filterItem" data-filter="networking">Networking</li>
                         </ul>
                     </div>
 
-                    <div class="filter-section">
-                        <h3 class="filter-title">Popular Tags</h3>
-                        <div id="tagFilters" class="tag-chips"></div>
+                    <div class="filterSection">
+                        <h3 class="filterTitle">Popular Tags</h3>
+                        <div id="tagFilters" class="tagChips"></div>
                     </div>
 
-                    <div class="filter-section">
-                        <h3 class="filter-title">Sort By</h3>
-                        <ul class="filter-list">
-                            <li class="filter-item" data-sort="name">Name (A-Z)</li>
-                            <li class="filter-item" data-sort="stars">Most Starred</li>
-                            <li class="filter-item" data-sort="pulls">Most Pulled</li>
-                            <li class="filter-item" data-sort="recent">Recently Updated</li>
+                    <div class="filterSection">
+                        <h3 class="filterTitle">Sort By</h3>
+                        <ul class="filterList">
+                            <li class="filterItem" data-sort="name">Name (A-Z)</li>
+                            <li class="filterItem" data-sort="stars">Most Starred</li>
+                            <li class="filterItem" data-sort="pulls">Most Pulled</li>
+                            <li class="filterItem" data-sort="recent">Recently Updated</li>
                         </ul>
                     </div>
                 </aside>
 
-                <!-- Right side: dynamic containers grid -->
-                <div class="settings-content" style="background:transparent; border:none; padding:0;">
-                    <div class="images-grid" id="imagesContainer" style="grid-template-columns:repeat(3, minmax(0, 1fr)); gap:20px;">
-                        <!-- Images will be loaded here dynamically -->
+                <div class="settingsContent" style="background:transparent; border:none; padding:0;">
+                    <div class="imagesGrid" id="imagesContainer"
+                        style="grid-template-columns:repeat(3, minmax(0, 1fr)); gap:20px;">
                         <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">
                             <p>Loading containers...</p>
                         </div>
@@ -91,7 +92,7 @@
 
     <footer>
         <div class="container">
-            <div class="footer-content">
+            <div class="footerContent">
                 <p>&copy; 2026 Qube Hub. Built with ❤️ for the Qube community.</p>
             </div>
         </div>
@@ -128,7 +129,7 @@
             try {
                 const response = await fetch('/api/images');
                 const data = await response.json();
-                
+
                 if (response.ok && data.images) {
                     allImages = data.images;
                     populateTagFilters();
@@ -154,7 +155,7 @@
                     });
                 }
             });
-            
+
             const tagContainer = document.getElementById('tagFilters');
             Array.from(allTags).slice(0, 8).forEach(tag => {
                 const btn = document.createElement('button');
@@ -178,7 +179,7 @@
 
         function setupSearchListener() {
             const searchInput = document.getElementById('searchFilter');
-            searchInput.addEventListener('input', function() {
+            searchInput.addEventListener('input', function () {
                 currentSearch = this.value.trim().toLowerCase();
                 displayFilteredImages();
             });
@@ -187,7 +188,7 @@
         function setupFilterListeners() {
             const filterItems = document.querySelectorAll('[data-filter]');
             filterItems.forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function () {
                     filterItems.forEach(li => {
                         li.classList.remove('active');
                         li.style.background = '';
@@ -205,7 +206,7 @@
         function setupSortListeners() {
             const sortItems = document.querySelectorAll('[data-sort]');
             sortItems.forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function () {
                     sortItems.forEach(li => {
                         li.style.background = '';
                         li.style.color = 'var(--text-secondary)';
@@ -221,7 +222,6 @@
         function displayFilteredImages() {
             let filtered = allImages;
 
-            // Apply category filter
             if (currentFilter !== 'all') {
                 filtered = filtered.filter(image => {
                     const name = (image.name || '').toLowerCase();
@@ -231,37 +231,35 @@
                     const fullText = `${name} ${category} ${tags} ${description}`;
 
                     if (currentFilter === 'databases') {
-                        return fullText.includes('database') || fullText.includes('postgres') || fullText.includes('mongo') || 
-                               fullText.includes('redis') || fullText.includes('mysql') || fullText.includes('db');
+                        return fullText.includes('database') || fullText.includes('postgres') || fullText.includes('mongo') ||
+                            fullText.includes('redis') || fullText.includes('mysql') || fullText.includes('db');
                     } else if (currentFilter === 'ai-ml') {
-                        return fullText.includes('ai') || fullText.includes('ml') || fullText.includes('torch') || 
-                               fullText.includes('tensorflow') || fullText.includes('jupyter') || fullText.includes('python');
+                        return fullText.includes('ai') || fullText.includes('ml') || fullText.includes('torch') ||
+                            fullText.includes('tensorflow') || fullText.includes('jupyter') || fullText.includes('python');
                     } else if (currentFilter === 'monitoring') {
-                        return fullText.includes('monitoring') || fullText.includes('prometheus') || fullText.includes('grafana') || 
-                               fullText.includes('elk') || fullText.includes('logging');
+                        return fullText.includes('monitoring') || fullText.includes('prometheus') || fullText.includes('grafana') ||
+                            fullText.includes('elk') || fullText.includes('logging');
                     } else if (currentFilter === 'dev-tools') {
-                        return fullText.includes('dev') || fullText.includes('node') || fullText.includes('go') || 
-                               fullText.includes('rust') || fullText.includes('java') || fullText.includes('tools');
+                        return fullText.includes('dev') || fullText.includes('node') || fullText.includes('go') ||
+                            fullText.includes('rust') || fullText.includes('java') || fullText.includes('tools');
                     } else if (currentFilter === 'networking') {
-                        return fullText.includes('network') || fullText.includes('nginx') || fullText.includes('proxy') || 
-                               fullText.includes('traefik') || fullText.includes('envoy');
+                        return fullText.includes('network') || fullText.includes('nginx') || fullText.includes('proxy') ||
+                            fullText.includes('traefik') || fullText.includes('envoy');
                     }
                 });
             }
 
-            // Apply search filter
             if (currentSearch) {
                 filtered = filtered.filter(image => {
                     const name = (image.name || '').toLowerCase();
                     const owner = (image.owner_username || '').toLowerCase();
                     const tag = (image.tag || '').toLowerCase();
                     const description = (image.description || '').toLowerCase();
-                    return name.includes(currentSearch) || owner.includes(currentSearch) || 
-                           tag.includes(currentSearch) || description.includes(currentSearch);
+                    return name.includes(currentSearch) || owner.includes(currentSearch) ||
+                        tag.includes(currentSearch) || description.includes(currentSearch);
                 });
             }
 
-            // Apply sorting
             filtered.sort((a, b) => {
                 if (currentSort === 'name') {
                     return (a.name || '').localeCompare(b.name || '');
@@ -279,4 +277,5 @@
         }
     </script>
 </body>
+
 </html>

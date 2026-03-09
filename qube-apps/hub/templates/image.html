@@ -5,11 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ .image.Name }} {{ .image.Tag }} - Qube Hub</title>
-  
+
   <!-- Meta Description -->
   <meta name="description" content="{{ .image.Description }}">
   <meta name="keywords" content="container, docker, lightweight, {{ .image.Name }}, qube">
-  
+
   <!-- Open Graph Tags -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://hub.qubecloud.org/images/{{ .image.Name }}/{{ .image.Tag }}">
@@ -17,13 +17,13 @@
   <meta property="og:description" content="{{ .image.Description }}">
   <meta property="og:image" content="https://hub.qubecloud.org/static/img/{{ .image.Name }}-logo.png">
   <meta property="og:site_name" content="Qube Hub">
-  
+
   <!-- Twitter Card Tags -->
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="{{ .image.Name }} {{ .image.Tag }} - Qube Hub">
   <meta name="twitter:description" content="{{ .image.Description }}">
   <meta name="twitter:image" content="https://hub.qubecloud.org/static/img/{{ .image.Name }}-logo.png">
-  
+
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,12 +34,12 @@
 <body>
   {{ template "topbar" . }}
 
-  <div class="container main-content">
-    <section class="section image-detail">
-      <div class="image-header">
-        <img class="image-logo" src="/api/images/{{ .image.Name }}/{{ .image.Tag }}/logo" alt="{{ .image.Name }} logo"
-          onerror="this.style.display='none'; var div=document.createElement('div'); div.className='image-logo-placeholder'; div.textContent='🧊'; this.parentNode.insertBefore(div, this);">
-        <div class="image-title">
+  <div class="container mainContent">
+    <section class="section imageDetail">
+      <div class="imageHeader">
+        <img class="imageLogo" src="/api/images/{{ .image.Name }}/{{ .image.Tag }}/logo" alt="{{ .image.Name }} logo"
+          onerror="this.style.display='none'; var div=document.createElement('div'); div.className='imageLogoPlaceholder'; div.textContent='🧊'; this.parentNode.insertBefore(div, this);">
+        <div class="imageTitle">
           <h2>{{ .owner_username }}/{{ .image.Name }}</h2>
           <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
             <label style="color: var(--text-secondary); font-size: 14px; font-weight: 500;">Version:</label>
@@ -61,14 +61,14 @@
         </div>
       </div>
       <br>
-      <div class="image-content">
-        <div class="image-main">
-          <p class="section-subtitle">By <span id="ownerUsername" data-owner="{{ .owner_username }}">{{ .owner_username
+      <div class="imageContent">
+        <div class="imageMain">
+          <p class="sectionSubtitle">By <span id="ownerUsername" data-owner="{{ .owner_username }}">{{ .owner_username
               }}</span> • Updated <span id="lastUpdated" data-date="{{ .image.LastUpdated }}">{{ .image.LastUpdated
               }}</span></p>
-          {{ if .image.Category }}<p class="section-subtitle" style="margin-top:8px;">Category: <span class="tag">{{
+          {{ if .image.Category }}<p class="sectionSubtitle" style="margin-top:8px;">Category: <span class="tag">{{
               .image.Category }}</span></p>{{ end }}
-          <div class="stats-row" style="margin:12px 0;">
+          <div class="statsRow" style="margin:12px 0;">
             <span>Pulls: {{ .image.Pulls }}</span>
             <span>Stars: <span id="starsCount">{{ .image.Stars }}</span></span>
             <span>Size: {{ if .size_formatted }}{{ .size_formatted }}{{ else }}{{ .image.Size }}{{ end }}</span>
@@ -80,28 +80,28 @@
             </div>
           </div>
           <div id="inlineEditPanel" style="display:none; margin-top:12px;">
-            <div class="form-group">
+            <div class="formGroup">
               <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                 <input type="checkbox" id="createNewVersion" style="width: auto; cursor: pointer;">
                 <span style="font-weight: 600; color: var(--primary);">Create New Version</span>
               </label>
-              <div class="sidebar-note">Check this to create a new version instead of updating the current {{ if
+              <div class="sidebarNote">Check this to create a new version instead of updating the current {{ if
                 .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}</div>
             </div>
-            <div class="form-group" id="newVersionField" style="display:none;">
+            <div class="formGroup" id="newVersionField" style="display:none;">
               <label>New Version Number *</label>
               <input id="newVersionTag" type="text" placeholder="e.g. 2.0.0, 1.5.0, 25.1.0" pattern="[0-9.]+" />
-              <div class="sidebar-note">Version must contain only numbers and dots (e.g., 1.0.0, 2.5.0, 21.0.0)</div>
+              <div class="sidebarNote">Version must contain only numbers and dots (e.g., 1.0.0, 2.5.0, 21.0.0)</div>
             </div>
-            <div class="form-group" id="newVersionFileField" style="display:none;">
+            <div class="formGroup" id="newVersionFileField" style="display:none;">
               <label>Container File (.tar) for New Version *</label>
-              <div class="file-input-wrapper">
+              <div class="fileInputWrapper">
                 <input type="file" id="newVersionFile" accept=".tar">
-                <div class="file-input-label">Click to select or drag new version .tar file</div>
+                <div class="fileInputLabel">Click to select or drag new version .tar file</div>
               </div>
-              <div class="sidebar-note">Upload the .tar file for this new version (Maximum 500MB)</div>
+              <div class="sidebarNote">Upload the .tar file for this new version (Maximum 500MB)</div>
             </div>
-            <div class="form-group" id="categoryField">
+            <div class="formGroup" id="categoryField">
               <label>Category</label>
               <select id="inlineEditCategory">
                 <option value="">None</option>
@@ -113,48 +113,48 @@
                 <option value="dev-tools" {{ if eq .image.Category "dev-tools" }}selected{{ end }}>Dev Tools</option>
               </select>
             </div>
-            <div class="form-group" id="aliasesField">
+            <div class="formGroup" id="aliasesField">
               <label>Aliases (Additional Version Tags)</label>
               <input id="inlineEditTags" type="text" placeholder="e.g. latest, stable, production"
                 value="{{ range $i, $v := .aliases }}{{ if $i }}, {{ end }}{{ $v }}{{ end }}" />
-              <div class="sidebar-note">Separate multiple aliases with commas (e.g., latest, stable)</div>
+              <div class="sidebarNote">Separate multiple aliases with commas (e.g., latest, stable)</div>
             </div>
-            <div class="form-group" id="descriptionField">
+            <div class="formGroup" id="descriptionField">
               <label>Description</label>
               <textarea id="inlineEditDescription" rows="4"
                 placeholder="Describe your image...">{{ .image.Description }}</textarea>
             </div>
-            <div class="form-group">
-              <label class="checkbox-label"><input type="checkbox" id="inlineEditPublic" {{ if .image.IsPublic
+            <div class="formGroup">
+              <label class="checkboxLabel"><input type="checkbox" id="inlineEditPublic" {{ if .image.IsPublic
                   }}checked{{ end }}> <span>Public</span></label>
             </div>
-            <div class="form-group" id="logoField">
+            <div class="formGroup" id="logoField">
               <label>Logo (PNG)</label>
-              <div class="file-input-wrapper">
+              <div class="fileInputWrapper">
                 <input type="file" id="inlineEditLogo" accept=".png">
-                <div class="file-input-label">Click to select logo</div>
+                <div class="fileInputLabel">Click to select logo</div>
               </div>
             </div>
           </div>
-          <div class="form-actions"
+          <div class="formActions"
             style="margin-top: 32px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <button id="starButton" class="btn-secondary {{ if .is_starred }}starred{{ end }}"
+            <button id="starButton" class="btnSecondary {{ if .is_starred }}starred{{ end }}"
               style="border-radius:6px; padding: 10px 16px; font-weight: 500;"
               onclick="toggleStar('{{ .image.ID }}', event)">
               {{ if .is_starred }}⭐ Starred{{ else }}☆ Star{{ end }}
             </button>
-            <button id="reportButton" class="btn-secondary"
+            <button id="reportButton" class="btnSecondary"
               style="border-radius:6px; background:#f59e0b; border-color:#f59e0b; padding: 10px 16px; font-weight: 500; color: white;"
               onclick="reportImage('{{ .image.ID }}', event)">🚩 Report</button>
 
             <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
-              <a id="editButton" class="btn-primary" href="#"
+              <a id="editButton" class="btnPrimary" href="#"
                 style="border-radius:6px; padding: 10px 18px; font-weight: 500; display:none;">✏️ Edit</a>
               <div id="editActionsGroup" style="display: none; gap: 10px; align-items: center;">
-                <button id="saveEditBtn" class="btn-primary"
+                <button id="saveEditBtn" class="btnPrimary"
                   style="border-radius:6px; padding: 10px 18px; font-weight: 500; background: #10b981; border-color: #10b981;"
                   type="button">✓ Save</button>
-                <button id="cancelEditBtn" class="btn-secondary"
+                <button id="cancelEditBtn" class="btnSecondary"
                   style="border-radius:6px; padding: 10px 18px; font-weight: 500;" type="button">✕ Cancel</button>
                 <button id="deleteImageBtn" class="delete"
                   style="background:#dc2626; color:#fff; border:0; border-radius:6px; padding:10px 16px; font-weight: 500; cursor: pointer;"
@@ -163,44 +163,43 @@
             </div>
           </div>
         </div>
-        <aside class="image-sidebar">
+        <aside class="imageSidebar">
           <h3>Tag summary</h3>
-          <div class="sidebar-block">
+          <div class="sidebarBlock">
             {{ if .report_count }}
-            <div class="sidebar-item">
+            <div class="sidebarItem">
               <div style="padding:8px 12px; background:#dc2626; color:white;font-weight: bold; border-radius:6px;">
                 ⚠️ Reported {{ .report_count }} time{{ if gt .report_count 1 }}s{{ end }}
                 {{ if ge .report_count .report_threshold }}(Private){{ end }}
               </div>
             </div>
             {{ end }}
-            <div class="sidebar-item"><span>Content type</span><strong>Image</strong></div>
-            <div class="sidebar-item"><span>Size</span><strong>{{ if .size_formatted }}{{ .size_formatted }}{{ else }}{{
+            <div class="sidebarItem"><span>Content type</span><strong>Image</strong></div>
+            <div class="sidebarItem"><span>Size</span><strong>{{ if .size_formatted }}{{ .size_formatted }}{{ else }}{{
                 .image.Size }}{{ end }}</strong></div>
-            <div class="sidebar-item"><span>Last updated</span><strong><span id="lastUpdatedSidebar"
+            <div class="sidebarItem"><span>Last updated</span><strong><span id="lastUpdatedSidebar"
                   data-date="{{ .image.LastUpdated }}">{{ .image.LastUpdated }}</span></strong></div>
-            <div class="sidebar-item digest-row"><span>Digest</span>
-              <div class="digest-wrap">
-                <code class="digest-clip" title="{{ .image.Digest }}"
+            <div class="sidebarItem digestRow"><span>Digest</span>
+              <div class="digestWrap">
+                <code class="digestClip" title="{{ .image.Digest }}"
                   data-full="{{ .image.Digest }}">{{ .image.Digest }}</code>
-                <button class="btn-copy" onclick="copyDigest(event)" aria-label="Copy digest">Copy</button>
+                <button class="btnCopy" onclick="copyDigest(event)" aria-label="Copy digest">Copy</button>
               </div>
             </div>
             {{ if lt .report_count .report_threshold }}
-            <div class="sidebar-item digest-row"><span>Download</span>
-              <div class="digest-wrap" style="margin-top:8px;">
-                <code class="digest-clip"
+            <div class="sidebarItem digestRow"><span>Download</span>
+              <div class="digestWrap" style="margin-top:8px;">
+                <code class="digestClip"
                   title="qube pull {{ .owner_username }}:{{ .image.Name }}:{{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}"
                   data-full="qube pull {{ .owner_username }}:{{ .image.Name }}:{{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}">qube pull {{ .owner_username }}:{{ .image.Name }}:{{ if .image.Tag }}{{ .image.Tag }}{{ else }}1.0.0{{ end }}</code>
-                <button class="btn-copy" onclick="copyCommand(event)" aria-label="Copy pull command">Copy</button>
+                <button class="btnCopy" onclick="copyCommand(event)" aria-label="Copy pull command">Copy</button>
               </div>
             </div>
             {{ end }}
           </div>
           {{ if lt .report_count .report_threshold }}
-          <div class="sidebar-actions">
-            <a class="btn-primary" href="#"
-              style="width:100%; border-radius:6px; position:relative; padding-left:36px;">
+          <div class="sidebarActions">
+            <a class="btnPrimary" href="#" style="width:100%; border-radius:6px; position:relative; padding-left:36px;">
               <span aria-hidden="true"
                 style="position:absolute; left:12px; top:50%; transform:translateY(-50%); display:inline-flex; align-items:center;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -209,17 +208,17 @@
               </span>
               Run in Qube Desktop
             </a>
-            <p class="sidebar-note">Requires Qube Desktop 1.00.0 or later.</p>
+            <p class="sidebarNote">Requires Qube Desktop 1.00.0 or later.</p>
           </div>
           {{ end }}
           <h4>Recent tags</h4>
-          <div id="recentTags" class="sidebar-tags">
+          <div id="recentTags" class="sidebarTags">
             {{ if .recent_tags }}
             {{ range .recent_tags }}
             <span class="tag">{{ . }}</span>
             {{ end }}
             {{ else }}
-            <p class="sidebar-note">No recent tags found.</p>
+            <p class="sidebarNote">No recent tags found.</p>
             {{ end }}
           </div>
         </aside>
@@ -304,9 +303,9 @@
 
     function copyDigest(e) {
       e.preventDefault();
-      const wrap = e.target.closest('.digest-wrap');
+      const wrap = e.target.closest('.digestWrap');
       if (!wrap) return;
-      const code = wrap.querySelector('.digest-clip');
+      const code = wrap.querySelector('.digestClip');
       const full = code?.getAttribute('data-full') || code?.textContent || '';
       if (!full) return;
       navigator.clipboard.writeText(full).then(() => {
@@ -319,9 +318,9 @@
 
     function copyCommand(e) {
       e.preventDefault();
-      const wrap = e.target.closest('.digest-wrap');
+      const wrap = e.target.closest('.digestWrap');
       if (!wrap) return;
-      const code = wrap.querySelector('.digest-clip');
+      const code = wrap.querySelector('.digestClip');
       const full = code?.getAttribute('data-full') || code?.textContent || '';
       if (!full) return;
       navigator.clipboard.writeText(full).then(() => {
@@ -349,7 +348,7 @@
         const user = JSON.parse(userStr);
         if (user && user.username && owner && user.username.toLowerCase() === owner.toLowerCase()) {
           editBtn.style.display = 'inline-block';
-          // toggle edit mode
+
           function setEditMode(on) {
             panel.style.display = on ? 'block' : 'none';
             editBtn.style.display = on ? 'none' : 'inline-block';
@@ -362,7 +361,6 @@
           editBtn.addEventListener('click', function (e) { e.preventDefault(); setEditMode(true); });
           cancelBtn.addEventListener('click', function () { setEditMode(false); });
 
-          // Handle create new version checkbox toggle
           const createNewVersionCheckbox = document.getElementById('createNewVersion');
           const newVersionField = document.getElementById('newVersionField');
           const newVersionFileField = document.getElementById('newVersionFileField');
@@ -377,7 +375,6 @@
               newVersionField.style.display = isCreatingNew ? 'block' : 'none';
               newVersionFileField.style.display = isCreatingNew ? 'block' : 'none';
 
-              // Hide category, aliases, description, and logo when creating new version
               if (categoryField) categoryField.style.display = isCreatingNew ? 'none' : 'block';
               if (aliasesField) aliasesField.style.display = isCreatingNew ? 'none' : 'block';
               if (descriptionField) descriptionField.style.display = isCreatingNew ? 'none' : 'block';
@@ -389,7 +386,6 @@
             });
           }
 
-          // save handler
           saveBtn.addEventListener('click', async function () {
             const token = localStorage.getItem('token');
             if (!token) { alert('Please login to save changes.'); return; }
@@ -403,13 +399,11 @@
                 return;
               }
 
-              // Validate version format (only numbers and dots)
               if (!/^[0-9.]+$/.test(newVersionTag)) {
                 alert('Version number must contain only numbers and dots (e.g., 1.0, 2.5, 21.0)');
                 return;
               }
 
-              // Check if .tar file is provided for new version
               const newVersionFile = document.getElementById('newVersionFile')?.files[0];
               if (!newVersionFile) {
                 alert('Please upload a .tar file for the new version');
@@ -450,7 +444,6 @@
             }
           });
 
-          // delete handler
           if (deleteBtn) {
             deleteBtn.addEventListener('click', async function () {
               if (!confirm('Delete this image? This cannot be undone.')) return;

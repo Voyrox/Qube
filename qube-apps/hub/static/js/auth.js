@@ -117,17 +117,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showNotification(message, type) {
-        const container = document.getElementById('toast-container');
+        const container = document.getElementById('toastContainer');
         if (!container) {
             console.error('Toast container not found');
             return;
         }
 
-        // Create toast HTML structure
         const toast = document.createElement('div');
-        toast.className = `toast-notification ${type}`;
+        toast.className = `toastNotification ${type}`;
 
-        // Determine icon based on type
         let iconSVG = '';
         if (type === 'success') {
             iconSVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
@@ -140,28 +138,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         toast.innerHTML = `
-            <div class="toast-icon">${iconSVG}</div>
-            <div class="toast-content">
-                <div class="toast-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
-                <div class="toast-message">${message}</div>
+            <div class="toastIcon">${iconSVG}</div>
+            <div class="toastContent">
+                <div class="toastTitle">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
+                <div class="toastMessage">${message}</div>
             </div>
-            <button class="toast-close">×</button>
-            <div class="toast-progress"></div>
+            <button class="toastClose">×</button>
+            <div class="toastProgress"></div>
         `;
 
         container.appendChild(toast);
 
-        // Trigger animation
         setTimeout(() => toast.classList.add('show'), 10);
 
-        // Close button
-        const closeBtn = toast.querySelector('.toast-close');
+        const closeBtn = toast.querySelector('.toastClose');
         closeBtn.addEventListener('click', () => {
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 400);
         });
 
-        // Auto-remove after 4 seconds
         setTimeout(() => {
             if (toast.parentNode) {
                 toast.classList.remove('show');
