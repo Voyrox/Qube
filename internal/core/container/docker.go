@@ -31,8 +31,51 @@ type QubeConfig struct {
 }
 
 type VolumeConfig struct {
-	HostPath      string `yaml:"host_path"`
-	ContainerPath string `yaml:"container_path"`
+	HostPath      string `yaml:"hostPath"`
+	ContainerPath string `yaml:"containerPath"`
+}
+
+func (v *VolumeConfig) UnmarshalYAML(value *yaml.Node) error {
+	type volumeConfigAlias struct {
+		HostPath      string `yaml:"hostPath"`
+		ContainerPath string `yaml:"containerPath"`
+	}
+
+	type legacyVolumeConfigAlias struct {
+		HostPath      string `yaml:"host_path"`
+		ContainerPath string `yaml:"container_path"`
+	}
+
+	var camel volumeConfigAlias
+	if err := value.Decode(&camel); err != nil {
+		return err
+	}
+	if camel.HostPath != "" || camel.ContainerPath != "" {
+		v.HostPath = camel.HostPath
+		v.ContainerPath = camel.ContainerPath
+		return nil
+	}
+
+	var legacy legacyVolumeConfigAlias
+	if err := value.Decode(&legacy); err != nil {
+		return err
+	}
+
+	v.HostPath = legacy.HostPath
+	v.ContainerPath = legacy.ContainerPath
+	return nil
+}
+
+func (v VolumeConfig) MarshalYAML() (interface{}, error) {
+	type volumeConfigAlias struct {
+		HostPath      string `yaml:"hostPath"`
+		ContainerPath string `yaml:"containerPath"`
+	}
+
+	return volumeConfigAlias{
+		HostPath:      v.HostPath,
+		ContainerPath: v.ContainerPath,
+	}, nil
 }
 
 func ConvertAndRun(dockerfilePath string) error {

@@ -150,12 +150,12 @@ function renderStats(containers, imageCount = 0) {
     if (totalEl) totalEl.innerText = imageCount || '0';
     
     const totalMemory = containers
-        .filter(c => c.pid && c.pid > 0 && c.memory_mb)
-        .reduce((sum, c) => sum + c.memory_mb, 0);
+        .filter(c => c.pid && c.pid > 0 && c.memoryMb)
+        .reduce((sum, c) => sum + c.memoryMb, 0);
     
     const totalCpu = containers
-        .filter(c => c.pid && c.pid > 0 && c.cpu_percent !== null && c.cpu_percent !== undefined)
-        .reduce((sum, c) => sum + c.cpu_percent, 0);
+        .filter(c => c.pid && c.pid > 0 && c.cpuPercent !== null && c.cpuPercent !== undefined)
+        .reduce((sum, c) => sum + c.cpuPercent, 0);
     
     const memoryCards = document.querySelectorAll('.stat-card');
     
@@ -280,7 +280,7 @@ async function loadImages() {
             tr.appendChild(nameCell);
             
             const sizeCell = document.createElement('td');
-            sizeCell.textContent = `${img.size_mb.toFixed(2)} MB`;
+            sizeCell.textContent = `${img.sizeMb.toFixed(2)} MB`;
             tr.appendChild(sizeCell);
             
             const pathCell = document.createElement('td');
@@ -324,13 +324,13 @@ async function loadVolumes() {
             tr.appendChild(containerCell);
             
             const hostCell = document.createElement('td');
-            hostCell.textContent = vol.host_path;
+            hostCell.textContent = vol.hostPath;
             hostCell.style.fontSize = '12px';
             hostCell.style.color = 'var(--text-secondary)';
             tr.appendChild(hostCell);
             
             const containerPathCell = document.createElement('td');
-            containerPathCell.textContent = vol.container_path;
+            containerPathCell.textContent = vol.containerPath;
             containerPathCell.style.fontSize = '12px';
             containerPathCell.style.color = 'var(--text-secondary)';
             tr.appendChild(containerPathCell);

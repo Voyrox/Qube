@@ -98,7 +98,7 @@ func TestStopContainerHandlerBadJSON(t *testing.T) {
 }
 
 func TestStopContainerHandlerInvalidID(t *testing.T) {
-	body := bytes.NewBufferString(`{"container_id":"abc"}`)
+	body := bytes.NewBufferString(`{"containerId":"abc"}`)
 	req := httptest.NewRequest(http.MethodPost, "/stop", body)
 	w := httptest.NewRecorder()
 	stopContainerHandler(w, req)
@@ -112,7 +112,7 @@ func TestStopContainerHandlerSuccess(t *testing.T) {
 	stopContainer = func(pid int) error { stopCalled++; return nil }
 	defer func() { stopContainer = container.StopContainer }()
 
-	body := bytes.NewBufferString(`{"container_id":"5"}`)
+	body := bytes.NewBufferString(`{"containerId":"5"}`)
 	req := httptest.NewRequest(http.MethodPost, "/stop", body)
 	w := httptest.NewRecorder()
 	stopContainerHandler(w, req)
@@ -128,7 +128,7 @@ func TestContainerInfoHandlerNotFound(t *testing.T) {
 	restore := withTracked(nil)
 	defer restore()
 
-	body := bytes.NewBufferString(`{"container_id":"missing"}`)
+	body := bytes.NewBufferString(`{"containerId":"missing"}`)
 	req := httptest.NewRequest(http.MethodPost, "/info", body)
 	w := httptest.NewRecorder()
 	containerInfoHandler(w, req)
@@ -146,7 +146,6 @@ func TestListImagesHandler(t *testing.T) {
 	imgDir := filepath.Join(tmp, "images")
 	_ = os.MkdirAll(imgDir, 0755)
 
-	// create two files
 	_ = os.WriteFile(filepath.Join(imgDir, "a.img"), []byte("1234"), 0644)
 	_ = os.WriteFile(filepath.Join(imgDir, "b.img"), []byte("123456"), 0644)
 

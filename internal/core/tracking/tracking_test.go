@@ -49,8 +49,7 @@ func TestUpdateAndRemove(t *testing.T) {
 	if len(GetAllTrackedEntries()) != 0 {
 		t.Fatalf("expected empty after remove by pid")
 	}
-
-	// Re-add and remove by name
+	
 	if err := TrackContainerNamed("c3", 10, "/dir", []string{"cmd"}, "img", "", false, nil, nil); err != nil {
 		t.Fatalf("track c3: %v", err)
 	}
@@ -72,7 +71,6 @@ func TestContainerListFileEnsureNewline(t *testing.T) {
 	cleanup := testutil.OverridePaths(t)
 	defer cleanup()
 
-	// Manually write a file without trailing newline to ensure TrackContainerNamed appends correctly.
 	if err := os.WriteFile(config.ContainerListFile, []byte("existing|1|/|cmd|0|img|ports|true"), 0644); err != nil {
 		t.Fatalf("write seed: %v", err)
 	}

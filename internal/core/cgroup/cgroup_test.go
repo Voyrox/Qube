@@ -113,9 +113,8 @@ func TestGetCPUFromProc(t *testing.T) {
 	defer func() { readFile = oldReadFile }()
 
 	cpuCacheMap = make(map[int]*cpuCache)
-	_, _ = GetCPUFromProc(1) // prime
+	_, _ = GetCPUFromProc(1)
 	time.Sleep(120 * time.Millisecond)
-	// change stat content to simulate more ticks
 	os.WriteFile(statPath, []byte("1 (cmd) S 0 0 0 0 0 0 0 0 0 200 150 0 0 0 0 0 0 0 0 0 0"), 0644)
 	v, err := GetCPUFromProc(1)
 	if err != nil {

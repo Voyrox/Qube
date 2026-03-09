@@ -83,7 +83,7 @@ async function loadContainer() {
     
     if (pidEl) pidEl.innerText = info.pid > 0 ? info.pid : '—';
     if (uptimeEl) uptimeEl.innerText = fmtUptime(info.timestamp);
-    if (memEl) memEl.innerText = info.memory_mb ? fmtMem(info.memory_mb) : '—';
+    if (memEl) memEl.innerText = info.memoryMb ? fmtMem(info.memoryMb) : '—';
     if (cmdEl) cmdEl.innerText = info.command && info.command.length ? info.command.join(' ') : '—';
 
     ensureWebSocket();

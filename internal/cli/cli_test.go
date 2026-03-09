@@ -81,8 +81,8 @@ container:
   environment:
     A: B
   volumes:
-    - host_path: /h
-      container_path: /c
+    - hostPath: /h
+      containerPath: /c
   debug: false
 `)), 0644)
 
@@ -128,7 +128,6 @@ func TestDeleteCommandNotFound(t *testing.T) {
 
 func runCommandInternal(args []string) error {
 	defer func() { os.Chdir("/") }()
-	// copy from RunCommand but return errors instead of os.Exit
 	if _, err := os.Stat("qube.yml"); err == nil && len(args) == 2 {
 		return runFromQMLInternal()
 	}
@@ -212,8 +211,8 @@ func runFromQMLInternal() error {
 
 	var volumes [][2]string
 	for _, vol := range config.Container.Volumes {
-		hostPath := vol["host_path"]
-		containerPath := vol["container_path"]
+		hostPath := vol.HostPath
+		containerPath := vol.ContainerPath
 		if hostPath != "" && containerPath != "" {
 			volumes = append(volumes, [2]string{hostPath, containerPath})
 		}

@@ -45,8 +45,8 @@ type ContainerInfo struct {
 	Isolated    bool        `json:"isolated"`
 	Volumes     [][2]string `json:"volumes"`
 	Environment []string    `json:"environment"`
-	MemoryMB    *float64    `json:"memory_mb,omitempty"`
-	CPUPercent  *float64    `json:"cpu_percent,omitempty"`
+	MemoryMB    *float64    `json:"memoryMb,omitempty"`
+	CPUPercent  *float64    `json:"cpuPercent,omitempty"`
 }
 
 type Response struct {
@@ -54,9 +54,45 @@ type Response struct {
 }
 
 type CommandParams struct {
-	ContainerID string `json:"container_id"`
+	ContainerID string `json:"containerId"`
 	PID         int    `json:"pid"`
 	Command     string `json:"command"`
+}
+
+func (p *CommandParams) UnmarshalJSON(data []byte) error {
+	type commandParamsAlias struct {
+		ContainerID string `json:"containerId"`
+		PID         int    `json:"pid"`
+		Command     string `json:"command"`
+	}
+
+	type legacyCommandParamsAlias struct {
+		ContainerID string `json:"container_id"`
+		PID         int    `json:"pid"`
+		Command     string `json:"command"`
+	}
+
+	var camel commandParamsAlias
+	if err := json.Unmarshal(data, &camel); err != nil {
+		return err
+	}
+
+	p.ContainerID = camel.ContainerID
+	p.PID = camel.PID
+	p.Command = camel.Command
+	if p.ContainerID != "" {
+		return nil
+	}
+
+	var legacy legacyCommandParamsAlias
+	if err := json.Unmarshal(data, &legacy); err != nil {
+		return err
+	}
+
+	p.ContainerID = legacy.ContainerID
+	p.PID = legacy.PID
+	p.Command = legacy.Command
+	return nil
 }
 
 func StartServer() {
@@ -263,7 +299,7 @@ func containerInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 type ImageInfo struct {
 	Name   string  `json:"name"`
-	SizeMB float64 `json:"size_mb"`
+	SizeMB float64 `json:"sizeMb"`
 	Path   string  `json:"path"`
 }
 
@@ -300,8 +336,8 @@ func listImagesHandler(w http.ResponseWriter, r *http.Request) {
 
 type VolumeInfo struct {
 	Name          string `json:"name"`
-	HostPath      string `json:"host_path"`
-	ContainerPath string `json:"container_path"`
+	HostPath      string `json:"hostPath"`
+	ContainerPath string `json:"containerPath"`
 	Container     string `json:"container"`
 }
 

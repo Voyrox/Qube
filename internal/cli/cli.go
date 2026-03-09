@@ -28,13 +28,13 @@ var (
 
 type QMLConfig struct {
 	Container struct {
-		System      string              `yaml:"system"`
-		Ports       []string            `yaml:"ports"`
-		Cmd         []string            `yaml:"cmd"`
-		Isolated    bool                `yaml:"isolated"`
-		Environment map[string]string   `yaml:"environment"`
-		Volumes     []map[string]string `yaml:"volumes"`
-		Debug       bool                `yaml:"debug"`
+		System      string                   `yaml:"system"`
+		Ports       []string                 `yaml:"ports"`
+		Cmd         []string                 `yaml:"cmd"`
+		Isolated    bool                     `yaml:"isolated"`
+		Environment map[string]string        `yaml:"environment"`
+		Volumes     []container.VolumeConfig `yaml:"volumes"`
+		Debug       bool                     `yaml:"debug"`
 	} `yaml:"container"`
 }
 
@@ -138,8 +138,8 @@ func runFromQML() {
 
 	var volumes [][2]string
 	for _, vol := range config.Container.Volumes {
-		hostPath := vol["host_path"]
-		containerPath := vol["container_path"]
+		hostPath := vol.HostPath
+		containerPath := vol.ContainerPath
 		if hostPath != "" && containerPath != "" {
 			volumes = append(volumes, [2]string{hostPath, containerPath})
 		}
@@ -168,7 +168,7 @@ func ListCommand() {
 
 func StopCommand(args []string) {
 	if len(args) < 3 {
-		color.Red("Usage: qube stop <pid|container_name>")
+		color.Red("Usage: qube stop <pid|containerName>")
 		os.Exit(1)
 	}
 
@@ -202,7 +202,7 @@ func StopCommand(args []string) {
 
 func StartCommand(args []string) {
 	if len(args) < 3 {
-		color.Red("Usage: qube start <pid|container_name>")
+		color.Red("Usage: qube start <pid|containerName>")
 		os.Exit(1)
 	}
 
@@ -215,7 +215,7 @@ func StartCommand(args []string) {
 
 func DeleteCommand(args []string) {
 	if len(args) < 3 {
-		color.Red("Usage: qube delete <pid|container_name>")
+		color.Red("Usage: qube delete <pid|containerName>")
 		os.Exit(1)
 	}
 
@@ -228,7 +228,7 @@ func DeleteCommand(args []string) {
 
 func EvalCommand(args []string) {
 	if len(args) < 3 {
-		color.Red("Usage: qube eval <container_name|pid> [command]")
+		color.Red("Usage: qube eval <containerName|pid> [command]")
 		os.Exit(1)
 	}
 
@@ -264,7 +264,7 @@ func EvalCommand(args []string) {
 
 func InfoCommand(args []string) {
 	if len(args) < 3 {
-		color.Red("Usage: qube info <container_name|pid>")
+		color.Red("Usage: qube info <containerName|pid>")
 		os.Exit(1)
 	}
 
@@ -304,7 +304,7 @@ func InfoCommand(args []string) {
 
 func SnapshotCommand(args []string) {
 	if len(args) < 3 {
-		color.Red("Usage: qube snapshot <container_name|pid>")
+		color.Red("Usage: qube snapshot <containerName|pid>")
 		os.Exit(1)
 	}
 
@@ -335,7 +335,7 @@ func SnapshotCommand(args []string) {
 
 func DockerCommand(args []string) {
 	if len(args) < 3 {
-		color.Red("Usage: qube docker <Dockerfile_path>")
+		color.Red("Usage: qube docker <dockerfilePath>")
 		os.Exit(1)
 	}
 
