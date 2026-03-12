@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Voyrox/Qube/internal/config"
-	"github.com/Voyrox/Qube/internal/core/cgroup"
-	"github.com/Voyrox/Qube/internal/core/tracking"
+	"github.com/Voyrox/Qube/src/config"
+	"github.com/Voyrox/Qube/src/core/cgroup"
+	"github.com/Voyrox/Qube/src/core/tracking"
 	"github.com/fatih/color"
 	"github.com/schollz/progressbar/v3"
 )

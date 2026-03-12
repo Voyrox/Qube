@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Voyrox/Qube/internal/core/tracking"
+	"github.com/Voyrox/Qube/src/core/tracking"
 	"gopkg.in/yaml.v3"
 )
 

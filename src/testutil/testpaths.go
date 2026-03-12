@@ -3,7 +3,7 @@ package testutil
 import (
 	"testing"
 
-	"github.com/Voyrox/Qube/internal/config"
+	"github.com/Voyrox/Qube/src/config"
 )
 
 func OverridePaths(t *testing.T) func() {

@@ -2,14 +2,13 @@ package cgroup
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Voyrox/Qube/internal/config"
+	"github.com/Voyrox/Qube/src/config"
 	"github.com/fatih/color"
 )
 
@@ -43,7 +42,7 @@ func InitCgroupRoot() error {
 	}
 
 	subtreeControl := filepath.Join(config.CgroupRoot, "cgroup.subtree_control")
-	if err := ioutil.WriteFile(subtreeControl, []byte("+memory +cpu"), 0644); err != nil {
+	if err := os.WriteFile(subtreeControl, []byte("+memory +cpu"), 0644); err != nil {
 		fmt.Printf("Warning: Failed to enable cgroup controllers: %v\n", err)
 	} else {
 		color.Green("✓ Cgroup controllers enabled: memory, cpu")
@@ -66,14 +65,14 @@ func SetupCgroupForContainer(containerName string) (string, error) {
 	}
 
 	memMaxPath := filepath.Join(cgroupPath, "memory.max")
-	if err := ioutil.WriteFile(memMaxPath, []byte(fmt.Sprintf("%d", MemoryMax)), 0644); err != nil {
+	if err := os.WriteFile(memMaxPath, []byte(fmt.Sprintf("%d", MemoryMax)), 0644); err != nil {
 		fmt.Printf("Warning: Failed to set memory.max limit: %v\n", err)
 	} else {
 		color.Green("✓ Memory limit set: %d bytes (%d MB)", MemoryMax, config.MemoryMaxMB)
 	}
 
 	memSwapPath := filepath.Join(cgroupPath, "memory.swap.max")
-	if err := ioutil.WriteFile(memSwapPath, []byte(fmt.Sprintf("%d", MemorySwapMax)), 0644); err != nil {
+	if err := os.WriteFile(memSwapPath, []byte(fmt.Sprintf("%d", MemorySwapMax)), 0644); err != nil {
 		fmt.Printf("Warning: Failed to set memory.swap.max limit: %v\n", err)
 	} else {
 		color.Green("✓ Swap limit set: %d bytes (%d MB)", MemorySwapMax, config.MemorySwapMaxMB)
@@ -81,7 +80,7 @@ func SetupCgroupForContainer(containerName string) (string, error) {
 
 	cpuMaxPath := filepath.Join(cgroupPath, "cpu.max")
 	cpuLimit := fmt.Sprintf("%d %d", config.CPUQuotaUS, config.CPUPeriodUS)
-	if err := ioutil.WriteFile(cpuMaxPath, []byte(cpuLimit), 0644); err != nil {
+	if err := os.WriteFile(cpuMaxPath, []byte(cpuLimit), 0644); err != nil {
 		fmt.Printf("Warning: Failed to set cpu.max limit: %v\n", err)
 	} else {
 		color.Green("✓ CPU limit set: %d/%d", config.CPUQuotaUS, config.CPUPeriodUS)
@@ -92,14 +91,14 @@ func SetupCgroupForContainer(containerName string) (string, error) {
 
 func AddProcessToCgroup(cgroupPath string, pid int) error {
 	procsPath := filepath.Join(cgroupPath, "cgroup.procs")
-	return ioutil.WriteFile(procsPath, []byte(fmt.Sprintf("%d", pid)), 0644)
+	return os.WriteFile(procsPath, []byte(fmt.Sprintf("%d", pid)), 0644)
 }
 
 func GetMemoryStats(containerName string) (*MemoryStats, error) {
 	cgroupPath := filepath.Join(config.CgroupRoot, containerName)
 	memCurrentPath := filepath.Join(cgroupPath, "memory.current")
 
-	content, err := ioutil.ReadFile(memCurrentPath)
+	content, err := os.ReadFile(memCurrentPath)
 	if err != nil {
 		return nil, err
 	}

@@ -3,13 +3,12 @@ package container
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
-	"github.com/Voyrox/Qube/internal/config"
+	"github.com/Voyrox/Qube/src/config"
 	"golang.org/x/sys/unix"
 )
 
@@ -101,7 +100,7 @@ func CopyFile(src, dst string) error {
 }
 
 func CopyDir(src, dst string) error {
-	entries, err := ioutil.ReadDir(src)
+	entries, err := os.ReadDir(src)
 	if err != nil {
 		return err
 	}

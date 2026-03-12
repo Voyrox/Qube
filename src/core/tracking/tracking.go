@@ -3,13 +3,12 @@ package tracking
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Voyrox/Qube/internal/config"
+	"github.com/Voyrox/Qube/src/config"
 )
 
 type ContainerEntry struct {
@@ -46,7 +45,7 @@ func TrackContainerNamed(name string, pid int, dir string, cmd []string, image s
 
 	info, err := os.Stat(config.ContainerListFile)
 	if err == nil && info.Size() > 0 {
-		content, _ := ioutil.ReadFile(config.ContainerListFile)
+		content, _ := os.ReadFile(config.ContainerListFile)
 		if len(content) > 0 && content[len(content)-1] != '\n' {
 			f.WriteString("\n")
 		}
@@ -60,7 +59,7 @@ func UpdateContainerPID(name string, newPID int, newDir string, newCmd []string,
 	found := false
 	newLine := fmt.Sprintf("%s|%d|%s|%s|%d|%s|%s|%t", name, newPID, newDir, strings.Join(newCmd, "\t"), currentTimestamp(), image, ports, isolated)
 
-	content, err := ioutil.ReadFile(config.ContainerListFile)
+	content, err := os.ReadFile(config.ContainerListFile)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return TrackContainerNamed(name, newPID, newDir, newCmd, image, ports, isolated, volumes, envVars)
@@ -92,11 +91,11 @@ func UpdateContainerPID(name string, newPID int, newDir string, newCmd []string,
 		return TrackContainerNamed(name, newPID, newDir, newCmd, image, ports, isolated, volumes, envVars)
 	}
 
-	return ioutil.WriteFile(config.ContainerListFile, []byte(strings.Join(newLines, "\n")+"\n"), 0644)
+	return os.WriteFile(config.ContainerListFile, []byte(strings.Join(newLines, "\n")+"\n"), 0644)
 }
 
 func RemoveContainerFromTracking(pid int) error {
-	content, err := ioutil.ReadFile(config.ContainerListFile)
+	content, err := os.ReadFile(config.ContainerListFile)
 	if err != nil {
 		return err
 	}
@@ -119,11 +118,11 @@ func RemoveContainerFromTracking(pid int) error {
 		newLines = append(newLines, line)
 	}
 
-	return ioutil.WriteFile(config.ContainerListFile, []byte(strings.Join(newLines, "\n")+"\n"), 0644)
+	return os.WriteFile(config.ContainerListFile, []byte(strings.Join(newLines, "\n")+"\n"), 0644)
 }
 
 func RemoveContainerFromTrackingByName(name string) error {
-	content, err := ioutil.ReadFile(config.ContainerListFile)
+	content, err := os.ReadFile(config.ContainerListFile)
 	if err != nil {
 		return err
 	}
@@ -145,7 +144,7 @@ func RemoveContainerFromTrackingByName(name string) error {
 		}
 	}
 
-	return ioutil.WriteFile(config.ContainerListFile, []byte(strings.Join(newLines, "\n")+"\n"), 0644)
+	return os.WriteFile(config.ContainerListFile, []byte(strings.Join(newLines, "\n")+"\n"), 0644)
 }
 
 func GetAllTrackedEntries() []ContainerEntry {
@@ -193,7 +192,7 @@ func GetAllTrackedEntries() []ContainerEntry {
 
 func GetProcessUptime(pid int) (uint64, error) {
 	statPath := fmt.Sprintf("/proc/%d/stat", pid)
-	content, err := ioutil.ReadFile(statPath)
+	content, err := os.ReadFile(statPath)
 	if err != nil {
 		return 0, err
 	}
@@ -208,7 +207,7 @@ func GetProcessUptime(pid int) (uint64, error) {
 		return 0, err
 	}
 
-	uptimeContent, err := ioutil.ReadFile("/proc/uptime")
+	uptimeContent, err := os.ReadFile("/proc/uptime")
 	if err != nil {
 		return 0, err
 	}

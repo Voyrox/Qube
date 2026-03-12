@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Voyrox/Qube/internal/core/container"
-	"github.com/Voyrox/Qube/internal/core/tracking"
+	"github.com/Voyrox/Qube/src/core/container"
+	"github.com/Voyrox/Qube/src/core/tracking"
 	"github.com/fatih/color"
 	"gopkg.in/yaml.v3"
 )

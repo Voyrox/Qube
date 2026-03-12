@@ -3,14 +3,13 @@ package container
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
-	"github.com/Voyrox/Qube/internal/config"
+	"github.com/Voyrox/Qube/src/config"
 	"github.com/fatih/color"
 	"github.com/schollz/progressbar/v3"
 )
@@ -65,7 +64,7 @@ func ListImages() ([]string, error) {
 		return []string{}, nil
 	}
 
-	files, err := ioutil.ReadDir(imagesDir)
+	files, err := os.ReadDir(imagesDir)
 	if err != nil {
 		return nil, err
 	}

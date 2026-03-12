@@ -5,9 +5,9 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/Voyrox/Qube/internal/cli"
-	"github.com/Voyrox/Qube/internal/core/container"
-	"github.com/Voyrox/Qube/internal/daemon"
+	"github.com/Voyrox/Qube/src/cli"
+	"github.com/Voyrox/Qube/src/core/container"
+	"github.com/Voyrox/Qube/src/daemon"
 	"github.com/fatih/color"
 )
 

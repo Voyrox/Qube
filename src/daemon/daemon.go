@@ -2,7 +2,6 @@ package daemon
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -10,11 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Voyrox/Qube/internal/api"
-	"github.com/Voyrox/Qube/internal/config"
-	"github.com/Voyrox/Qube/internal/core/cgroup"
-	"github.com/Voyrox/Qube/internal/core/container"
-	"github.com/Voyrox/Qube/internal/core/tracking"
+	"github.com/Voyrox/Qube/src/api"
+	"github.com/Voyrox/Qube/src/config"
+	"github.com/Voyrox/Qube/src/core/cgroup"
+	"github.com/Voyrox/Qube/src/core/container"
+	"github.com/Voyrox/Qube/src/core/tracking"
 	"github.com/fatih/color"
 )
 
@@ -27,7 +26,7 @@ var (
 	restartContainerFn   = restartContainer
 	removeCgroupFn       = cgroup.RemoveCgroup
 	osStat               = os.Stat
-	readDir              = ioutil.ReadDir
+	readDir              = os.ReadDir
 )
 
 func StartDaemon(debug bool) {
@@ -98,7 +97,7 @@ func cleanupOrphanedContainers() {
 
 			procPath := filepath.Join(containersPath, dirName, "rootfs", "proc")
 			for {
-				mounts, err := ioutil.ReadFile("/proc/mounts")
+				mounts, err := os.ReadFile("/proc/mounts")
 				if err != nil {
 					break
 				}
