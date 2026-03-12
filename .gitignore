@@ -24,5 +24,6 @@ ubuntu24default.tar.xz
 scripts/ubuntu-24.04-server-cloudimg-amd64-root.tar.xz
 *.tar
 *.gz
-qube
 coverage.out
+qube
+/bin
