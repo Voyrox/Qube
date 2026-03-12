@@ -1,19 +1,16 @@
 let apiBase = 'http://127.0.0.1:3030';
 
-// Load API base from Electron settings if available
 if (window.electron) {
   window.electron.getApiBase().then(base => {
     if (base) apiBase = base;
   });
   
-  // Listen for deep link events
   window.electron.onDeepLink((data) => {
     console.log('Deep link received:', data);
     handleDeepLink(data);
   });
 }
 
-// Handle deep link navigation
 function handleDeepLink(data) {
   const { action, param, query, fullUrl } = data;
   
@@ -21,25 +18,20 @@ function handleDeepLink(data) {
   
   switch (action) {
     case 'container':
-      // Open specific container (e.g., qube://container/mycontainer)
       if (param) {
         showToast(`Opening container: ${param}`, 'info');
-        // Navigate to container details or console
         showContainerConsole(param);
       }
       break;
       
     case 'image':
-      // Open specific image (e.g., qube://image/alpine)
       if (param) {
         showToast(`Opening image: ${param}`, 'info');
-        // Navigate to images page and highlight this image
-        loadDashboard(); // You can enhance this to filter/highlight specific image
+        loadDashboard();
       }
       break;
       
     case 'open':
-      // Navigate to specific page (e.g., qube://open?page=containers)
       if (query.page) {
         showToast(`Navigating to ${query.page}`, 'info');
         if (query.page === 'containers' || query.page === 'images') {
@@ -51,13 +43,10 @@ function handleDeepLink(data) {
       break;
       
     case 'action':
-      // Perform specific actions (e.g., qube://action/create?name=test&image=alpine)
       if (param === 'create' && query.name && query.image) {
         showToast(`Creating container ${query.name} from ${query.image}`, 'info');
-        // Trigger container creation
       } else if (param === 'pull' && query.image) {
         showToast(`Pulling image: ${query.image}`, 'info');
-        // Trigger image pull
       }
       break;
       
@@ -160,19 +149,16 @@ function renderStats(containers, imageCount = 0) {
     if (runningEl) runningEl.innerText = running;
     if (totalEl) totalEl.innerText = imageCount || '0';
     
-    // Calculate total memory from running containers
     const totalMemory = containers
-        .filter(c => c.pid && c.pid > 0 && c.memory_mb)
-        .reduce((sum, c) => sum + c.memory_mb, 0);
+        .filter(c => c.pid && c.pid > 0 && c.memoryMb)
+        .reduce((sum, c) => sum + c.memoryMb, 0);
     
-    // Calculate total CPU usage from running containers
     const totalCpu = containers
-        .filter(c => c.pid && c.pid > 0 && c.cpu_percent !== null && c.cpu_percent !== undefined)
-        .reduce((sum, c) => sum + c.cpu_percent, 0);
+        .filter(c => c.pid && c.pid > 0 && c.cpuPercent !== null && c.cpuPercent !== undefined)
+        .reduce((sum, c) => sum + c.cpuPercent, 0);
     
     const memoryCards = document.querySelectorAll('.stat-card');
     
-    // Update CPU Usage (card index 2)
     if (memoryCards[2]) {
         const cpuValue = memoryCards[2].querySelector('.value');
         if (cpuValue) {
@@ -185,7 +171,6 @@ function renderStats(containers, imageCount = 0) {
         }
     }
     
-    // Update Memory (card index 3)
     if (memoryCards[3]) {
         const memValue = memoryCards[3].querySelector('.value');
         if (memValue) {
@@ -260,8 +245,7 @@ async function loadDashboard() {
         const res = await fetch(`${apiBase}/list`);
         const data = await res.json();
         const containers = data.containers || [];
-        
-        // Also fetch images count for stats
+
         const imagesRes = await fetch(`${apiBase}/images`);
         const images = await imagesRes.json();
         
@@ -296,7 +280,7 @@ async function loadImages() {
             tr.appendChild(nameCell);
             
             const sizeCell = document.createElement('td');
-            sizeCell.textContent = `${img.size_mb.toFixed(2)} MB`;
+            sizeCell.textContent = `${img.sizeMb.toFixed(2)} MB`;
             tr.appendChild(sizeCell);
             
             const pathCell = document.createElement('td');
@@ -340,13 +324,13 @@ async function loadVolumes() {
             tr.appendChild(containerCell);
             
             const hostCell = document.createElement('td');
-            hostCell.textContent = vol.host_path;
+            hostCell.textContent = vol.hostPath;
             hostCell.style.fontSize = '12px';
             hostCell.style.color = 'var(--text-secondary)';
             tr.appendChild(hostCell);
             
             const containerPathCell = document.createElement('td');
-            containerPathCell.textContent = vol.container_path;
+            containerPathCell.textContent = vol.containerPath;
             containerPathCell.style.fontSize = '12px';
             containerPathCell.style.color = 'var(--text-secondary)';
             tr.appendChild(containerPathCell);
@@ -376,7 +360,6 @@ function setupSidebar() {
                 if (sec.id === target) sec.classList.add('active'); else sec.classList.remove('active');
             });
             
-            // Load data for the active section
             if (target === 'section-images') {
                 loadImages();
             } else if (target === 'section-volumes') {

@@ -13,7 +13,6 @@ Cargo.lock
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
 
-
 # Added by cargo
 
 /target
@@ -25,6 +24,7 @@ ubuntu24default.tar.xz
 scripts/ubuntu-24.04-server-cloudimg-amd64-root.tar.xz
 *.tar
 *.gz
-qube
-qube
+.idea/
 coverage.out
+qube
+/bin

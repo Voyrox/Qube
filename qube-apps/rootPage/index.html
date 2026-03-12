@@ -98,55 +98,54 @@
             gap: 8px;
         }
 
-        .btn-primary {
+        .btnPrimary {
             background: #6366f1;
             color: white;
             border-color: #6366f1;
         }
 
-        .btn-primary:hover {
+        .btnPrimary:hover {
             background: #2563eb;
             border-color: #2563eb;
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
         }
 
-        .btn-secondary {
+        .btnSecondary {
             background: transparent;
             color: var(--text);
             border-color: var(--border);
         }
 
-        .btn-secondary:hover {
+        .btnSecondary:hover {
             background: rgba(255, 255, 255, 0.05);
             border-color: var(--muted);
             transform: translateY(-2px);
         }
 
-        .btn-dark {
+        .btnDark {
             background: rgba(15, 23, 42, 0.9);
             color: var(--text);
             border-color: var(--border);
         }
 
-        .btn-dark:hover {
+        .btnDark:hover {
             background: rgba(15, 23, 42, 1);
             border-color: var(--blue);
             transform: translateY(-2px);
         }
 
-        .btn-ghost {
+        .btnGhost {
             background: transparent;
             color: var(--muted);
             border-color: transparent;
         }
 
-        .btn-ghost:hover {
+        .btnGhost:hover {
             color: var(--text);
             background: rgba(255, 255, 255, 0.05);
         }
 
-        /* Header */
         header {
             background-color: rgb(5, 6, 16);
             position: sticky;
@@ -158,7 +157,7 @@
             align-items: center;
         }
 
-        .header-container {
+        .headerContainer {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -177,7 +176,7 @@
             display: block;
         }
 
-        .logo .logo-text {
+        .logo .logoText {
             margin-left: 12px;
         }
 
@@ -186,29 +185,29 @@
             align-items: center;
         }
 
-        .nav-links {
+        .navLinks {
             display: flex;
             list-style: none;
             gap: 32px;
             margin-right: 32px;
         }
 
-        .nav-links a {
+        .navLinks a {
             font-weight: 500;
             font-size: 15px;
             color: var(--muted);
             position: relative;
         }
 
-        .nav-links a:hover {
+        .navLinks a:hover {
             color: var(--text);
         }
 
-        .nav-links a.active {
+        .navLinks a.active {
             color: var(--blue);
         }
 
-        .nav-links a.active::after {
+        .navLinks a.active::after {
             content: '';
             position: absolute;
             bottom: -6px;
@@ -219,13 +218,12 @@
             border-radius: 2px;
         }
 
-        .header-actions {
+        .headerActions {
             display: flex;
             align-items: center;
             gap: 16px;
         }
 
-        /* Hero Section */
         .hero {
             padding: 120px 0;
             background: #050714;
@@ -256,7 +254,7 @@
             z-index: 1;
         }
 
-        .hero-container {
+        .heroContainer {
             position: relative;
             z-index: 2;
             display: grid;
@@ -265,11 +263,11 @@
             align-items: center;
         }
 
-        .hero-content {
+        .heroContent {
             max-width: 600px;
         }
 
-        .hero-badge {
+        .heroBadge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -283,7 +281,7 @@
             margin-bottom: 24px;
         }
 
-        .hero-title {
+        .heroTitle {
             font-size: 52px;
             font-weight: 700;
             line-height: 1.1;
@@ -291,31 +289,31 @@
             margin-bottom: 24px;
         }
 
-        .hero-title span {
+        .heroTitle span {
             background: linear-gradient(90deg, var(--blue) 0%, #60a5fa 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        .hero-description {
+        .heroDescription {
             font-size: 20px;
             color: var(--muted);
             margin-bottom: 40px;
             line-height: 1.7;
         }
 
-        .hero-actions {
+        .heroActions {
             display: flex;
             gap: 16px;
             flex-wrap: wrap;
         }
 
-        .hero-terminal {
+        .heroTerminal {
             position: relative;
         }
 
-        .terminal-window {
+        .terminalWindow {
             background: #0a0a16;
             border-radius: 14px;
             overflow: hidden;
@@ -325,7 +323,7 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
-        .terminal-header {
+        .terminalHeader {
             background: #000013;
             padding: 12px 16px;
             display: flex;
@@ -334,31 +332,31 @@
             border-bottom: 1px solid #4d4d4d;
         }
 
-        .terminal-buttons {
+        .terminalButtons {
             display: flex;
             gap: 10px;
         }
 
-        .terminal-button {
+        .terminalButton {
             width: 13px;
             height: 13px;
             border-radius: 50%;
             box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
-        .terminal-button.red {
+        .terminalButton.red {
             background: #ff5f57;
         }
 
-        .terminal-button.yellow {
+        .terminalButton.yellow {
             background: #febc2e;
         }
 
-        .terminal-button.green {
+        .terminalButton.green {
             background: #28c840;
         }
 
-        .terminal-title {
+        .terminalTitle {
             font-family: 'Source Code Pro', 'SF Mono', 'Consolas', monospace;
             font-size: 13px;
             font-weight: 600;
@@ -369,19 +367,19 @@
             gap: 8px;
         }
 
-        .terminal-title .title-prompt {
+        .terminalTitle .titlePrompt {
             color: #fff;
         }
 
-        .terminal-title .title-separator {
+        .terminalTitle .titleSeparator {
             color: #8d8d8d;
         }
 
-        .terminal-title .title-path {
+        .terminalTitle .titlePath {
             color: #5eb3e5;
         }
 
-        .terminal-body {
+        .terminalBody {
             padding: 24px;
             font-family: 'Source Code Pro', 'SF Mono', 'Consolas', monospace;
             font-size: 15px;
@@ -390,40 +388,40 @@
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
-        .terminal-line {
+        .terminalLine {
             opacity: 1;
             transform: translateY(0);
             margin-bottom: 2px;
         }
 
-        .terminal-prompt {
+        .terminalPrompt {
             color: #4ae54a;
             margin-right: 0;
         }
 
-        .terminal-prompt .hostname {
+        .terminalPrompt .hostname {
             color: #4ae54a;
         }
 
-        .terminal-prompt .separator {
+        .terminalPrompt .separator {
             color: #8d8d8d;
         }
 
-        .terminal-prompt .path {
+        .terminalPrompt .path {
             color: #5eb3e5;
         }
 
-        .terminal-command {
+        .terminalCommand {
             color: #ffffff;
         }
 
-        .terminal-output {
+        .terminalOutput {
             color: #b0b0b0;
             padding-left: 20px;
             display: block;
         }
 
-        .terminal-cursor {
+        .terminalCursor {
             display: inline-block;
             width: 4px;
             height: 18px;
@@ -448,7 +446,7 @@
             }
         }
 
-        .terminal-status {
+        .terminalStatus {
             margin-top: 20px;
             padding-top: 16px;
             border-top: 1px solid #3d3d3d;
@@ -458,18 +456,18 @@
             color: #6d6d6d;
         }
 
-        .terminal-status .status-left {
+        .terminalStatus .statusLeft {
             display: flex;
             gap: 20px;
         }
 
-        .terminal-status .status-item {
+        .terminalStatus .statusItem {
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .terminal-status .status-dot {
+        .terminalStatus .statusDot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
@@ -477,19 +475,18 @@
             box-shadow: 0 0 6px rgba(40, 200, 64, 0.5);
         }
 
-        /* Section Styles */
         .section {
             padding: 100px 0;
             background: #050714;
         }
 
-        .section-header {
+        .sectionHeader {
             text-align: center;
             max-width: 700px;
             margin: 0 auto 60px;
         }
 
-        .section-label {
+        .sectionLabel {
             display: inline-block;
             color: var(--blue);
             font-weight: 600;
@@ -499,44 +496,43 @@
             margin-bottom: 16px;
         }
 
-        .section-title {
+        .sectionTitle {
             font-size: 40px;
             font-weight: 700;
             color: #fff;
             margin-bottom: 20px;
         }
 
-        .section-description {
+        .sectionDescription {
             font-size: 18px;
             color: var(--muted);
             line-height: 1.7;
         }
 
-        /* Install Section */
-        .install-section {
+        .installSection {
             background: #050714;
         }
 
-        .install-grid {
+        .installGrid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 60px;
             align-items: center;
         }
 
-        .install-content h3 {
+        .installContent h3 {
             font-size: 28px;
             color: #fff;
             margin-bottom: 20px;
         }
 
-        .install-content p {
+        .installContent p {
             color: var(--muted);
             margin-bottom: 24px;
             font-size: 17px;
         }
 
-        .code-block {
+        .codeBlock {
             background: rgba(15, 23, 42, 0.5);
             border-radius: 12px;
             padding: 20px;
@@ -547,13 +543,13 @@
             overflow: hidden;
         }
 
-        .code-block code {
+        .codeBlock code {
             color: #e5e7eb;
             display: block;
             white-space: pre;
         }
 
-        .copy-btn {
+        .copyBtn {
             position: absolute;
             top: 12px;
             right: 12px;
@@ -568,31 +564,30 @@
             font-family: inherit;
         }
 
-        .copy-btn:hover {
+        .copyBtn:hover {
             background: var(--blue);
             border-color: var(--blue);
             color: #fff;
         }
 
-        .copy-btn.copied {
+        .copyBtn.copied {
             background: #22c55e;
             border-color: #22c55e;
             color: #fff;
         }
 
-        /* Platform Grid */
-        .platforms-section {
+        .platformsSection {
             position: relative;
         }
 
-        .platforms-grid {
+        .platformsGrid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
             margin-top: 60px;
         }
 
-        .platform-card {
+        .platformCard {
             background: rgba(15, 23, 42, 0.5);
             border: 1px solid var(--border);
             border-radius: 14px;
@@ -602,38 +597,37 @@
             cursor: default;
         }
 
-        .platform-card:hover {
+        .platformCard:hover {
             transform: translateY(-4px);
             border-color: var(--blue);
             box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
         }
 
-        .platform-card i {
+        .platformCard i {
             font-size: 36px;
             color: var(--blue);
             margin-bottom: 16px;
         }
 
-        .platform-card h4 {
+        .platformCard h4 {
             color: #fff;
             font-size: 16px;
             margin-bottom: 4px;
         }
 
-        .platform-card span {
+        .platformCard span {
             color: var(--muted);
             font-size: 13px;
         }
 
-        /* Features Grid */
-        .features-grid {
+        .featuresGrid {
             display: grid;
             grid-template-columns: repeat(2, minmax(350px, 1fr));
             gap: 24px;
             margin-top: 60px;
         }
 
-        .feature-card {
+        .featureCard {
             background: rgba(15, 23, 42, 0.5);
             border: 1px solid var(--border);
             border-radius: 14px;
@@ -641,13 +635,13 @@
             transition: var(--transition);
         }
 
-        .feature-card:hover {
+        .featureCard:hover {
             transform: translateY(-8px);
             border-color: var(--blue);
             box-shadow: var(--shadow);
         }
 
-        .feature-icon {
+        .featureIcon {
             width: 56px;
             height: 56px;
             background: rgba(59, 130, 246, 0.1);
@@ -660,31 +654,30 @@
             font-size: 24px;
         }
 
-        .feature-card h3 {
+        .featureCard h3 {
             font-size: 20px;
             margin-bottom: 12px;
             color: #fff;
         }
 
-        .feature-card p {
+        .featureCard p {
             color: var(--muted);
             margin-bottom: 16px;
             font-size: 15px;
         }
 
-        /* Benchmarks Section */
-        .benchmarks-section {
+        .benchmarksSection {
             background: #050714;
         }
 
-        .benchmarks-grid {
+        .benchmarksGrid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 24px;
             margin-top: 60px;
         }
 
-        .benchmark-card {
+        .benchmarkCard {
             background: rgba(15, 23, 42, 0.5);
             border: 1px solid var(--border);
             border-radius: 14px;
@@ -693,49 +686,48 @@
             transition: var(--transition);
         }
 
-        .benchmark-card:hover {
+        .benchmarkCard:hover {
             transform: translateY(-4px);
             border-color: var(--blue);
         }
 
-        .benchmark-value {
+        .benchmarkValue {
             font-size: 48px;
             font-weight: 700;
             color: var(--blue);
             margin-bottom: 8px;
         }
 
-        .benchmark-value span {
+        .benchmarkValue span {
             font-size: 20px;
             color: var(--muted);
         }
 
-        .benchmark-label {
+        .benchmarkLabel {
             font-size: 16px;
             color: #fff;
             margin-bottom: 16px;
         }
 
-        .benchmark-comparison {
+        .benchmarkComparison {
             font-size: 13px;
             color: var(--muted);
             padding-top: 16px;
             border-top: 1px solid var(--border);
         }
 
-        .benchmark-comparison strong {
+        .benchmarkComparison strong {
             color: #22c55e;
         }
 
-        /* Use Cases */
-        .usecases-grid {
+        .usecasesGrid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 24px;
             margin-top: 60px;
         }
 
-        .usecase-card {
+        .usecaseCard {
             background: rgba(15, 23, 42, 0.5);
             border: 1px solid var(--border);
             border-radius: 14px;
@@ -743,35 +735,34 @@
             transition: var(--transition);
         }
 
-        .usecase-card:hover {
+        .usecaseCard:hover {
             transform: translateY(-4px);
             border-color: var(--blue);
         }
 
-        .usecase-card i {
+        .usecaseCard i {
             font-size: 28px;
             color: var(--blue);
             margin-bottom: 16px;
         }
 
-        .usecase-card h4 {
+        .usecaseCard h4 {
             font-size: 18px;
             color: #fff;
             margin-bottom: 12px;
         }
 
-        .usecase-card p {
+        .usecaseCard p {
             color: var(--muted);
             font-size: 14px;
         }
 
-        /* Getting Started */
-        .getting-started-section {
+        .gettingStartedSection {
             background: var(--card);
             border-top: 1px solid var(--border);
         }
 
-        .steps-container {
+        .stepsContainer {
             max-width: 800px;
             margin: 60px auto 0;
         }
@@ -787,7 +778,7 @@
             margin-bottom: 0;
         }
 
-        .step-number {
+        .stepNumber {
             width: 48px;
             height: 48px;
             background: var(--blue);
@@ -801,31 +792,30 @@
             flex-shrink: 0;
         }
 
-        .step-content {
+        .stepContent {
             flex: 1;
             padding-top: 4px;
         }
 
-        .step-content h3 {
+        .stepContent h3 {
             font-size: 22px;
             color: #fff;
             margin-bottom: 12px;
         }
 
-        .step-content p {
+        .stepContent p {
             color: var(--muted);
             margin-bottom: 16px;
         }
 
-        /* Security Section */
-        .security-grid {
+        .securityGrid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 24px;
             margin-top: 60px;
         }
 
-        .security-card {
+        .securityCard {
             background: rgba(15, 23, 42, 0.5);
             border: 1px solid var(--border);
             border-radius: 14px;
@@ -833,38 +823,37 @@
             transition: var(--transition);
         }
 
-        .security-card:hover {
+        .securityCard:hover {
             transform: translateY(-4px);
             border-color: var(--blue);
             box-shadow: var(--shadow);
         }
 
-        .security-card i {
+        .securityCard i {
             font-size: 28px;
             color: var(--blue);
             margin-bottom: 16px;
         }
 
-        .security-card h4 {
+        .securityCard h4 {
             font-size: 18px;
             color: #fff;
             margin-bottom: 12px;
         }
 
-        .security-card p {
+        .securityCard p {
             color: var(--muted);
             font-size: 14px;
         }
 
-        /* Documentation Section */
-        .docs-grid {
+        .docsGrid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
             margin-top: 60px;
         }
 
-        .doc-card {
+        .docCard {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -875,45 +864,44 @@
             transition: var(--transition);
         }
 
-        .doc-card:hover {
+        .docCard:hover {
             transform: translateY(-4px);
             border-color: var(--blue);
         }
 
-        .doc-card i {
+        .docCard i {
             font-size: 24px;
             color: var(--blue);
             flex-shrink: 0;
             margin-top: 2px;
         }
 
-        .doc-card h4 {
+        .docCard h4 {
             font-size: 16px;
             color: #fff;
             margin-bottom: 6px;
         }
 
-        .doc-card p {
+        .docCard p {
             color: var(--muted);
             font-size: 13px;
             line-height: 1.5;
         }
 
-        /* Community Section */
-        .community-section {
+        .communitySection {
             background: var(--card);
             border-top: 1px solid var(--border);
             border-bottom: 1px solid var(--border);
         }
 
-        .community-grid {
+        .communityGrid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 24px;
             margin-top: 60px;
         }
 
-        .community-card {
+        .communityCard {
             background: rgba(15, 23, 42, 0.5);
             border: 1px solid var(--border);
             border-radius: 14px;
@@ -922,63 +910,61 @@
             transition: var(--transition);
         }
 
-        .community-card:hover {
+        .communityCard:hover {
             transform: translateY(-4px);
             border-color: var(--blue);
         }
 
-        .community-card i {
+        .communityCard i {
             font-size: 36px;
             color: var(--blue);
             margin-bottom: 16px;
         }
 
-        .community-card h4 {
+        .communityCard h4 {
             font-size: 18px;
             color: #fff;
             margin-bottom: 12px;
         }
 
-        .community-card p {
+        .communityCard p {
             color: var(--muted);
             font-size: 14px;
             margin-bottom: 20px;
         }
 
-        /* CTA Section */
-        .cta-section {
+        .ctaSection {
             padding: 100px 0;
             background: #050714;
             text-align: center;
         }
 
-        .cta-content {
+        .ctaContent {
             max-width: 600px;
             margin: 0 auto;
         }
 
-        .cta-title {
+        .ctaTitle {
             font-size: 42px;
             font-weight: 700;
             color: #fff;
             margin-bottom: 20px;
         }
 
-        .cta-description {
+        .ctaDescription {
             font-size: 18px;
             color: var(--muted);
             margin-bottom: 40px;
             line-height: 1.7;
         }
 
-        .cta-buttons {
+        .ctaButtons {
             display: flex;
             gap: 16px;
             justify-content: center;
             flex-wrap: wrap;
         }
 
-        /* Footer */
         footer {
             background: #050714;
             color: var(--text);
@@ -986,26 +972,26 @@
             border-top: 1px solid var(--border);
         }
 
-        .footer-grid {
+        .footerGrid {
             display: grid;
             grid-template-columns: 2fr repeat(3, 1fr);
             gap: 60px;
             margin-bottom: 60px;
         }
 
-        .footer-brand p {
+        .footerBrand p {
             color: var(--muted);
             margin: 16px 0 24px;
             font-size: 15px;
             line-height: 1.6;
         }
 
-        .footer-social {
+        .footerSocial {
             display: flex;
             gap: 12px;
         }
 
-        .footer-social a {
+        .footerSocial a {
             width: 44px;
             height: 44px;
             background: rgba(255, 255, 255, 0.05);
@@ -1019,14 +1005,14 @@
             font-size: 18px;
         }
 
-        .footer-social a:hover {
+        .footerSocial a:hover {
             background: var(--blue);
             border-color: var(--blue);
             color: #fff;
             transform: translateY(-3px);
         }
 
-        .footer-column h4 {
+        .footerColumn h4 {
             font-size: 14px;
             font-weight: 600;
             color: #fff;
@@ -1035,24 +1021,24 @@
             margin-bottom: 20px;
         }
 
-        .footer-links {
+        .footerLinks {
             list-style: none;
         }
 
-        .footer-links li {
+        .footerLinks li {
             margin-bottom: 12px;
         }
 
-        .footer-links a {
+        .footerLinks a {
             color: var(--muted);
             font-size: 15px;
         }
 
-        .footer-links a:hover {
+        .footerLinks a:hover {
             color: var(--blue);
         }
 
-        .footer-bottom {
+        .footerBottom {
             padding-top: 40px;
             border-top: 1px solid var(--border);
             display: flex;
@@ -1062,101 +1048,99 @@
             gap: 20px;
         }
 
-        .footer-copyright {
+        .footerCopyright {
             color: var(--muted);
             font-size: 14px;
         }
 
-        .footer-legal {
+        .footerLegal {
             display: flex;
             gap: 24px;
         }
 
-        .footer-legal a {
+        .footerLegal a {
             color: var(--muted);
             font-size: 14px;
         }
 
-        .footer-legal a:hover {
+        .footerLegal a:hover {
             color: var(--blue);
         }
 
-        /* Animations */
-        .fade-in {
+        .fadeIn {
             opacity: 0;
             transform: translateY(20px);
             transition: opacity 0.6s ease, transform 0.6s ease;
         }
 
-        .fade-in.visible {
+        .fadeIn.visible {
             opacity: 1;
             transform: translateY(0);
         }
 
-        /* Responsive */
         @media (max-width: 1024px) {
-            .hero-container {
+            .heroContainer {
                 grid-template-columns: 1fr;
                 text-align: center;
             }
 
-            .hero-content {
+            .heroContent {
                 max-width: 100%;
             }
 
-            .hero-actions {
+            .heroActions {
                 justify-content: center;
             }
 
-            .hero-terminal {
+            .heroTerminal {
                 max-width: 500px;
                 margin: 0 auto;
             }
 
-            .install-grid {
+            .installGrid {
                 grid-template-columns: 1fr;
                 gap: 40px;
             }
 
-            .footer-grid {
+            .footerGrid {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 40px;
             }
         }
 
         @media (max-width: 768px) {
-            .nav-links {
+            .navLinks {
                 display: none;
             }
 
-            .hero-title {
+            .heroTitle {
                 font-size: 36px;
             }
 
-            .hero-description {
+            .heroDescription {
                 font-size: 17px;
             }
 
-            .section-title {
+            .sectionTitle {
                 font-size: 32px;
             }
 
-            .features-grid,
-            .benchmarks-grid,
-            .usecases-grid {
+            .featuresGrid,
+            .benchmarksGrid,
+            .usecasesGrid {
                 grid-template-columns: 1fr;
             }
 
-            .footer-grid {
+            .footerGrid {
                 grid-template-columns: 1fr;
             }
 
-            .footer-bottom {
+            .footerBottom {
                 flex-direction: column;
                 text-align: center;
             }
 
-            .footer-legal {
+            .footerLegal {
                 flex-wrap: wrap;
                 justify-content: center;
             }
@@ -1166,12 +1150,12 @@
                 gap: 16px;
             }
 
-            .hero-actions {
+            .heroActions {
                 flex-direction: column;
                 align-items: stretch;
             }
 
-            .hero-actions .btn {
+            .heroActions .btn {
                 width: 100%;
                 justify-content: center;
             }
@@ -1186,7 +1170,7 @@
                 padding: 80px 0;
             }
 
-            .hero-title {
+            .heroTitle {
                 font-size: 32px;
             }
 
@@ -1194,15 +1178,15 @@
                 padding: 60px 0;
             }
 
-            .section-title {
+            .sectionTitle {
                 font-size: 28px;
             }
 
-            .terminal-window {
+            .terminalWindow {
                 font-size: 13px;
             }
 
-            .terminal-body {
+            .terminalBody {
                 padding: 16px;
                 font-size: 13px;
             }
@@ -1212,26 +1196,26 @@
 
 <body>
     <header>
-        <div class="container header-container">
+        <div class="container headerContainer">
             <a href="#" class="logo" aria-label="Qube Home">
                 <img src="https://hub.qubecloud.org/static/logo.png" alt="Qube Logo">
-                <span class="logo-text">QubeCloud</span>
+                <span class="logoText">QubeCloud</span>
             </a>
 
             <nav>
-                <ul class="nav-links">
+                <ul class="navLinks">
                     <li><a href="#" class="active">Home</a></li>
                     <li><a href="#features">Features</a></li>
                     <li><a href="#benchmarks">Performance</a></li>
-                    <li><a href="#getting-started">Docs</a></li>
+                    <li><a href="#gettingStarted">Docs</a></li>
                     <li><a href="https://github.com/Voyrox/Qube">GitHub</a></li>
                 </ul>
 
-                <div class="header-actions">
-                    <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn btn-ghost">
-                        <i class="fab fa-github btn-icon"></i> Star
+                <div class="headerActions">
+                    <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn btnGhost">
+                        <i class="fab fa-github btnIcon"></i> Star
                     </a>
-                    <a href="https://hub.qubecloud.org/" class="btn btn-primary">
+                    <a href="https://hub.qubecloud.org/" class="btn btnPrimary">
                         Get Started
                     </a>
                 </div>
@@ -1240,89 +1224,89 @@
     </header>
 
     <section class="hero">
-        <div class="container hero-container">
-            <div class="hero-content fade-in">
-                <div class="hero-badge">
+        <div class="container heroContainer">
+            <div class="heroContent fadeIn">
+                <div class="heroBadge">
                     <i class="fas fa-bolt"></i> Now in Beta
                 </div>
-                <h1 class="hero-title">
+                <h1 class="heroTitle">
                     The Container Runtime<br>
                     <span>for Modern Development</span>
                 </h1>
-                <p class="hero-description">
+                <p class="heroDescription">
                     Qube is a lightweight, performant container runtime written in Go.
                     Build, run, and manage containers with simplicity and speed.
                 </p>
-                <div class="hero-actions">
-                    <a href="#getting-started" class="btn btn-primary">
-                        <i class="fas fa-download btn-icon"></i> Install Qube
+                <div class="heroActions">
+                    <a href="#gettingStarted" class="btn btnPrimary">
+                        <i class="fas fa-download btnIcon"></i> Install Qube
                     </a>
-                    <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn btn-secondary">
-                        <i class="fab fa-github btn-icon"></i> View on GitHub
+                    <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn btnSecondary">
+                        <i class="fab fa-github btnIcon"></i> View on GitHub
                     </a>
                 </div>
             </div>
 
-            <div class="hero-terminal fade-in">
-                <div class="terminal-window">
-                    <div class="terminal-header">
-                        <div class="terminal-buttons">
-                            <div class="terminal-button red"></div>
-                            <div class="terminal-button yellow"></div>
-                            <div class="terminal-button green"></div>
+            <div class="heroTerminal fadeIn">
+                <div class="terminalWindow">
+                    <div class="terminalHeader">
+                        <div class="terminalButtons">
+                            <div class="terminalButton red"></div>
+                            <div class="terminalButton yellow"></div>
+                            <div class="terminalButton green"></div>
                         </div>
-                        <div class="terminal-title">
-                            <span class="title-prompt">user@qube</span><span class="title-separator">:</span><span
-                                class="title-path">~</span>
+                        <div class="terminalTitle">
+                            <span class="titlePrompt">user@qube</span><span class="titleSeparator">:</span><span
+                                class="titlePath">~</span>
                         </div>
                     </div>
-                    <div class="terminal-body">
-                        <div class="terminal-line">
-                            <span class="terminal-prompt"><span class="hostname">user@qube</span><span
+                    <div class="terminalBody">
+                        <div class="terminalLine">
+                            <span class="terminalPrompt"><span class="hostname">user@qube</span><span
                                     class="separator">:</span><span class="path">~$</span></span>
-                            <span class="terminal-command">qube run --image Voyrox:nodejs:25.2.0</span>
+                            <span class="terminalCommand">qube run --image Voyrox:nodejs:25.2.0</span>
                         </div>
-                        <div class="terminal-line">
-                            <span class="terminal-output">Pulling image...</span>
+                        <div class="terminalLine">
+                            <span class="terminalOutput">Pulling image...</span>
                         </div>
-                        <div class="terminal-line">
-                            <span class="terminal-output">Creating container with isolated namespaces</span>
+                        <div class="terminalLine">
+                            <span class="terminalOutput">Creating container with isolated namespaces</span>
                         </div>
-                        <div class="terminal-line">
-                            <span class="terminal-output">Container started in 0.12s</span>
+                        <div class="terminalLine">
+                            <span class="terminalOutput">Container started in 0.12s</span>
                         </div>
-                        <div class="terminal-line">
-                            <span class="terminal-prompt"><span class="hostname">user@qube</span><span
+                        <div class="terminalLine">
+                            <span class="terminalPrompt"><span class="hostname">user@qube</span><span
                                     class="separator">:</span><span class="path">~$</span></span>
-                            <span class="terminal-command">qube list</span>
+                            <span class="terminalCommand">qube list</span>
                         </div>
-                        <div class="terminal-line">
-                            <span class="terminal-output"> CONTAINER ID IMAGE STATUS PORTS</span>
+                        <div class="terminalLine">
+                            <span class="terminalOutput"> CONTAINER ID IMAGE STATUS PORTS</span>
                         </div>
-                        <div class="terminal-line">
-                            <span class="terminal-output"> Qube-j9sn487 Voyrox:nodejs:25.2.0 Running 3000:3000</span>
+                        <div class="terminalLine">
+                            <span class="terminalOutput"> Qube-j9sn487 Voyrox:nodejs:25.2.0 Running 3000:3000</span>
                         </div>
-                        <div class="terminal-line">
-                            <span class="terminal-prompt"><span class="hostname">user@qube</span><span
+                        <div class="terminalLine">
+                            <span class="terminalPrompt"><span class="hostname">user@qube</span><span
                                     class="separator">:</span><span class="path">~$</span></span>
-                            <span class="terminal-command">qube eval Qube-j9sn487 node --version</span><span
-                                class="terminal-cursor"></span>
+                            <span class="terminalCommand">qube eval Qube-j9sn487 node --version</span><span
+                                class="terminalCursor"></span>
                         </div>
-                        <div class="terminal-line">
-                            <span class="terminal-output">v18.15.0</span>
+                        <div class="terminalLine">
+                            <span class="terminalOutput">v18.15.0</span>
                         </div>
-                        <div class="terminal-status">
-                            <div class="status-left">
-                                <div class="status-item">
-                                    <span class="status-dot"></span>
+                        <div class="terminalStatus">
+                            <div class="statusLeft">
+                                <div class="statusItem">
+                                    <span class="statusDot"></span>
                                     <span>Running</span>
                                 </div>
-                                <div class="status-item">
+                                <div class="statusItem">
                                     <span>voyrox/nodejs:25.2.0</span>
                                 </div>
                             </div>
-                            <div class="status-right">
-                                <span id="terminal-time"></span>
+                            <div class="statusRight">
+                                <span id="terminalTime"></span>
                             </div>
                         </div>
                     </div>
@@ -1331,50 +1315,50 @@
         </div>
     </section>
 
-    <section class="section install-section" id="getting-started">
+    <section class="section installSection" id="gettingStarted">
         <div class="container">
-            <div class="install-grid">
-                <div class="install-content fade-in">
-                    <span class="section-label">Getting Started</span>
+            <div class="installGrid">
+                <div class="installContent fadeIn">
+                    <span class="sectionLabel">Getting Started</span>
                     <h3>Install Qube in Minutes</h3>
                     <p>
                         Qube works on Linux, macOS, and Windows. Clone the repository and build from source using Make.
                     </p>
-                    <div class="code-block">
-                        <code id="install-code">git clone https://github.com/Voyrox/Qube.git
+                    <div class="codeBlock">
+                        <code id="installCode">git clone https://github.com/Voyrox/Qube.git
 cd Qube
 make install</code>
-                        <button class="copy-btn"
+                        <button class="copyBtn"
                             onclick="copyCode(this, 'git clone https://github.com/Voyrox/Qube.git\ncd Qube\nmake install')">Copy</button>
                     </div>
                 </div>
-                <div class="fade-in">
-                    <div class="features-grid" style="margin-top: 0;">
-                        <div class="feature-card" style="padding: 20px;">
-                            <div class="feature-icon" style="width: 48px; height: 48px; font-size: 20px;">
+                <div class="fadeIn">
+                    <div class="featuresGrid" style="margin-top: 0;">
+                        <div class="featureCard" style="padding: 20px;">
+                            <div class="featureIcon" style="width: 48px; height: 48px; font-size: 20px;">
                                 <i class="fas fa-check"></i>
                             </div>
                             <h4 style="font-size: 16px; margin-bottom: 8px;">Go 1.21+ Required</h4>
                             <p style="font-size: 14px; margin-bottom: 0;">Make sure you have Go installed on your
                                 system.</p>
                         </div>
-                        <div class="feature-card" style="padding: 20px;">
-                            <div class="feature-icon" style="width: 48px; height: 48px; font-size: 20px;">
+                        <div class="featureCard" style="padding: 20px;">
+                            <div class="featureIcon" style="width: 48px; height: 48px; font-size: 20px;">
                                 <i class="fab fa-linux"></i>
                             </div>
                             <h4 style="font-size: 16px; margin-bottom: 8px;">Linux</h4>
                             <p style="font-size: 14px; margin-bottom: 0;">Full support for all major Linux
                                 distributions.</p>
                         </div>
-                        <div class="feature-card" style="padding: 20px;">
-                            <div class="feature-icon" style="width: 48px; height: 48px; font-size: 20px;">
+                        <div class="featureCard" style="padding: 20px;">
+                            <div class="featureIcon" style="width: 48px; height: 48px; font-size: 20px;">
                                 <i class="fas fa-cloud"></i>
                             </div>
                             <h4 style="font-size: 16px; margin-bottom: 8px;">Cloud</h4>
                             <p style="font-size: 14px; margin-bottom: 0;">Any Cloud Provider</p>
                         </div>
-                        <div class="feature-card" style="padding: 20px;">
-                            <div class="feature-icon" style="width: 48px; height: 48px; font-size: 20px;">
+                        <div class="featureCard" style="padding: 20px;">
+                            <div class="featureIcon" style="width: 48px; height: 48px; font-size: 20px;">
                                 <i class="fab fa-windows"></i>
                             </div>
                             <h4 style="font-size: 16px; margin-bottom: 8px;">Windows</h4>
@@ -1386,38 +1370,38 @@ make install</code>
         </div>
     </section>
 
-    <section class="section platforms-section">
+    <section class="section platformsSection">
         <div class="container">
-            <div class="section-header fade-in">
-                <span class="section-label">Platforms</span>
-                <h2 class="section-title">Runs Everywhere</h2>
-                <p class="section-description">
+            <div class="sectionHeader fadeIn">
+                <span class="sectionLabel">Platforms</span>
+                <h2 class="sectionTitle">Runs Everywhere</h2>
+                <p class="sectionDescription">
                     Qube is designed to work across different environments and platforms.
                 </p>
             </div>
 
-            <div class="platforms-grid">
-                <div class="platform-card fade-in">
+            <div class="platformsGrid">
+                <div class="platformCard fadeIn">
                     <i class="fab fa-linux"></i>
                     <h4>Linux</h4>
                     <span>Full Support</span>
                 </div>
-                <div class="platform-card fade-in">
+                <div class="platformCard fadeIn">
                     <i class="fab fa-apple"></i>
                     <h4>macOS</h4>
                     <span>Intel & Apple Silicon</span>
                 </div>
-                <div class="platform-card fade-in">
+                <div class="platformCard fadeIn">
                     <i class="fab fa-windows"></i>
                     <h4>Windows</h4>
                     <span>WSL2 Support</span>
                 </div>
-                <div class="platform-card fade-in">
+                <div class="platformCard fadeIn">
                     <i class="fas fa-microchip"></i>
                     <h4>Raspberry Pi</h4>
                     <span>ARM Support</span>
                 </div>
-                <div class="platform-card fade-in">
+                <div class="platformCard fadeIn">
                     <i class="fas fa-cloud"></i>
                     <h4>Cloud</h4>
                     <span>Any Cloud Provider</span>
@@ -1426,19 +1410,19 @@ make install</code>
         </div>
     </section>
 
-    <section class="section features-section" id="features">
+    <section class="section featuresSection" id="features">
         <div class="container">
-            <div class="section-header fade-in">
-                <span class="section-label">Features</span>
-                <h2 class="section-title">Why Choose Qube?</h2>
-                <p class="section-description">
+            <div class="sectionHeader fadeIn">
+                <span class="sectionLabel">Features</span>
+                <h2 class="sectionTitle">Why Choose Qube?</h2>
+                <p class="sectionDescription">
                     Built from the ground up for developers who need performance and simplicity.
                 </p>
             </div>
 
-            <div class="features-grid">
-                <div class="feature-card fade-in">
-                    <div class="feature-icon">
+            <div class="featuresGrid">
+                <div class="featureCard fadeIn">
+                    <div class="featureIcon">
                         <i class="fas fa-bolt"></i>
                     </div>
                     <h3>Lightning Fast</h3>
@@ -1448,8 +1432,8 @@ make install</code>
                     </p>
                 </div>
 
-                <div class="feature-card fade-in">
-                    <div class="feature-icon">
+                <div class="featureCard fadeIn">
+                    <div class="featureIcon">
                         <i class="fas fa-shield-alt"></i>
                     </div>
                     <h3>Secure Isolation</h3>
@@ -1459,8 +1443,8 @@ make install</code>
                     </p>
                 </div>
 
-                <div class="feature-card fade-in">
-                    <div class="feature-icon">
+                <div class="featureCard fadeIn">
+                    <div class="featureIcon">
                         <i class="fas fa-plug"></i>
                     </div>
                     <h3>REST API</h3>
@@ -1470,8 +1454,8 @@ make install</code>
                     </p>
                 </div>
 
-                <div class="feature-card fade-in">
-                    <div class="feature-icon">
+                <div class="featureCard fadeIn">
+                    <div class="featureIcon">
                         <i class="fas fa feather-alt"></i>
                     </div>
                     <h3>Minimal Footprint</h3>
@@ -1481,8 +1465,8 @@ make install</code>
                     </p>
                 </div>
 
-                <div class="feature-card fade-in">
-                    <div class="feature-icon">
+                <div class="featureCard fadeIn">
+                    <div class="featureIcon">
                         <i class="fas fa-globe"></i>
                     </div>
                     <h3>Cross-Platform</h3>
@@ -1492,8 +1476,8 @@ make install</code>
                     </p>
                 </div>
 
-                <div class="feature-card fade-in">
-                    <div class="feature-icon">
+                <div class="featureCard fadeIn">
+                    <div class="featureIcon">
                         <i class="fas fa-code"></i>
                     </div>
                     <h3>Developer Friendly</h3>
@@ -1505,45 +1489,45 @@ make install</code>
         </div>
     </section>
 
-    <section class="section benchmarks-section" id="benchmarks">
+    <section class="section benchmarksSection" id="benchmarks">
         <div class="container">
-            <div class="section-header fade-in">
-                <span class="section-label">Performance</span>
-                <h2 class="section-title">Benchmarks</h2>
-                <p class="section-description">
+            <div class="sectionHeader fadeIn">
+                <span class="sectionLabel">Performance</span>
+                <h2 class="sectionTitle">Benchmarks</h2>
+                <p class="sectionDescription">
                     See how Qube compares to traditional container runtimes.
                 </p>
             </div>
 
-            <div class="benchmarks-grid">
-                <div class="benchmark-card fade-in">
-                    <div class="benchmark-value">0.12s <span>/ vs 1.8s</span></div>
-                    <div class="benchmark-label">Startup Time</div>
-                    <div class="benchmark-comparison">
+            <div class="benchmarksGrid">
+                <div class="benchmarkCard fadeIn">
+                    <div class="benchmarkValue">0.12s <span>/ vs 1.8s</span></div>
+                    <div class="benchmarkLabel">Startup Time</div>
+                    <div class="benchmarkComparison">
                         <strong>15x faster</strong> than Docker
                     </div>
                 </div>
 
-                <div class="benchmark-card fade-in">
-                    <div class="benchmark-value">8MB <span>/ vs 45MB</span></div>
-                    <div class="benchmark-label">Memory Usage</div>
-                    <div class="benchmark-comparison">
+                <div class="benchmarkCard fadeIn">
+                    <div class="benchmarkValue">8MB <span>/ vs 45MB</span></div>
+                    <div class="benchmarkLabel">Memory Usage</div>
+                    <div class="benchmarkComparison">
                         <strong>5.6x smaller</strong> footprint
                     </div>
                 </div>
 
-                <div class="benchmark-card fade-in">
-                    <div class="benchmark-value">12MB <span>/ vs 85MB</span></div>
-                    <div class="benchmark-label">Binary Size</div>
-                    <div class="benchmark-comparison">
+                <div class="benchmarkCard fadeIn">
+                    <div class="benchmarkValue">12MB <span>/ vs 85MB</span></div>
+                    <div class="benchmarkLabel">Binary Size</div>
+                    <div class="benchmarkComparison">
                         <strong>7x smaller</strong> installation
                     </div>
                 </div>
 
-                <div class="benchmark-card fade-in">
-                    <div class="benchmark-value">45MB <span>/ vs 350MB</span></div>
-                    <div class="benchmark-label">Disk Footprint</div>
-                    <div class="benchmark-comparison">
+                <div class="benchmarkCard fadeIn">
+                    <div class="benchmarkValue">45MB <span>/ vs 350MB</span></div>
+                    <div class="benchmarkLabel">Disk Footprint</div>
+                    <div class="benchmarkComparison">
                         <strong>7.8x smaller</strong> on disk
                     </div>
                 </div>
@@ -1553,46 +1537,46 @@ make install</code>
 
     <section class="section">
         <div class="container">
-            <div class="section-header fade-in">
-                <span class="section-label">Use Cases</span>
-                <h2 class="section-title">Perfect For Every Scenario</h2>
-                <p class="section-description">
+            <div class="sectionHeader fadeIn">
+                <span class="sectionLabel">Use Cases</span>
+                <h2 class="sectionTitle">Perfect For Every Scenario</h2>
+                <p class="sectionDescription">
                     Whether you're building locally or deploying to production, Qube has you covered.
                 </p>
             </div>
 
-            <div class="usecases-grid">
-                <div class="usecase-card fade-in">
+            <div class="usecasesGrid">
+                <div class="usecaseCard fadeIn">
                     <i class="fas fa-code"></i>
                     <h4>Local Development</h4>
                     <p>Spin up containers instantly for local development. No more waiting for Docker to start.</p>
                 </div>
 
-                <div class="usecase-card fade-in">
+                <div class="usecaseCard fadeIn">
                     <i class="fas fa-sync"></i>
                     <h4>CI/CD Pipelines</h4>
                     <p>Fast, reliable containers for testing and deployment. Reduce pipeline times significantly.</p>
                 </div>
 
-                <div class="usecase-card fade-in">
+                <div class="usecaseCard fadeIn">
                     <i class="fas fa-flask"></i>
                     <h4>Testing Environments</h4>
                     <p>Create isolated test environments quickly. Perfect for integration and unit tests.</p>
                 </div>
 
-                <div class="usecase-card fade-in">
+                <div class="usecaseCard fadeIn">
                     <i class="fas fa-server"></i>
                     <h4>Edge Computing</h4>
                     <p>Lightweight containers ideal for edge deployments with limited resources.</p>
                 </div>
 
-                <div class="usecase-card fade-in">
+                <div class="usecaseCard fadeIn">
                     <i class="fas fa-cubes"></i>
                     <h4>Microservices</h4>
                     <p>Build and run microservices with minimal overhead. Scale efficiently.</p>
                 </div>
 
-                <div class="usecase-card fade-in">
+                <div class="usecaseCard fadeIn">
                     <i class="fas fa-history"></i>
                     <h4>Legacy Applications</h4>
                     <p>Expose old applications to the web easily without complex configuration.</p>
@@ -1603,47 +1587,47 @@ make install</code>
 
     <section class="section">
         <div class="container">
-            <div class="section-header fade-in">
-                <span class="section-label">Security</span>
-                <h2 class="section-title">Secure By Default</h2>
-                <p class="section-description">
+            <div class="sectionHeader fadeIn">
+                <span class="sectionLabel">Security</span>
+                <h2 class="sectionTitle">Secure By Default</h2>
+                <p class="sectionDescription">
                     Qube implements industry-standard security features to keep your containers safe.
                 </p>
             </div>
 
-            <div class="security-grid">
-                <div class="security-card fade-in">
+            <div class="securityGrid">
+                <div class="securityCard fadeIn">
                     <i class="fas fa-box"></i>
                     <h4>Container Isolation</h4>
                     <p>Uses Linux namespaces to provide complete isolation between containers and the host system.</p>
                 </div>
 
-                <div class="security-card fade-in">
+                <div class="securityCard fadeIn">
                     <i class="fas fa-microchip"></i>
                     <h4>Resource Limits</h4>
                     <p>Cgroups v2 support for CPU, memory, and I/O limits. Prevent containers from consuming excessive
                         resources.</p>
                 </div>
 
-                <div class="security-card fade-in">
+                <div class="securityCard fadeIn">
                     <i class="fas fa-key"></i>
                     <h4>Capabilities Management</h4>
                     <p>Fine-grained control over Linux capabilities. Grant only what's needed, nothing more.</p>
                 </div>
 
-                <div class="security-card fade-in">
+                <div class="securityCard fadeIn">
                     <i class="fas fa-shield-alt"></i>
                     <h4>Seccomp Profiles</h4>
                     <p>System call filtering to reduce the attack surface. Block dangerous syscalls by default.</p>
                 </div>
 
-                <div class="security-card fade-in">
+                <div class="securityCard fadeIn">
                     <i class="fas fa-lock"></i>
                     <h4>AppArmor/SELinux</h4>
                     <p>Mandatory access control support for enhanced security policies on supported systems.</p>
                 </div>
 
-                <div class="security-card fade-in">
+                <div class="securityCard fadeIn">
                     <i class="fas fa-file-contract"></i>
                     <h4>Image Signing</h4>
                     <p>Verify container image integrity with cryptographic signatures before running.</p>
@@ -1652,19 +1636,19 @@ make install</code>
         </div>
     </section>
 
-    <section class="cta-section">
+    <section class="ctaSection">
         <div class="container">
-            <div class="cta-content fade-in">
-                <h2 class="cta-title">Ready to Get Started?</h2>
-                <p class="cta-description">
+            <div class="ctaContent fadeIn">
+                <h2 class="ctaTitle">Ready to Get Started?</h2>
+                <p class="ctaDescription">
                     Install Qube today and experience the future of container runtimes.
                 </p>
-                <div class="cta-buttons">
-                    <a href="#getting-started" class="btn btn-primary">
-                        <i class="fas fa-download btn-icon"></i> Install Qube
+                <div class="ctaButtons">
+                    <a href="#gettingStarted" class="btn btnPrimary">
+                        <i class="fas fa-download btnIcon"></i> Install Qube
                     </a>
-                    <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn btn-secondary">
-                        <i class="fab fa-github btn-icon"></i> Star on GitHub
+                    <a href="https://github.com/Voyrox/Qube" target="_blank" class="btn btnSecondary">
+                        <i class="fab fa-github btnIcon"></i> Star on GitHub
                     </a>
                 </div>
             </div>
@@ -1673,8 +1657,8 @@ make install</code>
 
     <footer>
         <div class="container">
-            <div class="footer-grid">
-                <div class="footer-brand">
+            <div class="footerGrid">
+                <div class="footerBrand">
                     <a href="#" class="logo">
                         <img src="https://hub.qubecloud.org/static/logo.png" alt="Qube Logo">
                     </a>
@@ -1682,7 +1666,7 @@ make install</code>
                         Qube is a lightweight, performant container runtime written in Go.
                         Built for developers who need simplicity without sacrificing power.
                     </p>
-                    <div class="footer-social">
+                    <div class="footerSocial">
                         <a href="https://github.com/Voyrox/Qube" target="_blank" aria-label="GitHub">
                             <i class="fab fa-github"></i>
                         </a>
@@ -1695,9 +1679,9 @@ make install</code>
                     </div>
                 </div>
 
-                <div class="footer-column">
+                <div class="footerColumn">
                     <h4>Product</h4>
-                    <ul class="footer-links">
+                    <ul class="footerLinks">
                         <li><a href="#features">Features</a></li>
                         <li><a href="#benchmarks">Performance</a></li>
                         <li><a href="#">Roadmap</a></li>
@@ -1705,19 +1689,19 @@ make install</code>
                     </ul>
                 </div>
 
-                <div class="footer-column">
+                <div class="footerColumn">
                     <h4>Documentation</h4>
-                    <ul class="footer-links">
-                        <li><a href="#getting-started">Getting Started</a></li>
+                    <ul class="footerLinks">
+                        <li><a href="#gettingStarted">Getting Started</a></li>
                         <li><a href="#">CLI Reference</a></li>
                         <li><a href="#">API Docs</a></li>
                         <li><a href="#">Best Practices</a></li>
                     </ul>
                 </div>
 
-                <div class="footer-column">
+                <div class="footerColumn">
                     <h4>Community</h4>
-                    <ul class="footer-links">
+                    <ul class="footerLinks">
                         <li><a href="https://github.com/Voyrox/Qube">GitHub</a></li>
                         <li><a href="#">Contributing</a></li>
                         <li><a href="#">Discord</a></li>
@@ -1726,11 +1710,11 @@ make install</code>
                 </div>
             </div>
 
-            <div class="footer-bottom">
-                <div class="footer-copyright">
+            <div class="footerBottom">
+                <div class="footerCopyright">
                     &copy; 2026 Qube Project. Open source under MIT License.
                 </div>
-                <div class="footer-legal">
+                <div class="footerLegal">
                     <a href="https://github.com/Voyrox/Qube/blob/main/LICENSE" target="_blank">License</a>
                     <a href="#">Privacy Policy</a>
                     <a href="#">Terms of Service</a>
@@ -1740,7 +1724,6 @@ make install</code>
     </footer>
 
     <script>
-        // Copy to clipboard functionality
         function copyCode(button, code) {
             navigator.clipboard.writeText(code).then(function () {
                 const originalText = button.textContent;
@@ -1755,11 +1738,9 @@ make install</code>
             });
         }
 
-        // Terminal animation
         document.addEventListener('DOMContentLoaded', function () {
-            // Update terminal time
             function updateTerminalTime() {
-                const timeElement = document.getElementById('terminal-time');
+                const timeElement = document.getElementById('terminalTime');
                 if (timeElement) {
                     const now = new Date();
                     const hours = String(now.getHours()).padStart(2, '0');
@@ -1770,8 +1751,7 @@ make install</code>
             updateTerminalTime();
             setInterval(updateTerminalTime, 60000);
 
-            // Scroll animations
-            const fadeElements = document.querySelectorAll('.fade-in');
+            const fadeElements = document.querySelectorAll('.fadeIn');
 
             const fadeObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
@@ -1786,7 +1766,6 @@ make install</code>
 
             fadeElements.forEach(el => fadeObserver.observe(el));
 
-            // Header shadow on scroll
             const header = document.querySelector('header');
             window.addEventListener('scroll', function () {
                 if (window.scrollY > 20) {
@@ -1796,7 +1775,6 @@ make install</code>
                 }
             });
 
-            // Smooth scroll for anchor links
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     e.preventDefault();

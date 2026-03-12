@@ -163,7 +163,7 @@ curl -O http://localhost:2112/api/images/alpine/latest/download
 The hub is compatible with the existing Qube CLI. Update your Qube configuration to point to your hub:
 
 ```bash
-# In internal/config/config.go or via environment
+# In src/config/config.go or via environment
 export QUBE_HUB_URL="http://localhost:2112"
 ```
 
@@ -179,7 +179,7 @@ qube pull imagename:tag
 ```
 hub/
 ├── main.go                 # Application entry point
-├── internal/
+├── src/
 │   ├── config/            # Configuration management
 │   ├── database/          # ScyllaDB connection
 │   ├── handlers/          # HTTP handlers

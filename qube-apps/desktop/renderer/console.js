@@ -1,6 +1,5 @@
 let apiBase = 'http://127.0.0.1:3030';
 
-// Load API base from Electron settings if available
 if (window.electron) {
   window.electron.getApiBase().then(base => {
     if (base) apiBase = base;
@@ -84,7 +83,7 @@ async function loadContainer() {
     
     if (pidEl) pidEl.innerText = info.pid > 0 ? info.pid : '—';
     if (uptimeEl) uptimeEl.innerText = fmtUptime(info.timestamp);
-    if (memEl) memEl.innerText = info.memory_mb ? fmtMem(info.memory_mb) : '—';
+    if (memEl) memEl.innerText = info.memoryMb ? fmtMem(info.memoryMb) : '—';
     if (cmdEl) cmdEl.innerText = info.command && info.command.length ? info.command.join(' ') : '—';
 
     ensureWebSocket();
@@ -146,14 +145,12 @@ function focusInput() {
 }
 
 function showPrompt() {
-  // Remove old input line if exists
   if (inputLine && inputLine.parentNode) {
     inputLine.parentNode.removeChild(inputLine);
   }
   inputLine = document.createElement('div');
   inputLine.className = 'terminal-line';
   
-  // Add prompt text
   const promptSpan = document.createElement('span');
   promptSpan.style.color = '#00aa00';
   promptSpan.textContent = '$ ';
@@ -192,13 +189,11 @@ terminalInput.addEventListener('keydown', (e) => {
       return;
     }
     if (command) {
-      // Append command to output
       const promptLine = document.createElement('div');
       promptLine.className = 'terminal-line';
       promptLine.textContent = '$ ' + command;
       terminal.appendChild(promptLine);
       
-      // Send command to eval process via IPC
       if (window.electron && window.electron.sendEvalCommand) {
         window.electron.sendEvalCommand(command).then((output) => {
           if (output) {
@@ -243,7 +238,6 @@ document.getElementById('btn-clear').addEventListener('click', () => {
 });
 document.getElementById('btn-reload').addEventListener('click', loadContainer);
 
-// Navigation handlers (CSP-safe; no inline handlers)
 if (backButton) {
   backButton.addEventListener('click', () => {
     window.location.href = './index.html';

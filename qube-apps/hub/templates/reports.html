@@ -10,17 +10,17 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    .reports-container {
+    .reportsContainer {
       max-width: 1200px;
       margin: 0 auto;
       padding: 40px 20px;
     }
 
-    .reports-header {
+    .reportsHeader {
       margin-bottom: 30px;
     }
 
-    .reports-header h1 {
+    .reportsHeader h1 {
       font-size: 32px;
       font-weight: 700;
       margin-bottom: 10px;
@@ -34,7 +34,7 @@
       margin-bottom: 24px;
     }
 
-    .report-header {
+    .reportHeader {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
@@ -43,61 +43,61 @@
       padding-bottom: 16px;
     }
 
-    .report-image-info {
+    .reportImageInfo {
       flex: 1;
     }
 
-    .report-image-info h3 {
+    .reportImageInfo h3 {
       font-size: 20px;
       font-weight: 600;
       margin-bottom: 8px;
     }
 
-    .report-image-info .meta {
+    .reportImageInfo .meta {
       color: var(--text-secondary, #888);
       font-size: 14px;
     }
 
-    .report-actions {
+    .reportActions {
       display: flex;
       gap: 8px;
     }
 
-    .report-list {
+    .reportList {
       margin-top: 16px;
     }
 
-    .report-item {
+    .reportItem {
       background: var(--bg-secondary, #0d0d0d);
       border-radius: 8px;
       padding: 16px;
       margin-bottom: 12px;
     }
 
-    .report-item-header {
+    .reportItemHeader {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
     }
 
-    .reporter-info {
+    .reporterInfo {
       font-weight: 500;
       color: var(--text-primary, #fff);
     }
 
-    .report-time {
+    .reportTime {
       color: var(--text-secondary, #888);
       font-size: 13px;
     }
 
-    .report-reason {
+    .reportReason {
       color: var(--text-primary, #ddd);
       line-height: 1.6;
       margin-top: 8px;
     }
 
-    .report-count {
+    .reportCount {
       display: inline-block;
       background: var(--primary, #3b82f6);
       color: white;
@@ -107,7 +107,7 @@
       font-weight: 600;
     }
 
-    .btn-danger {
+    .btnDanger {
       background: #dc2626;
       color: white;
       border: none;
@@ -118,11 +118,11 @@
       transition: background 0.2s;
     }
 
-    .btn-danger:hover {
+    .btnDanger:hover {
       background: #b91c1c;
     }
 
-    .btn-warning {
+    .btnWarning {
       background: #ea580c;
       color: white;
       border: none;
@@ -133,11 +133,11 @@
       transition: background 0.2s;
     }
 
-    .btn-warning:hover {
+    .btnWarning:hover {
       background: #c2410c;
     }
 
-    .btn-dismiss {
+    .btnDismiss {
       background: #6b7280;
       color: white;
       border: none;
@@ -148,17 +148,17 @@
       transition: background 0.2s;
     }
 
-    .btn-dismiss:hover {
+    .btnDismiss:hover {
       background: #4b5563;
     }
 
-    .empty-state {
+    .emptyState {
       text-align: center;
       padding: 60px 20px;
       color: var(--text-secondary, #888);
     }
 
-    .empty-state h2 {
+    .emptyState h2 {
       font-size: 24px;
       margin-bottom: 12px;
       color: var(--text-primary, #fff);
@@ -175,8 +175,8 @@
 <body>
   {{ template "topbar" . }}
 
-  <div class="reports-container">
-    <div class="reports-header">
+  <div class="reportsContainer">
+    <div class="reportsHeader">
       <h1>🚩 Reported Images</h1>
       <p style="color: var(--text-secondary, #888);">Review and moderate reported content</p>
     </div>
@@ -185,7 +185,7 @@
       <p>Loading reports...</p>
     </div>
 
-    <div id="emptyState" class="empty-state" style="display: none;">
+    <div id="emptyState" class="emptyState" style="display: none;">
       <h2>No Reports</h2>
       <p>There are currently no reported images.</p>
     </div>
@@ -239,18 +239,18 @@
           card.id = `report-card-${imageId}`;
 
           const reportItems = imageReports.map(r => `
-            <div class="report-item">
-              <div class="report-item-header">
-                <span class="reporter-info">👤 ${escapeHtml(r.reporter_username)}</span>
-                <span class="report-time">${formatDate(r.report.created_at)}</span>
+            <div class="reportItem">
+              <div class="reportItemHeader">
+                <span class="reporterInfo">👤 ${escapeHtml(r.reporter_username)}</span>
+                <span class="reportTime">${formatDate(r.report.created_at)}</span>
               </div>
-              <div class="report-reason">${escapeHtml(r.report.reason)}</div>
+              <div class="reportReason">${escapeHtml(r.report.reason)}</div>
             </div>
           `).join('');
 
           card.innerHTML = `
-            <div class="report-header">
-              <div class="report-image-info">
+            <div class="reportHeader">
+              <div class="reportImageInfo">
                 <h3>
                   <a href="/images/${encodeURIComponent(firstReport.image_name)}/${encodeURIComponent(firstReport.image_tag)}" 
                      style="color: var(--text-primary); text-decoration: none;">
@@ -258,17 +258,17 @@
                   </a>
                 </h3>
                 <div class="meta">
-                  <span class="report-count">${imageReports.length} report${imageReports.length > 1 ? 's' : ''}</span>
+                  <span class="reportCount">${imageReports.length} report${imageReports.length > 1 ? 's' : ''}</span>
                   <span style="margin-left: 12px;">Owner: ${escapeHtml(firstReport.image_owner)}</span>
                 </div>
               </div>
-              <div class="report-actions">
-                <button class="btn-dismiss" onclick="dismissReports('${imageId}')">Dismiss</button>
-                <button class="btn-danger" onclick="deleteImage('${imageId}')">Delete Image</button>
-                <button class="btn-warning" onclick="banUser('${firstReport.image_owner_id}', '${escapeHtml(firstReport.image_owner)}')">Ban User</button>
+              <div class="reportActions">
+                <button class="btnDismiss" onclick="dismissReports('${imageId}')">Dismiss</button>
+                <button class="btnDanger" onclick="deleteImage('${imageId}')">Delete Image</button>
+                <button class="btnWarning" onclick="banUser('${firstReport.image_owner_id}', '${escapeHtml(firstReport.image_owner)}')">Ban User</button>
               </div>
             </div>
-            <div class="report-list">
+            <div class="reportList">
               ${reportItems}
             </div>
           `;
@@ -348,7 +348,6 @@
 
         if (!response.ok) throw new Error('Failed to ban user');
 
-        // Remove all cards belonging to this user
         document.querySelectorAll('.report-card').forEach(card => {
           card.remove();
         });
@@ -377,7 +376,7 @@
         if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
         if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
         if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
-        
+
         return date.toLocaleDateString();
       } catch {
         return dateStr;

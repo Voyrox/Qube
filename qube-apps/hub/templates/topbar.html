@@ -4,40 +4,40 @@
 </head>
 <nav class="navbar">
     <div class="container">
-        <a href="/" class="nav-brand" style="text-decoration: none; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <a href="/" class="navBrand" style="text-decoration: none; display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <img src="/static/logo.png" alt="Qube Logo" width="28" height="28">
             <span>QubeCloud</span>
         </a>
-        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <button class="navToggle" id="navToggle" aria-label="Toggle navigation">
             <span></span>
             <span></span>
             <span></span>
         </button>
-        <div class="nav-menu">
-            <a href="/" class="nav-link">Home</a>
-            <a href="/explore" class="nav-link">Explore</a>
-            <a href="/reports" id="navReportsLink" class="nav-link" style="display:none;">Reports <span id="reportsCount" class="badge" style="background:#dc2626; color:white; padding:2px 6px; border-radius:10px; font-size:12px; margin-left:4px;"></span></a>
-            <div class="nav-auth" id="navAuth">
-                <a href="/login" class="nav-link">Login</a>
-                <a href="/signup" class="btn-primary">Get Started</a>
+        <div class="navMenu">
+            <a href="/" class="navLink">Home</a>
+            <a href="/explore" class="navLink">Explore</a>
+            <a href="/reports" id="navReportsLink" class="navLink" style="display:none;">Reports <span id="reportsCount" class="badge" style="background:#dc2626; color:white; padding:2px 6px; border-radius:10px; font-size:12px; margin-left:4px;"></span></a>
+            <div class="navAuth" id="navAuth">
+                <a href="/login" class="navLink">Login</a>
+                <a href="/signup" class="btnPrimary">Get Started</a>
             </div>
-            <div class="nav-user" id="navUser" style="display: none;">
-                <button id="uploadBtn" class="btn-primary-sm">+ Upload</button>
-                <div class="user-profile-menu">
-                    <button id="profileMenuBtn" class="profile-btn">
+            <div class="navUser" id="navUser" style="display: none;">
+                <button id="uploadBtn" class="btnPrimarySm">+ Upload</button>
+                <div class="userProfileMenu">
+                    <button id="profileMenuBtn" class="profileBtn">
                         <img id="navAvatar" src="/static/img/avatar-default.svg" alt="Avatar" width="24" height="24" style="border-radius:50%" onerror="this.src='/static/img/avatar-default.svg'" />
                     </button>
-                    <div class="profile-dropdown" id="profileDropdown">
-                        <div class="profile-info">
-                            <p id="profileUsername" class="profile-name">User</p>
-                            <p id="profileEmail" class="profile-email">user@example.com</p>
+                    <div class="profileDropdown" id="profileDropdown">
+                        <div class="profileInfo">
+                            <p id="profileUsername" class="profileName">User</p>
+                            <p id="profileEmail" class="profileEmail">user@example.com</p>
                         </div>
                         <hr>
-                        <a href="/profile" class="dropdown-item">My Images</a>
-                        <a href="/settings" class="dropdown-item">Settings</a>
-                        <a href="/reports" id="navReportsDropdown" class="dropdown-item" style="display:none;">Reports</a>
+                        <a href="/profile" class="dropdownItem">My Images</a>
+                        <a href="/settings" class="dropdownItem">Settings</a>
+                        <a href="/reports" id="navReportsDropdown" class="dropdownItem" style="display:none;">Reports</a>
                         <hr>
-                        <a href="#" id="logoutBtn" class="dropdown-item danger">Logout</a>
+                        <a href="#" id="logoutBtn" class="dropdownItem danger">Logout</a>
                     </div>
                 </div>
             </div>
@@ -45,7 +45,6 @@
     </div>
 </nav>
 <script>
-// Populate navbar user info once per page
 (async function(){
     try {
         const token = localStorage.getItem('token');
@@ -60,7 +59,6 @@
         if (uname) uname.textContent = u.username || 'User';
         if (uemail) uemail.textContent = u.email || '';
         
-        // Check if user is admin by attempting to access reports API
         try {
             const reportRes = await fetch('/api/reports', { headers: { Authorization: `Bearer ${token}` }});
             if (reportRes.ok) {
@@ -68,11 +66,9 @@
                 const reportsLink = document.getElementById('navReportsLink');
                 const reportsDropdown = document.getElementById('navReportsDropdown');
                 
-                // Show Reports link in both navbar and dropdown
                 if (reportsLink) reportsLink.style.display = 'inline-block';
                 if (reportsDropdown) reportsDropdown.style.display = 'block';
                 
-                // Update badge count
                 const count = Object.keys(reports).length;
                 const badge = document.getElementById('reportsCount');
                 if (badge && count > 0) {

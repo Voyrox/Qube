@@ -2,9 +2,11 @@
 [![GitHub contributors](https://img.shields.io/github/contributors/Voyrox/Qube)](https://github.com/Voyrox/Qube/graphs/contributors)
 [![Github CI](https://github.com/Voyrox/Qube/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/Voyrox/Qube/actions)
 
+<!-- 
 <p align="center">
   <img src="./docs/assets/images/logo.png" width="450">
 </p>
+-->
 
 # 🚀 Features
 > [!TIP]

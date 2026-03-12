@@ -1,4 +1,4 @@
-.PHONY: all build install clean test run daemon help
+.PHONY: all build install clean test run daemon dev deps fmt lint release help
 
 # Build variables
 BINARY_NAME=qube
@@ -16,7 +16,7 @@ all: build
 # Build the binary
 build:
 	@echo "Building Qube..."
-	@$(GOCMD) -o $(BINARY_NAME) ./cmd/qube
+	@$(GOCMD) -o $(BINARY_NAME) ./
 	@echo "✓ Build complete: ./$(BINARY_NAME)"
 
 # Install the binary and service
@@ -59,7 +59,7 @@ run: build
 # Development build with race detector
 dev:
 	@echo "Building with race detector..."
-	@$(GO) build -race -o $(BINARY_NAME) ./cmd/qube
+	@$(GO) build -race -o $(BINARY_NAME) ./
 
 # Download dependencies
 deps:
@@ -87,8 +87,8 @@ lint:
 release:
 	@echo "Building release binaries..."
 	@mkdir -p bin
-	@GOOS=linux GOARCH=amd64 $(GOCMD) -o bin/$(BINARY_NAME)-linux-amd64 ./cmd/qube
-	@GOOS=linux GOARCH=arm64 $(GOCMD) -o bin/$(BINARY_NAME)-linux-arm64 ./cmd/qube
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOCMD) -o bin/$(BINARY_NAME)-linux-amd64 ./
+	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOCMD) -o bin/$(BINARY_NAME)-linux-arm64 ./
 	@echo "✓ Release binaries built in ./bin/"
 
 # Help
