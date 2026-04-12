@@ -1,0 +1,10 @@
+.git
+.gitignore
+.env
+storage/
+*.log
+*.tmp
+*.bak
+*.exe
+qube-hub
+qube-hub.exe

@@ -63,6 +63,35 @@ go run main.go
 
 The server will be available at `http://localhost:2112`
 
+## Kube
+
+
+### Build
+
+```bat
+docker build -t registry.ewenmacculloch.com/qubehub:latest .
+```
+
+### Push
+
+```bat
+docker push registry.ewenmacculloch.com/qubehub:latest
+```
+
+### Deploy
+
+```bat
+kubectl apply -f qubehub.yaml
+kubectl rollout restart deployment/qubehub -n apps
+kubectl rollout status deployment/qubehub -n apps
+```
+
+### One-Step Apply
+
+```bat
+apply.bat
+```
+
 ## API Endpoints
 
 ### Authentication

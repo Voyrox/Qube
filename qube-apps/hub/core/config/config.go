@@ -26,18 +26,18 @@ type Config struct {
 
 func Load() *Config {
 	return &Config{
-		Addr:  getEnv("ADDR", ":2112"),
+		Addr:  getEnv("ADDR", ":32003"),
 		Debug: getEnv("DEBUG", "false") == "true",
 
-		ScyllaHosts:    getEnvArray("SCYLLA_HOSTS", []string{"127.0.0.1"}),
+		ScyllaHosts:    getEnvArray("SCYLLA_HOSTS", []string{"192.168.1.87"}),
 		ScyllaKeyspace: getEnv("SCYLLA_KEYSPACE", "qube_hub"),
 		ScyllaUsername: getEnv("SCYLLA_USERNAME", ""),
 		ScyllaPassword: getEnv("SCYLLA_PASSWORD", ""),
 
-		JWTSecret: getEnv("JWT_SECRET", "your-secret-key-change-this"),
+		JWTSecret: getEnv("JWT_SECRET", "cd609f60f2fd459cc82ca31f789da20a1a2fafa6807896b83f625a6279fc3102e2e0fcde"),
 
 		StoragePath:   getEnv("STORAGE_PATH", "./storage/images"),
-		MaxUploadSize: getEnvInt64("MAX_UPLOAD_SIZE", 1073741824), // 1GB default
+		MaxUploadSize: getEnvInt64("MAX_UPLOAD_SIZE", 5368709120), // 5GB default
 
 		DisableAtMinReports: getEnvInt("DISABLE_AT_MIN_REPORTS", 5), // Default 5 reports
 
