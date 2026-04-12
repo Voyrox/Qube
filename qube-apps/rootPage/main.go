@@ -1,23 +1,16 @@
 package main
 
 import (
-	"os"
-
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	r := gin.Default()
-	r.Static("/static", "./static")
 
 	r.GET("/", func(c *gin.Context) {
 		c.File("index.html")
 	})
+	r.StaticFile("/footer.png", "./footer.png")
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "2343"
-	}
-
-	_ = r.Run(":" + port)
+	_ = r.Run(":32002")
 }

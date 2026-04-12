@@ -1,11 +1,36 @@
-### Build
+## Qube Root Page
+
+### Local Build
 
 ```bash
-go build -o qube-website main.go
+go build -o qube .
 ```
 
-### Run
+### Local Run
 
 ```bash
-pm2 start qube-website --name "qube-website"
+./qube
+```
+
+The website listens on `http://localhost:32002`.
+
+### Docker
+
+```bash
+docker build -t registry.ewenmacculloch.com/qube:latest .
+docker push registry.ewenmacculloch.com/qube:latest
+```
+
+### Kubernetes
+
+```bash
+kubectl apply -f qube.yaml
+kubectl rollout restart deployment/qube -n apps
+kubectl rollout status deployment/qube -n apps --timeout=120s
+```
+
+### One-Step Deploy
+
+```bat
+apply.bat
 ```

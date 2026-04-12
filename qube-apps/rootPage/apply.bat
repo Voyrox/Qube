@@ -4,19 +4,19 @@ setlocal
 git pull
 if errorlevel 1 goto :error
 
-docker build -t registry.ewenmacculloch.com/portfolio:latest .
+docker build -t registry.ewenmacculloch.com/qube:latest .
 if errorlevel 1 goto :error
 
-docker push registry.ewenmacculloch.com/portfolio:latest
+docker push registry.ewenmacculloch.com/qube:latest
 if errorlevel 1 goto :error
 
-kubectl apply -f go-profile.yaml
+kubectl apply -f qube.yaml
 if errorlevel 1 goto :error
 
-kubectl rollout restart deployment/go-profile -n apps
+kubectl rollout restart deployment/qube -n apps
 if errorlevel 1 goto :error
 
-kubectl rollout status deployment/go-profile -n apps
+kubectl rollout status deployment/qube -n apps --timeout=120s
 if errorlevel 1 goto :error
 
 echo Deployment updated successfully.
