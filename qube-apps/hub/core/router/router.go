@@ -100,10 +100,8 @@ func Setup(db *database.ScyllaDB, cfg *config.Config, cacheManager *cache.CacheM
 		protected := api.Group("")
 		protected.Use(middleware.AuthMiddlewareWithDB(cfg, db))
 		{
-			// Auth
 			protected.GET("/auth/profile", authHandler.GetProfile)
 
-			// Images
 			protected.POST("/images/upload", imageHandler.Upload)
 			protected.GET("/images/my", imageHandler.GetMyImages)
 			protected.DELETE("/images/:id", imageHandler.Delete)
@@ -113,7 +111,6 @@ func Setup(db *database.ScyllaDB, cfg *config.Config, cacheManager *cache.CacheM
 			protected.GET("/image-id/:id/star", imageHandler.StarStatus)
 			protected.POST("/images/by-name/:name/:tag", imageHandler.UpdateImage)
 
-			// Reports
 			protected.POST("/reports/:id", reportHandler.SubmitReport)
 			protected.GET("/reports", reportHandler.GetReports)
 			protected.DELETE("/reports/image/:id", reportHandler.DeleteReportedImage)

@@ -40,7 +40,6 @@ func (h *ReportHandler) SubmitReport(c *gin.Context) {
 		return
 	}
 
-	// Check if image exists
 	var imageName string
 	err = h.db.Session().Query(
 		"SELECT name FROM images WHERE id = ? LIMIT 1",
@@ -51,7 +50,6 @@ func (h *ReportHandler) SubmitReport(c *gin.Context) {
 		return
 	}
 
-	// Check if user already reported this image
 	var existingID gocql.UUID
 	err = h.db.Session().Query(
 		"SELECT id FROM reports WHERE image_id = ? AND user_id = ? LIMIT 1",
@@ -83,7 +81,6 @@ func (h *ReportHandler) SubmitReport(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Report submitted successfully"})
 }
 
-// GetReports returns all reports (admin only)
 func (h *ReportHandler) GetReports(c *gin.Context) {
 	userEmail, exists := c.Get("userEmail")
 	if !exists || userEmail.(string) != h.cfg.AdminEmail {
@@ -100,7 +97,6 @@ func (h *ReportHandler) GetReports(c *gin.Context) {
 		ReporterUsername string        `json:"reporter_username"`
 	}
 
-	// Get all unique image_ids with reports
 	iter := h.db.Session().Query(
 		`SELECT DISTINCT image_id FROM reports`,
 	).Iter()
@@ -109,7 +105,6 @@ func (h *ReportHandler) GetReports(c *gin.Context) {
 	var reportsMap = make(map[string][]ReportWithDetails)
 
 	for iter.Scan(&imageID) {
-		// Get image details
 		var imageName, imageTag, imageOwnerUsername string
 		var imageOwnerID gocql.UUID
 		err := h.db.Session().Query(
@@ -120,7 +115,6 @@ func (h *ReportHandler) GetReports(c *gin.Context) {
 			continue
 		}
 
-		// Get owner username
 		err = h.db.Session().Query(
 			"SELECT username FROM users WHERE id = ? LIMIT 1",
 			imageOwnerID,
@@ -129,7 +123,6 @@ func (h *ReportHandler) GetReports(c *gin.Context) {
 			imageOwnerUsername = "Unknown"
 		}
 
-		// Get all reports for this image
 		reportIter := h.db.Session().Query(
 			"SELECT id, image_id, user_id, reason, created_at FROM reports WHERE image_id = ?",
 			imageID,
@@ -137,7 +130,6 @@ func (h *ReportHandler) GetReports(c *gin.Context) {
 
 		var report models.Report
 		for reportIter.Scan(&report.ID, &report.ImageID, &report.UserID, &report.Reason, &report.CreatedAt) {
-			// Get reporter username
 			var reporterUsername string
 			err := h.db.Session().Query(
 				"SELECT username FROM users WHERE id = ? LIMIT 1",
@@ -171,7 +163,6 @@ func (h *ReportHandler) GetReports(c *gin.Context) {
 	c.JSON(http.StatusOK, reportsMap)
 }
 
-// DeleteReportedImage deletes an image and all its reports (admin only)
 func (h *ReportHandler) DeleteReportedImage(c *gin.Context) {
 	userEmail, exists := c.Get("userEmail")
 	if !exists || userEmail.(string) != h.cfg.AdminEmail {
@@ -186,7 +177,6 @@ func (h *ReportHandler) DeleteReportedImage(c *gin.Context) {
 		return
 	}
 
-	// Delete the image
 	err = h.db.Session().Query(
 		"DELETE FROM images WHERE id = ?",
 		imageID,
@@ -196,7 +186,6 @@ func (h *ReportHandler) DeleteReportedImage(c *gin.Context) {
 		return
 	}
 
-	// Delete all reports for this image
 	iter := h.db.Session().Query(
 		"SELECT user_id FROM reports WHERE image_id = ?",
 		imageID,
@@ -211,7 +200,6 @@ func (h *ReportHandler) DeleteReportedImage(c *gin.Context) {
 	}
 	iter.Close()
 
-	// Delete stars for this image
 	starIter := h.db.Session().Query(
 		"SELECT user_id FROM stars WHERE image_id = ?",
 		imageID,
@@ -228,7 +216,6 @@ func (h *ReportHandler) DeleteReportedImage(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Image deleted successfully"})
 }
 
-// BanUser bans a user and deletes all their images (admin only)
 func (h *ReportHandler) BanUser(c *gin.Context) {
 	userEmail, exists := c.Get("userEmail")
 	if !exists || userEmail.(string) != h.cfg.AdminEmail {
@@ -243,7 +230,6 @@ func (h *ReportHandler) BanUser(c *gin.Context) {
 		return
 	}
 
-	// Get user's images
 	iter := h.db.Session().Query(
 		"SELECT id FROM images WHERE owner_id = ?",
 		userID,
@@ -251,13 +237,11 @@ func (h *ReportHandler) BanUser(c *gin.Context) {
 
 	var imageID gocql.UUID
 	for iter.Scan(&imageID) {
-		// Delete the image
 		h.db.Session().Query(
 			"DELETE FROM images WHERE id = ?",
 			imageID,
 		).Exec()
 
-		// Delete reports for this image
 		reportIter := h.db.Session().Query(
 			"SELECT user_id FROM reports WHERE image_id = ?",
 			imageID,
@@ -272,7 +256,6 @@ func (h *ReportHandler) BanUser(c *gin.Context) {
 		}
 		reportIter.Close()
 
-		// Delete stars for this image
 		starIter := h.db.Session().Query(
 			"SELECT user_id FROM stars WHERE image_id = ?",
 			imageID,
@@ -288,7 +271,6 @@ func (h *ReportHandler) BanUser(c *gin.Context) {
 	}
 	iter.Close()
 
-	// Delete the user
 	err = h.db.Session().Query(
 		"DELETE FROM users WHERE id = ?",
 		userID,
@@ -301,7 +283,6 @@ func (h *ReportHandler) BanUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User banned and all content deleted"})
 }
 
-// DismissReports dismisses all reports for an image (admin only)
 func (h *ReportHandler) DismissReports(c *gin.Context) {
 	userEmail, exists := c.Get("userEmail")
 	if !exists || userEmail.(string) != h.cfg.AdminEmail {
@@ -316,7 +297,6 @@ func (h *ReportHandler) DismissReports(c *gin.Context) {
 		return
 	}
 
-	// Delete all reports for this image
 	iter := h.db.Session().Query(
 		"SELECT user_id FROM reports WHERE image_id = ?",
 		imageID,

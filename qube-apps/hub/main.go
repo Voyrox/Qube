@@ -39,7 +39,6 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	// Initialize cache manager with 15 minute TTL
 	cacheManager := cache.NewCacheManager(15 * time.Minute)
 
 	r := router.Setup(db, cfg, cacheManager)

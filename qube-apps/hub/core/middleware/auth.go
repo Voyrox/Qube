@@ -68,7 +68,6 @@ func AuthMiddlewareWithDB(cfg *config.Config, db *database.ScyllaDB) gin.Handler
 			c.Set("user_id", claims.UserID)
 			c.Set("username", claims.Username)
 
-			// Fetch user email from database if db is provided
 			if db != nil {
 				var email string
 				err := db.Session().Query(
