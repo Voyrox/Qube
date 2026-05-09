@@ -1,15 +1,27 @@
 # Qube
-[![GitHub contributors](https://img.shields.io/github/contributors/Voyrox/Qube)](https://github.com/Voyrox/Qube/graphs/contributors)
-[![Github CI](https://github.com/Voyrox/Qube/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/Voyrox/Qube/actions)
 
-<!-- 
-<p align="center">
-  <img src="./docs/assets/images/logo.png" width="450">
-</p>
--->
+<div align="center">
+
+<img src="./qube-apps/hub/static/logo.svg" alt="Kite Logo" width="128" height="128">
+
+<em>A modern Container manager</em>
+
+<img src="./images/image.png">
+
+<a href="https://github.com/Voyrox/Qube/graphs/contributors"><img src="https://img.shields.io/github/contributors/Voyrox/Qube" alt="GitHub contributors"></a>
+<a href="https://github.com/Voyrox/Qube/actions"><img src="https://github.com/Voyrox/Qube/actions/workflows/go.yml/badge.svg?branch=main" alt="Github CI"></a>
+<a href="https://github.com/Voyrox/Qube/blob/main/go.mod"><img src="https://img.shields.io/github/go-mod/go-version/Voyrox/Qube" alt="Go Version"></a>
+
+<a href="https://qubecloud.org/"><strong>Live Demo</strong></a> | <a href="https://hub.qubecloud.org/"><strong>Hub</strong></a>
+
+</div>
+
+Qube lets you run isolated containers on Linux. Pull a prebuilt image, expose ports, mount volumes, pass environment variables, and exec into running containers; all from the command line or over the REST API. It also supports a `qube.yml` config file so you can define your container setup once and just run `qube run`.
 
 # 🚀 Features
+
 > [!TIP]
+>
 > - Lightweight and fast container runtime
 > - Linux namespace isolation (PID, Mount, Network, IPC, UTS)
 > - CGroups v2 resource management (memory, CPU)
@@ -18,7 +30,6 @@
 > - Docker-like workflow
 > - Prebuilt container images
 > - QML configuration file support
-> 
 
 ## Quick Start
 
@@ -45,7 +56,7 @@ make install
 ```
 
 ### Quick Example
-![Help cmd](./images/image.png)
+
 ```bash
 # Start the daemon
 sudo systemctl start qubed
@@ -140,6 +151,7 @@ qube pull <image>  # Pull image
 ```
 
 ### Prebuilt Images
+
 Check out available images at: [Qube Hub](https://hub.qubecloud.org)
 
 ## API Endpoints
