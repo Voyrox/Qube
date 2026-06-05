@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: apps
+
 ---
 apiVersion: v1
 kind: Secret
@@ -20,6 +21,7 @@ stringData:
   MAX_UPLOAD_SIZE: "5368709120"
   DISABLE_AT_MIN_REPORTS: "5"
   ADMIN_EMAIL: "ewen@macculloch.net"
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -32,6 +34,7 @@ spec:
   resources:
     requests:
       storage: 25Gi
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -79,14 +82,16 @@ spec:
             httpGet:
               path: /
               port: http
-            initialDelaySeconds: 3
+            initialDelaySeconds: 5
             periodSeconds: 10
+            failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /
               port: http
-            initialDelaySeconds: 10
+            initialDelaySeconds: 20
             periodSeconds: 20
+            failureThreshold: 3
           resources:
             requests:
               cpu: 100m
@@ -105,6 +110,7 @@ spec:
         - name: qubehub-data
           persistentVolumeClaim:
             claimName: qubehub-data
+
 ---
 apiVersion: v1
 kind: Service
@@ -112,11 +118,36 @@ metadata:
   name: qubehub
   namespace: apps
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: qubehub
   ports:
     - name: http
       port: 32003
       targetPort: http
-      nodePort: 32003
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: qubehub
+  namespace: apps
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - hub.qubecloud.org
+      secretName: qubehub-tls
+  rules:
+    - host: hub.qubecloud.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: qubehub
+                port:
+                  number: 32003

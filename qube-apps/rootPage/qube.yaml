@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: apps
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -11,10 +12,7 @@ metadata:
 spec:
   replicas: 1
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 0
-      maxUnavailable: 1
+    type: Recreate
   selector:
     matchLabels:
       app: qube
@@ -23,12 +21,13 @@ spec:
       labels:
         app: qube
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: kube-syd-worker-01
       imagePullSecrets:
         - name: regcred
       securityContext:
         runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
       containers:
@@ -38,25 +37,32 @@ spec:
           ports:
             - name: http
               containerPort: 32002
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /app/.cache
           readinessProbe:
             httpGet:
               path: /
               port: http
-            initialDelaySeconds: 3
+            initialDelaySeconds: 15
             periodSeconds: 10
+            failureThreshold: 12
           livenessProbe:
             httpGet:
               path: /
               port: http
-            initialDelaySeconds: 10
+            initialDelaySeconds: 45
             periodSeconds: 20
+            failureThreshold: 3
           resources:
             requests:
               cpu: 100m
-              memory: 64Mi
+              memory: 128Mi
             limits:
               cpu: 500m
-              memory: 256Mi
+              memory: 512Mi
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -64,6 +70,12 @@ spec:
             capabilities:
               drop:
                 - ALL
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+
 ---
 apiVersion: v1
 kind: Service
@@ -71,11 +83,36 @@ metadata:
   name: qube
   namespace: apps
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: qube
   ports:
     - name: http
       port: 32002
       targetPort: http
-      nodePort: 32002
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: qube
+  namespace: apps
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - qubecloud.org
+      secretName: qube-tls
+  rules:
+    - host: qubecloud.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: qube
+                port:
+                  number: 32002
