@@ -15,10 +15,11 @@ type ScyllaDB struct {
 
 func NewScyllaDB(cfg *config.Config) (*ScyllaDB, error) {
 	cluster := gocql.NewCluster(cfg.ScyllaHosts...)
-	cluster.Consistency = gocql.Quorum
+	cluster.Consistency = gocql.LocalQuorum
 	cluster.ProtoVersion = 4
 	cluster.ConnectTimeout = time.Second * 10
 	cluster.Timeout = time.Second * 10
+	cluster.PoolConfig.HostSelectionPolicy = gocql.DCAwareRoundRobinPolicy(cfg.ScyllaLocalDC)
 
 	if cfg.ScyllaUsername != "" && cfg.ScyllaPassword != "" {
 		cluster.Authenticator = gocql.PasswordAuthenticator{
@@ -34,7 +35,11 @@ func NewScyllaDB(cfg *config.Config) (*ScyllaDB, error) {
 
 	keyspaceQuery := fmt.Sprintf(`
 		CREATE KEYSPACE IF NOT EXISTS %s
-		WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}
+		WITH replication = {
+		  'class': 'NetworkTopologyStrategy',
+		  'UAS': 1,
+		  'Australia': 1
+		}
 	`, cfg.ScyllaKeyspace)
 
 	if err := session.Query(keyspaceQuery).Exec(); err != nil {
@@ -45,6 +50,9 @@ func NewScyllaDB(cfg *config.Config) (*ScyllaDB, error) {
 	session.Close()
 
 	cluster.Keyspace = cfg.ScyllaKeyspace
+	cluster.PoolConfig.HostSelectionPolicy = gocql.TokenAwareHostPolicy(
+		gocql.DCAwareRoundRobinPolicy(cfg.ScyllaLocalDC),
+	)
 	session, err = cluster.CreateSession()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to keyspace: %w", err)
@@ -157,6 +165,7 @@ func (db *ScyllaDB) InitSchema() error {
 
 	migrations := []string{
 		`ALTER TABLE images ADD category TEXT`,
+		fmt.Sprintf(`ALTER KEYSPACE %s WITH replication = {'class': 'NetworkTopologyStrategy', 'UAS': 1, 'Australia': 1}`, db.keyspace),
 	}
 
 	for _, migration := range migrations {

@@ -11,6 +11,7 @@ type Config struct {
 
 	ScyllaHosts    []string
 	ScyllaKeyspace string
+	ScyllaLocalDC  string
 	ScyllaUsername string
 	ScyllaPassword string
 
@@ -29,8 +30,9 @@ func Load() *Config {
 		Addr:  getEnv("ADDR", ":32003"),
 		Debug: getEnv("DEBUG", "false") == "true",
 
-		ScyllaHosts:    getEnvArray("SCYLLA_HOSTS", []string{"192.168.1.87"}),
-		ScyllaKeyspace: getEnv("SCYLLA_KEYSPACE", "qube_hub"),
+		ScyllaHosts:    getEnvArray("SCYLLA_HOSTS", []string{""}),
+		ScyllaKeyspace: getEnv("SCYLLA_KEYSPACE", ""),
+		ScyllaLocalDC:  getEnv("SCYLLA_LOCAL_DC", ""),
 		ScyllaUsername: getEnv("SCYLLA_USERNAME", ""),
 		ScyllaPassword: getEnv("SCYLLA_PASSWORD", ""),
 
