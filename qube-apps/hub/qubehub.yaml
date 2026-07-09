@@ -1,24 +1,4 @@
 apiVersion: v1
-kind: Secret
-metadata:
-  name: qubehub-env
-  namespace: apps
-type: Opaque
-stringData:
-  ADDR: ":32003"
-  SCYLLA_HOSTS: "10.50.0.2,10.50.0.1"
-  SCYLLA_KEYSPACE: "qube_hub"
-  SCYLLA_LOCAL_DC: "Australia"
-  SCYLLA_USERNAME: "ewen"
-  SCYLLA_PASSWORD: "Tensor$35a"
-  JWT_SECRET: "cd609f60f2fd459cc82ca31f789da20a1a2fafa6807896b83f625a6279fc3102e2e0fcde"
-  STORAGE_PATH: "/app/storage/images"
-  MAX_UPLOAD_SIZE: "5368709120"
-  DISABLE_AT_MIN_REPORTS: "5"
-  ADMIN_EMAIL: "ewen@macculloch.net"
-
----
-apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: qubehub-data
