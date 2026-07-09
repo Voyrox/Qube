@@ -1,16 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: qube
+  name: qubehub
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/Voyrox/Qube.git
     targetRevision: main
-    path: qube-apps
-    directory:
-      recurse: true
+    path: qube-apps/hub
   destination:
     server: https://kubernetes.default.svc
     namespace: apps
