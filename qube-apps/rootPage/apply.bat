@@ -4,10 +4,10 @@ setlocal
 git pull
 if errorlevel 1 goto :error
 
-docker build -t registry.ewenmacculloch.com/qube:latest .
+docker build -t harbor.ewenmacculloch.com/core/qube:latest .
 if errorlevel 1 goto :error
 
-docker push registry.ewenmacculloch.com/qube:latest
+docker push harbor.ewenmacculloch.com/core/qube:latest
 if errorlevel 1 goto :error
 
 kubectl apply -f qube.yaml
