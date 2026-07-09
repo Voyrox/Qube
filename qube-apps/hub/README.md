@@ -69,13 +69,13 @@ The server will be available at `http://localhost:2112`
 ### Build
 
 ```bat
-docker build -t registry.ewenmacculloch.com/qubehub:latest .
+docker build -t harbor.ewenmacculloch.com/core/qubehub:1.0.0 .
 ```
 
 ### Push
 
 ```bat
-docker push registry.ewenmacculloch.com/qubehub:latest
+docker push harbor.ewenmacculloch.com/core/qubehub:1.0.0
 ```
 
 ### Deploy

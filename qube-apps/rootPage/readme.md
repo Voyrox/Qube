@@ -17,8 +17,8 @@ The website listens on `http://localhost:32002`.
 ### Docker
 
 ```bash
-docker build -t registry.ewenmacculloch.com/qube:latest .
-docker push registry.ewenmacculloch.com/qube:latest
+docker build -t harbor.ewenmacculloch.com/core/qube:1.0.0 .
+docker push harbor.ewenmacculloch.com/core/qube:1.0.0
 ```
 
 ### Kubernetes

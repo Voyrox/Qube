@@ -1,0 +1,145 @@
+name: Build Qube Harbor Images
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/deploy.yml"
+      - "qube-apps/rootPage/**"
+      - "qube-apps/hub/**"
+  workflow_dispatch:
+    inputs:
+      bootstrap:
+        description: Build current manifest tags without bumping
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: qube-harbor-build
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      rootpage: ${{ steps.filter.outputs.rootpage }}
+      hub: ${{ steps.filter.outputs.hub }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            rootpage:
+              - 'qube-apps/rootPage/**'
+              - '.github/workflows/deploy.yml'
+            hub:
+              - 'qube-apps/hub/**'
+              - '.github/workflows/deploy.yml'
+
+  build-rootpage:
+    needs: changes
+    if: needs.changes.outputs.rootpage == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: version
+        run: |
+          current=$(grep -m1 -oE 'harbor\.ewenmacculloch\.com/core/qube:[0-9]+\.[0-9]+\.[0-9]+' qube-apps/rootPage/qube.yaml | cut -d: -f2)
+          if [ "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.bootstrap || 'false' }}" = "true" ]; then
+            echo "tag=$current" >> "$GITHUB_OUTPUT"
+          else
+            IFS=. read -r major minor patch <<< "$current"
+            echo "tag=${major}.${minor}.$((patch + 1))" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: docker/login-action@v3
+        with:
+          registry: harbor.ewenmacculloch.com
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: ./qube-apps/rootPage
+          file: ./qube-apps/rootPage/Dockerfile
+          push: true
+          tags: harbor.ewenmacculloch.com/core/qube:${{ steps.version.outputs.tag }}
+
+  build-hub:
+    needs: changes
+    if: needs.changes.outputs.hub == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: version
+        run: |
+          current=$(grep -m1 -oE 'harbor\.ewenmacculloch\.com/core/qubehub:[0-9]+\.[0-9]+\.[0-9]+' qube-apps/hub/qubehub.yaml | cut -d: -f2)
+          if [ "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.bootstrap || 'false' }}" = "true" ]; then
+            echo "tag=$current" >> "$GITHUB_OUTPUT"
+          else
+            IFS=. read -r major minor patch <<< "$current"
+            echo "tag=${major}.${minor}.$((patch + 1))" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: docker/login-action@v3
+        with:
+          registry: harbor.ewenmacculloch.com
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: ./qube-apps/hub
+          file: ./qube-apps/hub/Dockerfile
+          push: true
+          tags: harbor.ewenmacculloch.com/core/qubehub:${{ steps.version.outputs.tag }}
+
+  update-manifest:
+    needs: [changes, build-rootpage, build-hub]
+    if: always() && (needs.changes.outputs.rootpage == 'true' || needs.changes.outputs.hub == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - id: version
+        run: |
+          root_current=$(grep -m1 -oE 'harbor\.ewenmacculloch\.com/core/qube:[0-9]+\.[0-9]+\.[0-9]+' qube-apps/rootPage/qube.yaml | cut -d: -f2)
+          hub_current=$(grep -m1 -oE 'harbor\.ewenmacculloch\.com/core/qubehub:[0-9]+\.[0-9]+\.[0-9]+' qube-apps/hub/qubehub.yaml | cut -d: -f2)
+          if [ "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.bootstrap || 'false' }}" = "true" ]; then
+            root_tag="$root_current"
+            hub_tag="$hub_current"
+          else
+            root_tag=$(printf '%s' "$root_current" | awk -F. '{print $1"."$2"."($3 + 1)}')
+            hub_tag=$(printf '%s' "$hub_current" | awk -F. '{print $1"."$2"."($3 + 1)}')
+          fi
+          {
+            echo "root_tag=$root_tag"
+            echo "hub_tag=$hub_tag"
+          } >> "$GITHUB_OUTPUT"
+      - name: Update manifest tags
+        if: ${{ !(github.event_name == 'workflow_dispatch' && github.event.inputs.bootstrap == 'true') }}
+        env:
+          ROOT_TAG: ${{ steps.version.outputs.root_tag }}
+          HUB_TAG: ${{ steps.version.outputs.hub_tag }}
+        run: |
+          if [ "${{ needs.changes.outputs.rootpage }}" = "true" ]; then
+            perl -0pi -e "s|harbor\.ewenmacculloch\.com/core/qube:[^[:space:]]+|harbor.ewenmacculloch.com/core/qube:$ROOT_TAG|g" qube-apps/rootPage/qube.yaml
+          fi
+          if [ "${{ needs.changes.outputs.hub }}" = "true" ]; then
+            perl -0pi -e "s|harbor\.ewenmacculloch\.com/core/qubehub:[^[:space:]]+|harbor.ewenmacculloch.com/core/qubehub:$HUB_TAG|g" qube-apps/hub/qubehub.yaml
+          fi
+          if git diff --quiet -- qube-apps/rootPage/qube.yaml qube-apps/hub/qubehub.yaml; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add qube-apps/rootPage/qube.yaml qube-apps/hub/qubehub.yaml
+          git commit -m "chore: bump qube harbor images [skip ci]"
+          git push
