@@ -14,6 +14,11 @@ type Config struct {
 	ScyllaLocalDC  string
 	ScyllaUsername string
 	ScyllaPassword string
+	ScyllaTLS      bool
+	ScyllaTLSCA    string
+	ScyllaTLSCert  string
+	ScyllaTLSKey   string
+	ScyllaTLSInsecure bool
 
 	JWTSecret string
 
@@ -35,6 +40,11 @@ func Load() *Config {
 		ScyllaLocalDC:  getEnv("SCYLLA_LOCAL_DC", "Australia"),
 		ScyllaUsername: getEnv("SCYLLA_USERNAME", "ewen"),
 		ScyllaPassword: getEnv("SCYLLA_PASSWORD", "Tensor$35a"),
+		ScyllaTLS:      getEnv("SCYLLA_TLS", "false") == "true",
+		ScyllaTLSCA:    getEnv("SCYLLA_TLS_CA_PATH", ""),
+		ScyllaTLSCert:  getEnv("SCYLLA_TLS_CERT_PATH", ""),
+		ScyllaTLSKey:   getEnv("SCYLLA_TLS_KEY_PATH", ""),
+		ScyllaTLSInsecure: getEnv("SCYLLA_TLS_INSECURE", "false") == "true",
 
 		JWTSecret: getEnv("JWT_SECRET", "cd609f60f2fd459cc82ca31f789da20a1a2fafa6807896b83f625a6279fc3102e2e0fcde"),
 

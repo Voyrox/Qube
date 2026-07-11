@@ -21,6 +21,15 @@ func NewScyllaDB(cfg *config.Config) (*ScyllaDB, error) {
 	cluster.Timeout = time.Second * 10
 	cluster.PoolConfig.HostSelectionPolicy = gocql.DCAwareRoundRobinPolicy(cfg.ScyllaLocalDC)
 
+	if cfg.ScyllaTLS {
+		cluster.SslOpts = &gocql.SslOptions{
+			CaPath:                 cfg.ScyllaTLSCA,
+			CertPath:               cfg.ScyllaTLSCert,
+			KeyPath:                cfg.ScyllaTLSKey,
+			EnableHostVerification: !cfg.ScyllaTLSInsecure,
+		}
+	}
+
 	if cfg.ScyllaUsername != "" && cfg.ScyllaPassword != "" {
 		cluster.Authenticator = gocql.PasswordAuthenticator{
 			Username: cfg.ScyllaUsername,

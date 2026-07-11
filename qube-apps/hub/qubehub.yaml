@@ -6,9 +6,34 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
+  storageClassName: local-path
   resources:
     requests:
       storage: 25Gi
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: qubehub-env
+  namespace: apps
+type: Opaque
+stringData:
+  ADDR: ":32003"
+  DEBUG: "false"
+  SCYLLA_HOSTS: "192.168.1.156"
+  SCYLLA_LOCAL_DC: "Australia"
+  SCYLLA_KEYSPACE: "qube_hub"
+  SCYLLA_USERNAME: "ewen"
+  SCYLLA_PASSWORD: "Tensor$35a"
+  SCYLLA_TLS: "true"
+  SCYLLA_TLS_INSECURE: "true"
+  SCYLLA_TLS_CA_PATH: "/etc/scylla-tls/server.cas"
+  SCYLLA_TLS_CERT_PATH: "/etc/scylla-tls/server.crt"
+  SCYLLA_TLS_KEY_PATH: "/etc/scylla-tls/server.key"
+  JWT_SECRET: "hddozMjn1Xv0cWlD9LwV9pQ6LSrpQkYh3JfG3u7Ac8mN2rB5VxTz4KsEaQnY1PcU"
+  STORAGE_PATH: "/app/storage/images"
+  MAX_UPLOAD_SIZE: "1073741824"
 
 ---
 apiVersion: apps/v1
@@ -53,6 +78,9 @@ spec:
               mountPath: /app/storage
             - name: qubehub-data
               mountPath: /app/static/avatars
+            - name: scylla-tls
+              mountPath: /etc/scylla-tls
+              readOnly: true
           readinessProbe:
             httpGet:
               path: /
@@ -85,6 +113,9 @@ spec:
         - name: qubehub-data
           persistentVolumeClaim:
             claimName: qubehub-data
+        - name: scylla-tls
+          secret:
+            secretName: scylla-tls
 
 ---
 apiVersion: v1
