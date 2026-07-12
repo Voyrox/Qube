@@ -35,7 +35,7 @@ func Load() *Config {
 		Addr:  getEnv("ADDR", ":32003"),
 		Debug: getEnv("DEBUG", "false") == "true",
 
-		ScyllaHosts:    getEnvArray("SCYLLA_HOSTS", []string{"10.50.0.2", "10.50.0.1"}),
+		ScyllaHosts:    getEnvArray("SCYLLA_HOSTS", []string{"10.50.0.2", "10.50.0.3"}),
 		ScyllaKeyspace: getEnv("SCYLLA_KEYSPACE", "qube_hub"),
 		ScyllaLocalDC:  getEnv("SCYLLA_LOCAL_DC", "Australia"),
 		ScyllaUsername: getEnv("SCYLLA_USERNAME", "ewen"),
