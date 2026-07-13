@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -60,13 +61,48 @@ func MountProc(cid string) error {
 	return unix.Mount("proc", procPath, "proc", unix.MS_NOEXEC|unix.MS_NOSUID|unix.MS_NODEV, "")
 }
 
+func resolveMountDestination(rootfs, containerPath string) (string, error) {
+	cleanPath := path.Clean(containerPath)
+	if !path.IsAbs(cleanPath) {
+		return "", fmt.Errorf("container path must be absolute: %s", containerPath)
+	}
+
+	if cleanPath == "/" {
+		return "", fmt.Errorf("container path cannot be root")
+	}
+
+	dest := filepath.Join(rootfs, strings.TrimPrefix(cleanPath, "/"))
+	absRootfs, err := filepath.Abs(rootfs)
+	if err != nil {
+		return "", err
+	}
+
+	absDest, err := filepath.Abs(dest)
+	if err != nil {
+		return "", err
+	}
+
+	rel, err := filepath.Rel(absRootfs, absDest)
+	if err != nil {
+		return "", err
+	}
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("container path escapes rootfs: %s", containerPath)
+	}
+
+	return dest, nil
+}
+
 func MountVolume(cid, hostPath, containerPath string) error {
 	if _, err := os.Stat(hostPath); os.IsNotExist(err) {
 		return fmt.Errorf("host path '%s' does not exist", hostPath)
 	}
 
 	rootfs := GetRootfs(cid)
-	dest := filepath.Join(rootfs, strings.TrimPrefix(containerPath, "/"))
+	dest, err := resolveMountDestination(rootfs, containerPath)
+	if err != nil {
+		return err
+	}
 
 	if _, err := os.Stat(dest); os.IsNotExist(err) {
 		fmt.Printf("DEBUG: Creating mount point at %s\n", dest)

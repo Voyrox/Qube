@@ -2,6 +2,8 @@ package tracking
 
 import (
 	"bufio"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -28,6 +30,55 @@ func currentTimestamp() uint64 {
 	return uint64(time.Now().Unix())
 }
 
+func encodeTrackingField(v any) (string, error) {
+	if v == nil {
+		return "", nil
+	}
+
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(raw), nil
+}
+
+func decodeVolumesField(raw string) [][2]string {
+	if raw == "" {
+		return [][2]string{}
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(raw)
+	if err != nil {
+		return [][2]string{}
+	}
+
+	var volumes [][2]string
+	if err := json.Unmarshal(decoded, &volumes); err != nil {
+		return [][2]string{}
+	}
+
+	return volumes
+}
+
+func decodeEnvVarsField(raw string) []string {
+	if raw == "" {
+		return []string{}
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(raw)
+	if err != nil {
+		return []string{}
+	}
+
+	var envVars []string
+	if err := json.Unmarshal(decoded, &envVars); err != nil {
+		return []string{}
+	}
+
+	return envVars
+}
+
 func TrackContainerNamed(name string, pid int, dir string, cmd []string, image string, ports string, isolated bool, volumes [][2]string, envVars []string) error {
 	if err := os.MkdirAll(config.TrackingDir, 0755); err != nil {
 		return err
@@ -35,7 +86,15 @@ func TrackContainerNamed(name string, pid int, dir string, cmd []string, image s
 
 	timestamp := currentTimestamp()
 	cmdStr := strings.Join(cmd, "\t")
-	line := fmt.Sprintf("%s|%d|%s|%s|%d|%s|%s|%t\n", name, pid, dir, cmdStr, timestamp, image, ports, isolated)
+	encodedVolumes, err := encodeTrackingField(volumes)
+	if err != nil {
+		return err
+	}
+	encodedEnvVars, err := encodeTrackingField(envVars)
+	if err != nil {
+		return err
+	}
+	line := fmt.Sprintf("%s|%d|%s|%s|%d|%s|%s|%t|%s|%s\n", name, pid, dir, cmdStr, timestamp, image, ports, isolated, encodedVolumes, encodedEnvVars)
 
 	f, err := os.OpenFile(config.ContainerListFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
@@ -57,7 +116,15 @@ func TrackContainerNamed(name string, pid int, dir string, cmd []string, image s
 
 func UpdateContainerPID(name string, newPID int, newDir string, newCmd []string, image string, ports string, isolated bool, volumes [][2]string, envVars []string) error {
 	found := false
-	newLine := fmt.Sprintf("%s|%d|%s|%s|%d|%s|%s|%t", name, newPID, newDir, strings.Join(newCmd, "\t"), currentTimestamp(), image, ports, isolated)
+	encodedVolumes, err := encodeTrackingField(volumes)
+	if err != nil {
+		return err
+	}
+	encodedEnvVars, err := encodeTrackingField(envVars)
+	if err != nil {
+		return err
+	}
+	newLine := fmt.Sprintf("%s|%d|%s|%s|%d|%s|%s|%t|%s|%s", name, newPID, newDir, strings.Join(newCmd, "\t"), currentTimestamp(), image, ports, isolated, encodedVolumes, encodedEnvVars)
 
 	content, err := os.ReadFile(config.ContainerListFile)
 	if err != nil {
@@ -181,8 +248,18 @@ func GetAllTrackedEntries() []ContainerEntry {
 			Image:     parts[5],
 			Ports:     parts[6],
 			Isolated:  isolated,
-			Volumes:   [][2]string{},
-			EnvVars:   []string{},
+			Volumes: decodeVolumesField(func() string {
+				if len(parts) > 8 {
+					return parts[8]
+				}
+				return ""
+			}()),
+			EnvVars: decodeEnvVarsField(func() string {
+				if len(parts) > 9 {
+					return parts[9]
+				}
+				return ""
+			}()),
 		}
 		entries = append(entries, entry)
 	}
