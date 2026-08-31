@@ -296,7 +296,7 @@ function displayImages(images, showDelete = false, containerId = 'imagesList') {
         return `
         <div class="imageCard" onclick="viewImage('${escapeHtml(image.name)}', '${escapeHtml(version)}')">
             <div class="imageHeader">
-                ${image.logo_path ? `<img src="${image.logo_path}" alt="${escapeHtml(image.name)} logo" class="imageLogo">` : '<div class="imageLogoPlaceholder">🧊</div>'}
+                ${image.logo_path ? `<img src="${image.logo_path}" alt="${escapeHtml(image.name)} logo" class="imageLogo">` : '<div class="imageLogoPlaceholder">IMG</div>'}
                 <div class="imageTitle">
                     <h3>${escapeHtml((image.owner_username || image.owner_username_fallback || image.owner || 'user'))}/${escapeHtml(image.name)}</h3>
                     <div class="tags">${versionHtml}</div>
@@ -309,7 +309,7 @@ function displayImages(images, showDelete = false, containerId = 'imagesList') {
                 <span>Stars: ${image.stars || 0}</span>
                 <span>Last updated: ${formatDate(image.last_updated || image.updated_at)}</span>
             </div>
-            ${showDelete ? `<button class="delete" onclick="event.stopPropagation(); deleteImage('${image.id}')">🗑️ Delete</button>` : ''}
+            ${showDelete ? `<button class="delete" onclick="event.stopPropagation(); deleteImage('${image.id}')">Delete</button>` : ''}
         </div>`;
     }).join('');
 }
@@ -362,12 +362,12 @@ async function toggleStar(imageId, event) {
         if (response.ok) {
             const data = await response.json().catch(() => ({}));
             button.classList.toggle('starred');
-            button.textContent = isStarred ? '☆ Star' : '⭐ Starred';
+            button.textContent = isStarred ? 'Star' : 'Starred';
             const starsEl = document.getElementById('starsCount');
             if (starsEl && typeof data.stars === 'number') {
                 starsEl.textContent = String(data.stars);
             }
-            showNotification(isStarred ? 'Unstarred' : 'Starred!', 'success');
+            showNotification(isStarred ? 'Unstarred' : 'Starred', 'success');
             setTimeout(() => { loadMostPulled(); loadTrending(); }, 500);
         } else {
             const data = await response.json();

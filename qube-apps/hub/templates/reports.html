@@ -177,7 +177,7 @@
 
   <div class="reportsContainer">
     <div class="reportsHeader">
-      <h1>🚩 Reported Images</h1>
+      <h1>Reported Images</h1>
       <p style="color: var(--text-secondary, #888);">Review and moderate reported content</p>
     </div>
 
@@ -241,7 +241,7 @@
           const reportItems = imageReports.map(r => `
             <div class="reportItem">
               <div class="reportItemHeader">
-                <span class="reporterInfo">👤 ${escapeHtml(r.reporter_username)}</span>
+                <span class="reporterInfo">${escapeHtml(r.reporter_username)}</span>
                 <span class="reportTime">${formatDate(r.report.created_at)}</span>
               </div>
               <div class="reportReason">${escapeHtml(r.report.reason)}</div>

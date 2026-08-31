@@ -48,25 +48,59 @@
 <body>
     {{ template "topbar" . }}
 
-    <div class="hero">
-        <div class="container">
-            <div class="heroBadge">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                </svg>
-                <span>Built for developers</span>
+    <div class="hero hubHero">
+        <div class="container hubHeroGrid">
+            <div class="hubHeroCopy">
+                <div class="heroBadge"><span>Qube Hub / image registry</span></div>
+                <h1>Images for<br><span>small runtimes</span></h1>
+                <p>Find lightweight root filesystems for Qube, inspect runtime-ready images, and pull them straight into your local container workflow.</p>
+                <div class="searchBox">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Search images, tags, owners...">
+                    <button id="searchBtn">Explore</button>
+                </div>
             </div>
-            <h1>Container Images,<br>Simplified</h1>
-            <p>Discover, share, and deploy container images with the Qube ecosystem</p>
-            <div class="searchBox">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.35-4.35" />
-                </svg>
-                <input type="text" id="searchInput" placeholder="Search for images...">
-                <button id="searchBtn">Search</button>
-            </div>
+
+            <aside class="hubHeroPanel imagePreviewPanel" aria-label="Popular Qube images preview">
+                <div class="panelTopline">
+                    <span>popular images</span>
+                    <a href="/explore">View all</a>
+                </div>
+                <div class="heroImageList">
+                    <a class="heroImageItem" href="/explore?q=nodejs">
+                        <img src="/static/logo.png" alt="" />
+                        <div>
+                            <strong>Voyrox/nodejs</strong>
+                            <span>Runtime image · Node.js workloads</span>
+                        </div>
+                        <em>25.2.0</em>
+                    </a>
+                    <a class="heroImageItem" href="/explore?q=go">
+                        <img src="/static/logo.png" alt="" />
+                        <div>
+                            <strong>Voyrox/go</strong>
+                            <span>Build tools · Go services</span>
+                        </div>
+                        <em>1.23</em>
+                    </a>
+                    <a class="heroImageItem" href="/explore?q=alpine">
+                        <img src="/static/logo.png" alt="" />
+                        <div>
+                            <strong>Voyrox/alpine</strong>
+                            <span>Minimal base · Small rootfs</span>
+                        </div>
+                        <em>latest</em>
+                    </a>
+                </div>
+                <div class="panelStats">
+                    <span><strong>Pull</strong> direct from CLI</span>
+                    <span><strong>Inspect</strong> tags and sizes</span>
+                    <span><strong>Publish</strong> your own images</span>
+                </div>
+            </aside>
         </div>
     </div>
 
@@ -91,7 +125,7 @@
             <div class="sectionHeader">
                 <div>
                     <h2>Popular Images</h2>
-                    <p class="sectionSubtitle">Most starred this month</p>
+                    <p class="sectionSubtitle">Most starred by the community</p>
                 </div>
                 <a href="#" class="viewAll">
                     <span>View All</span>
@@ -112,7 +146,7 @@
             <div class="sectionHeader">
                 <div>
                     <h2>Trending Now</h2>
-                    <p class="sectionSubtitle">Most pulled this week</p>
+                    <p class="sectionSubtitle">Most pulled from Qube Hub</p>
                 </div>
                 <a href="#" class="viewAll">
                     <span>View All</span>
@@ -198,7 +232,7 @@
         <section class="section">
             <div class="sectionHeader">
                 <div>
-                    <h2>💻 Programming Languages</h2>
+                    <h2>Programming Languages</h2>
                     <p class="sectionSubtitle">Node.js, Go, Python, Rust & more</p>
                 </div>
                 <a href="/explore?category=programming-languages" class="viewAll">
@@ -216,7 +250,7 @@
         <section class="section">
             <div class="sectionHeader">
                 <div>
-                    <h2>📦 Databases</h2>
+                    <h2>Databases</h2>
                     <p class="sectionSubtitle">PostgreSQL, Redis, MongoDB & more</p>
                 </div>
                 <a href="/explore?category=databases" class="viewAll">
@@ -234,7 +268,7 @@
         <section class="section">
             <div class="sectionHeader">
                 <div>
-                    <h2>🤖 AI & Machine Learning</h2>
+                    <h2>AI & Machine Learning</h2>
                     <p class="sectionSubtitle">TensorFlow, PyTorch, Jupyter & more</p>
                 </div>
                 <a href="/explore?category=ai-ml" class="viewAll">
@@ -252,7 +286,7 @@
         <section class="section">
             <div class="sectionHeader">
                 <div>
-                    <h2>📊 Monitoring & Observability</h2>
+                    <h2>Monitoring & Observability</h2>
                     <p class="sectionSubtitle">Prometheus, Grafana, ELK & more</p>
                 </div>
                 <a href="/explore?category=monitoring" class="viewAll">
@@ -270,7 +304,7 @@
         <section class="section">
             <div class="sectionHeader">
                 <div>
-                    <h2>⚙️ Developer Tools</h2>
+                    <h2>Developer Tools</h2>
                     <p class="sectionSubtitle">Node.js, Go, Rust & more</p>
                 </div>
                 <a href="/explore?category=dev-tools" class="viewAll">
@@ -344,7 +378,7 @@
     <footer>
         <div class="container">
             <div class="footerContent">
-                <p>&copy; 2026 Qube Hub. Built with ❤️ for the Qube community.</p>
+                <p>&copy; 2026 Qube Hub. Built for small container systems.</p>
             </div>
         </div>
     </footer>
