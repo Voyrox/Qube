@@ -15,7 +15,7 @@ WORKDIR /app
 
 COPY --from=builder /out/qube /app/qube
 COPY --from=builder /src/index.html /app/index.html
-COPY --from=builder /src/footer.png /app/footer.png
+COPY --from=builder /src/logo.png /app/logo.png
 
 EXPOSE 32002
 

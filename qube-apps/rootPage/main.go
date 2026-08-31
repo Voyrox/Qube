@@ -10,7 +10,6 @@ func main() {
 	r.GET("/", func(c *gin.Context) {
 		c.File("index.html")
 	})
-	r.StaticFile("/footer.png", "./footer.png")
 	r.StaticFile("/logo.png", "./logo.png")
 
 	_ = r.Run(":32002")
