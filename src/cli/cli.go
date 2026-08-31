@@ -708,10 +708,6 @@ func usageTemplate() string {
 	return `Usage:
   {{.UseLine}}
 
-{{- if .HasAvailableAliases}}
-Aliases:
-  {{.NameAndAliases}}
-{{- end}}
 
 {{- if .HasAvailableSubCommands}}
 Commands:
