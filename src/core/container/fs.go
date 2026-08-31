@@ -105,13 +105,10 @@ func MountVolume(cid, hostPath, containerPath string) error {
 	}
 
 	if _, err := os.Stat(dest); os.IsNotExist(err) {
-		fmt.Printf("DEBUG: Creating mount point at %s\n", dest)
 		if err := os.MkdirAll(dest, 0755); err != nil {
 			return err
 		}
 	}
-
-	fmt.Printf("DEBUG: Attempting to mount %s -> %s\n", hostPath, dest)
 
 	unix.Unmount(dest, unix.MNT_DETACH)
 

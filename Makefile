@@ -6,18 +6,33 @@ INSTALL_PATH=/usr/local/bin
 SERVICE_FILE=qubed.service
 SERVICE_PATH=/etc/systemd/system
 
+# Qube uses Linux namespaces/cgroups, so builds target Linux by default.
+TARGET_OS?=linux
+TARGET_ARCH?=amd64
+CGO_ENABLED?=0
+HOST_OS:=$(shell go env GOHOSTOS)
+
 # Go build flags
 GO=go
 GOFLAGS=-ldflags="-s -w"
-GOCMD=$(GO) build $(GOFLAGS)
+GOCMD=CGO_ENABLED=$(CGO_ENABLED) GOOS=$(TARGET_OS) GOARCH=$(TARGET_ARCH) $(GO) build $(GOFLAGS)
+
+ifeq ($(HOST_OS),windows)
+TESTCMD=GOOS=linux $(GO) test ./... -exec=true
+else
+TESTCMD=$(GO) test -v -covermode=count -coverprofile=coverage.out ./...
+endif
 
 all: build
 
 # Build the binary
 build:
-	@echo "Building Qube..."
+	@echo "Building Qube for $(TARGET_OS)/$(TARGET_ARCH)..."
 	@$(GOCMD) -o $(BINARY_NAME) ./
-	@echo "✓ Build complete: ./$(BINARY_NAME)"
+	@echo "OK Build complete: ./$(BINARY_NAME)"
+	@if [ "$(HOST_OS)" = "windows" ]; then \
+		echo "  Note: Qube is Linux-only; this is a Linux binary for WSL/Linux hosts."; \
+	fi
 
 # Install the binary and service
 install: build
@@ -27,11 +42,11 @@ install: build
 	@sudo chmod +x $(INSTALL_PATH)/$(BINARY_NAME)
 	@sudo chmod u+s $(INSTALL_PATH)/$(BINARY_NAME)
 	@ls -la $(INSTALL_PATH)/$(BINARY_NAME)
-	@echo "✓ Installed to $(INSTALL_PATH)/$(BINARY_NAME)"
+	@echo "OK Installed to $(INSTALL_PATH)/$(BINARY_NAME)"
 	@if [ -f $(SERVICE_FILE) ]; then \
 		sudo cp $(SERVICE_FILE) $(SERVICE_PATH)/$(SERVICE_FILE); \
 		sudo systemctl daemon-reload; \
-		echo "✓ Service file installed to $(SERVICE_PATH)/$(SERVICE_FILE)"; \
+		echo "OK Service file installed to $(SERVICE_PATH)/$(SERVICE_FILE)"; \
 		echo "  Run 'sudo systemctl start qubed' to start the daemon"; \
 	fi
 
@@ -40,12 +55,12 @@ clean:
 	@echo "Cleaning build artifacts..."
 	@rm -f $(BINARY_NAME)
 	@rm -rf bin/
-	@echo "✓ Clean complete"
+	@echo "OK Clean complete"
 
 # Run tests
 test:
 	@echo "Running tests..."
-	@$(GO) test -v -covermode=count -coverprofile=coverage.out ./...
+	@$(TESTCMD)
 
 # Run the daemon in debug mode
 daemon: build
@@ -66,13 +81,13 @@ deps:
 	@echo "Downloading dependencies..."
 	@$(GO) mod download
 	@$(GO) mod tidy
-	@echo "✓ Dependencies updated"
+	@echo "OK Dependencies updated"
 
 # Format code
 fmt:
 	@echo "Formatting code..."
 	@$(GO) fmt ./...
-	@echo "✓ Code formatted"
+	@echo "OK Code formatted"
 
 # Lint code
 lint:
@@ -87,14 +102,14 @@ lint:
 release:
 	@echo "Building release binaries..."
 	@mkdir -p bin
-	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOCMD) -o bin/$(BINARY_NAME)-linux-amd64 ./
-	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOCMD) -o bin/$(BINARY_NAME)-linux-arm64 ./
-	@echo "✓ Release binaries built in ./bin/"
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GO) build $(GOFLAGS) -o bin/$(BINARY_NAME)-linux-amd64 ./
+	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build $(GOFLAGS) -o bin/$(BINARY_NAME)-linux-arm64 ./
+	@echo "OK Release binaries built in ./bin/"
 
 # Help
 help:
 	@echo "Qube Makefile Commands:"
-	@echo "  make build    - Build the binary"
+	@echo "  make build    - Build the Linux binary"
 	@echo "  make install  - Install binary and systemd service"
 	@echo "  make clean    - Remove build artifacts"
 	@echo "  make test     - Run tests"
