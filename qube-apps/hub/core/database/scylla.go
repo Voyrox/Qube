@@ -11,6 +11,7 @@ import (
 type ScyllaDB struct {
 	session  *gocql.Session
 	keyspace string
+	localDC  string
 }
 
 func NewScyllaDB(cfg *config.Config) (*ScyllaDB, error) {
@@ -46,10 +47,9 @@ func NewScyllaDB(cfg *config.Config) (*ScyllaDB, error) {
 		CREATE KEYSPACE IF NOT EXISTS %s
 		WITH replication = {
 		  'class': 'NetworkTopologyStrategy',
-		  'UAS': 1,
-		  'Australia': 1
+		  '%s': 1
 		}
-	`, cfg.ScyllaKeyspace)
+	`, cfg.ScyllaKeyspace, cfg.ScyllaLocalDC)
 
 	if err := session.Query(keyspaceQuery).Exec(); err != nil {
 		session.Close()
@@ -70,6 +70,7 @@ func NewScyllaDB(cfg *config.Config) (*ScyllaDB, error) {
 	return &ScyllaDB{
 		session:  session,
 		keyspace: cfg.ScyllaKeyspace,
+		localDC:  cfg.ScyllaLocalDC,
 	}, nil
 }
 
@@ -174,7 +175,7 @@ func (db *ScyllaDB) InitSchema() error {
 
 	migrations := []string{
 		`ALTER TABLE images ADD category TEXT`,
-		fmt.Sprintf(`ALTER KEYSPACE %s WITH replication = {'class': 'NetworkTopologyStrategy', 'UAS': 1, 'Australia': 1}`, db.keyspace),
+		fmt.Sprintf(`ALTER KEYSPACE %s WITH replication = {'class': 'NetworkTopologyStrategy', '%s': 1}`, db.keyspace, db.localDC),
 	}
 
 	for _, migration := range migrations {
