@@ -316,12 +316,12 @@ function displayImages(images, showDelete = false, containerId = 'imagesList') {
 
 function viewImage(name, tag) {
     if (!tag) tag = 'latest';
-    window.location.href = `/images/${encodeURIComponent(name)}/${encodeURIComponent(tag)}`;
+    window.location.href = `/hub/images/${encodeURIComponent(name)}/${encodeURIComponent(tag)}`;
 }
 
 async function downloadImage(username, name, version) {
     if (!version) version = 'latest';
-    window.location.href = `/download/${username}/${name}?version=${version}`;
+    window.location.href = `/hub/download/${username}/${name}?version=${version}`;
     showNotification('Download started...', 'success');
 }
 
@@ -529,7 +529,7 @@ async function reportImage(imageId, event) {
     const token = localStorage.getItem('token');
     if (!token) {
         alert('Please login to report images');
-        window.location.href = '/login';
+        window.location.href = '/hub/login';
         return;
     }
 

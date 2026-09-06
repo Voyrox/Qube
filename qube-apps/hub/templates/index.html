@@ -67,10 +67,10 @@
             <aside class="hubHeroPanel imagePreviewPanel" aria-label="Popular Qube images preview">
                 <div class="panelTopline">
                     <span>popular images</span>
-                    <a href="/explore">View all</a>
+                    <a href="/hub/explore">View all</a>
                 </div>
                 <div class="heroImageList">
-                    <a class="heroImageItem" href="/explore?q=nodejs">
+                    <a class="heroImageItem" href="/hub/explore?q=nodejs">
                         <img src="/static/logo.png" alt="" />
                         <div>
                             <strong>Voyrox/nodejs</strong>
@@ -78,7 +78,7 @@
                         </div>
                         <em>25.2.0</em>
                     </a>
-                    <a class="heroImageItem" href="/explore?q=go">
+                    <a class="heroImageItem" href="/hub/explore?q=go">
                         <img src="/static/logo.png" alt="" />
                         <div>
                             <strong>Voyrox/go</strong>
@@ -86,7 +86,7 @@
                         </div>
                         <em>1.23</em>
                     </a>
-                    <a class="heroImageItem" href="/explore?q=alpine">
+                    <a class="heroImageItem" href="/hub/explore?q=alpine">
                         <img src="/static/logo.png" alt="" />
                         <div>
                             <strong>Voyrox/alpine</strong>
@@ -235,7 +235,7 @@
                     <h2>Programming Languages</h2>
                     <p class="sectionSubtitle">Node.js, Go, Python, Rust & more</p>
                 </div>
-                <a href="/explore?category=programming-languages" class="viewAll">
+                <a href="/hub/explore?category=programming-languages" class="viewAll">
                     <span>View All</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="9 18 15 12 9 6" />
@@ -253,7 +253,7 @@
                     <h2>Databases</h2>
                     <p class="sectionSubtitle">PostgreSQL, Redis, MongoDB & more</p>
                 </div>
-                <a href="/explore?category=databases" class="viewAll">
+                <a href="/hub/explore?category=databases" class="viewAll">
                     <span>View All</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="9 18 15 12 9 6" />
@@ -271,7 +271,7 @@
                     <h2>AI & Machine Learning</h2>
                     <p class="sectionSubtitle">TensorFlow, PyTorch, Jupyter & more</p>
                 </div>
-                <a href="/explore?category=ai-ml" class="viewAll">
+                <a href="/hub/explore?category=ai-ml" class="viewAll">
                     <span>View All</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="9 18 15 12 9 6" />
@@ -289,7 +289,7 @@
                     <h2>Monitoring & Observability</h2>
                     <p class="sectionSubtitle">Prometheus, Grafana, ELK & more</p>
                 </div>
-                <a href="/explore?category=monitoring" class="viewAll">
+                <a href="/hub/explore?category=monitoring" class="viewAll">
                     <span>View All</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="9 18 15 12 9 6" />
@@ -307,7 +307,7 @@
                     <h2>Developer Tools</h2>
                     <p class="sectionSubtitle">Node.js, Go, Rust & more</p>
                 </div>
-                <a href="/explore?category=dev-tools" class="viewAll">
+                <a href="/hub/explore?category=dev-tools" class="viewAll">
                     <span>View All</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="9 18 15 12 9 6" />
@@ -524,9 +524,9 @@
         document.getElementById('searchBtn').addEventListener('click', function () {
             const query = document.getElementById('searchInput').value.trim();
             if (query) {
-                window.location.href = '/explore?q=' + encodeURIComponent(query);
+                window.location.href = '/hub/explore?q=' + encodeURIComponent(query);
             } else {
-                window.location.href = '/explore';
+                window.location.href = '/hub/explore';
             }
         });
 
@@ -544,9 +544,9 @@
                 const isTrending = section.querySelector('#trendingList');
 
                 if (isPopular) {
-                    window.location.href = '/explore?sort=stars';
+                    window.location.href = '/hub/explore?sort=stars';
                 } else if (isTrending) {
-                    window.location.href = '/explore?sort=pulls';
+                    window.location.href = '/hub/explore?sort=pulls';
                 }
             });
         });
@@ -560,7 +560,7 @@
                 'devtools': 'dev-tools'
             };
             const mappedCategory = categoryMap[category] || category;
-            window.location.href = '/explore?category=' + encodeURIComponent(mappedCategory);
+            window.location.href = '/hub/explore?category=' + encodeURIComponent(mappedCategory);
         };
     </script>
 </body>

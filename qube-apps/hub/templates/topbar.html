@@ -4,7 +4,7 @@
 </head>
 <nav class="navbar">
     <div class="container">
-        <a href="/" class="navBrand" style="text-decoration: none; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <a href="/hub/" class="navBrand" style="text-decoration: none; display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <img src="/static/logo.png" alt="Qube Logo" width="28" height="28">
             <span>Qube Hub</span>
         </a>
@@ -14,12 +14,12 @@
             <span></span>
         </button>
         <div class="navMenu">
-            <a href="/" class="navLink">Home</a>
-            <a href="/explore" class="navLink">Explore</a>
-            <a href="/reports" id="navReportsLink" class="navLink" style="display:none;">Reports <span id="reportsCount" class="badge" style="background:#dc2626; color:white; padding:2px 6px; border-radius:10px; font-size:12px; margin-left:4px;"></span></a>
+            <a href="/hub/" class="navLink">Home</a>
+            <a href="/hub/explore" class="navLink">Explore</a>
+            <a href="/hub/reports" id="navReportsLink" class="navLink" style="display:none;">Reports <span id="reportsCount" class="badge" style="background:#dc2626; color:white; padding:2px 6px; border-radius:10px; font-size:12px; margin-left:4px;"></span></a>
             <div class="navAuth" id="navAuth">
-                <a href="/login" class="navLink">Login</a>
-                <a href="/signup" class="btnPrimary">Publish Image</a>
+                <a href="/hub/login" class="navLink">Login</a>
+                <a href="/hub/signup" class="btnPrimary">Publish Image</a>
             </div>
             <div class="navUser" id="navUser" style="display: none;">
                 <button id="uploadBtn" class="btnPrimarySm">+ Upload</button>
@@ -33,9 +33,9 @@
                             <p id="profileEmail" class="profileEmail">user@example.com</p>
                         </div>
                         <hr>
-                        <a href="/profile" class="dropdownItem">My Images</a>
-                        <a href="/settings" class="dropdownItem">Settings</a>
-                        <a href="/reports" id="navReportsDropdown" class="dropdownItem" style="display:none;">Reports</a>
+                        <a href="/hub/profile" class="dropdownItem">My Images</a>
+                        <a href="/hub/settings" class="dropdownItem">Settings</a>
+                        <a href="/hub/reports" id="navReportsDropdown" class="dropdownItem" style="display:none;">Reports</a>
                         <hr>
                         <a href="#" id="logoutBtn" class="dropdownItem danger">Logout</a>
                     </div>

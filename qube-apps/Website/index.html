@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Qube — a lightweight Linux container runtime and container manager written in Go." />
+  <title>Qube — Linux containers, without the weight.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Qube home">
+      <img class="brand-mark" src="logo.png" alt="" aria-hidden="true" />
+      <span>Qube</span>
+    </a>
+
+    <nav class="desktop-nav" aria-label="Primary navigation">
+      <a href="#runtime">Runtime</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#architecture">Architecture</a>
+      <a href="/hub/">Hub</a>
+      <a href="https://github.com/Voyrox/Qube" target="_blank" rel="noreferrer">GitHub ↗</a>
+    </nav>
+
+    <a class="header-cta" href="https://github.com/Voyrox/Qube" target="_blank" rel="noreferrer">View source</a>
+  </header>
+
+  <main id="top">
+    <section class="hero shell">
+      <div class="eyebrow"><span class="status-dot"></span> Linux / Go / Open source</div>
+      <h1>
+        Containers.<br>
+        <span class="hero-title-line"><span class="hero-tagline">Without the weight.</span><img class="hero-logo" src="logo.png" alt="Qube logo" /></span>
+      </h1>
+      <div class="hero-bottom">
+        <p>Qube is a lightweight Linux container runtime and manager written in Go. Pull images, isolate processes, set resource limits, expose ports, mount volumes, and manage workloads from one small binary.</p>
+        <div class="hero-actions">
+          <a class="button button-solid" href="#install">Install Qube</a>
+          <a class="button button-outline" href="/hub/">Explore Qube Hub ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="command-strip" aria-label="Quick install">
+      <div class="shell command-strip-inner">
+        <span class="mono muted">01 / QUICK START</span>
+        <button class="copy-command" data-copy="git clone https://github.com/Voyrox/Qube && cd Qube && make install" aria-label="Copy install command">
+          <code>$ git clone https://github.com/Voyrox/Qube && cd Qube && make install</code>
+          <span class="copy-label">COPY</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="intro shell" id="runtime">
+      <div class="section-index mono">02 / RUNTIME</div>
+      <div class="intro-grid">
+        <h2>Built close to Linux.</h2>
+        <div class="intro-copy">
+          <p>No hidden orchestration layer. Qube works directly with Linux primitives: namespaces for isolation, cgroups v2 for resource controls, chroot-based filesystems, and a daemon for managed container lifecycle.</p>
+          <a class="text-link" href="#architecture">See how Qube is put together <span>→</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature-grid shell" aria-label="Qube features">
+      <article class="feature-card feature-card-wide">
+        <div class="card-top"><span class="mono">NAMESPACE ISOLATION</span><span class="card-num">01</span></div>
+        <div class="namespace-viz" aria-hidden="true">
+          <div class="host-label mono">HOST</div>
+          <div class="namespace-box">
+            <span>PID</span><span>MNT</span><span>NET</span><span>IPC</span><span>UTS</span>
+          </div>
+          <div class="process-lines"><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <h3>Actual isolation primitives.</h3>
+        <p>Separate process, mount, network, IPC, and hostname namespaces create a real container boundary you can inspect and learn from.</p>
+      </article>
+
+      <article class="feature-card">
+        <div class="card-top"><span class="mono">CGROUPS V2</span><span class="card-num">02</span></div>
+        <div class="meter-stack" aria-hidden="true">
+          <div><span>CPU</span><i style="--fill:68%"></i><b>2 cores</b></div>
+          <div><span>MEM</span><i style="--fill:82%"></i><b>2 GB</b></div>
+          <div><span>SWAP</span><i style="--fill:43%"></i><b>1 GB</b></div>
+        </div>
+        <h3>Resource limits that map to the kernel.</h3>
+        <p>Control memory and CPU through cgroups v2 instead of hiding resource management behind another abstraction.</p>
+      </article>
+
+      <article class="feature-card">
+        <div class="card-top"><span class="mono">ONE BINARY</span><span class="card-num">03</span></div>
+        <div class="binary-viz" aria-hidden="true"><span>Q</span><small>qube</small></div>
+        <h3>Small surface area.</h3>
+        <p>A Go runtime, CLI, local management API, WebSockets, and daemon supervision in a project you can actually read end to end.</p>
+      </article>
+    </section>
+
+    <section class="workflow" id="workflow">
+      <div class="shell workflow-inner">
+        <div class="section-index mono">03 / WORKFLOW</div>
+        <div class="workflow-heading">
+          <h2>Familiar commands.<br>Transparent behavior.</h2>
+          <p>A Docker-like workflow without pretending to be Docker. Qube focuses on the core lifecycle: pull, run, inspect, execute, stop, snapshot.</p>
+        </div>
+
+        <div class="terminal" role="region" aria-label="Qube command line example">
+          <div class="terminal-bar">
+            <span class="mono">qube — bash</span>
+            <span class="terminal-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          </div>
+          <div class="terminal-body mono" id="terminal-demo">
+            <p><span class="prompt">$</span> <span class="typed" data-text="sudo qube pull Voyrox:nodejs:25.2.0"></span><span class="caret">▋</span></p>
+            <p class="output terminal-line hidden">→ resolving image Voyrox:nodejs:25.2.0</p>
+            <p class="output terminal-line hidden">→ extracted root filesystem</p>
+            <p class="success terminal-line hidden">✓ image ready</p>
+            <p class="terminal-line hidden command"><span class="prompt">$</span> sudo qube run --image Voyrox:nodejs:25.2.0 --ports 3000 --cmd "node server.js"</p>
+            <p class="output terminal-line hidden">→ creating namespaces [pid mnt net ipc uts]</p>
+            <p class="output terminal-line hidden">→ applying cgroup limits</p>
+            <p class="success terminal-line hidden">✓ Qube-a7f2k9 running · :3000</p>
+          </div>
+        </div>
+
+        <div class="command-cards">
+          <div><code>qube run</code><span>Start a workload</span></div>
+          <div><code>qube list</code><span>See managed containers</span></div>
+          <div><code>qube eval</code><span>Execute inside a container</span></div>
+          <div><code>qube snapshot</code><span>Capture container state</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="architecture shell" id="architecture">
+      <div class="section-index mono">04 / ARCHITECTURE</div>
+      <div class="architecture-grid">
+        <div class="architecture-title">
+          <h2>Everything has<br>a place.</h2>
+          <p>The runtime stays intentionally legible: user-facing tools feed a compact core, which configures Linux isolation and persists only the state it needs.</p>
+        </div>
+
+        <div class="arch-diagram" aria-label="Qube architecture diagram">
+          <div class="arch-row arch-inputs">
+            <span>CLI</span><span>Daemon</span><span>REST / WS</span>
+          </div>
+          <div class="arch-connector"><i></i><i></i><i></i></div>
+          <div class="arch-core">
+            <strong>QUBE RUNTIME</strong>
+            <small>lifecycle · image · process · filesystem</small>
+          </div>
+          <div class="arch-connector down"><i></i><i></i><i></i></div>
+          <div class="arch-row arch-kernel">
+            <span>Namespaces</span><span>cgroups v2</span><span>Root FS</span>
+          </div>
+          <div class="arch-footer mono">LINUX KERNEL</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="manifest-section shell">
+      <div class="manifest-copy">
+        <span class="mono muted">05 / CONFIG AS CODE</span>
+        <h2>Repeatable by default.</h2>
+        <p>Put the runtime configuration beside your application with <code>qube.yml</code>. Ports, commands, environment variables, isolation, and volumes remain explicit.</p>
+      </div>
+      <pre class="manifest"><code><span class="dim">container:</span>
+  <span class="key">system:</span> Voyrox:nodejs:25.2.0
+  <span class="key">ports:</span>
+    - <span class="string">"3000"</span>
+  <span class="key">cmd:</span>
+    - npm install
+    - node index.js
+  <span class="key">isolated:</span> false
+  <span class="key">environment:</span>
+    NODE_ENV: <span class="string">"development"</span></code></pre>
+    </section>
+
+    <section class="stats">
+      <div class="shell stats-grid">
+        <div><span class="stat-value">5</span><span class="stat-label mono">LINUX NAMESPACES</span></div>
+        <div><span class="stat-value">1</span><span class="stat-label mono">GO BINARY</span></div>
+        <div><span class="stat-value">0</span><span class="stat-label mono">GRADIENTS</span></div>
+        <div><span class="stat-value">∞</span><span class="stat-label mono">THINGS TO BREAK / LEARN</span></div>
+      </div>
+    </section>
+
+    <section class="install shell" id="install">
+      <div class="install-rule"></div>
+      <span class="mono muted">06 / GET QUBE</span>
+      <h2>Run Linux containers.<br><span>See how they work.</span></h2>
+      <div class="install-actions">
+        <a class="button button-solid large" href="https://github.com/Voyrox/Qube" target="_blank" rel="noreferrer">Get Qube on GitHub ↗</a>
+        <a class="button button-outline large" href="https://qubecloud.org/" target="_blank" rel="noreferrer">Live demo ↗</a>
+      </div>
+      <p class="install-note mono">LINUX ONLY · ROOT REQUIRED · CGROUPS V2 RECOMMENDED</p>
+    </section>
+  </main>
+
+  <footer class="footer shell">
+    <a class="brand footer-brand" href="#top">
+      <img class="brand-mark" src="logo.png" alt="" aria-hidden="true" />
+      <span>Qube</span>
+    </a>
+    <p>A lightweight Linux container runtime and container manager written in Go.</p>
+    <div class="footer-links">
+      <a href="https://github.com/Voyrox/Qube" target="_blank" rel="noreferrer">GitHub</a>
+      <a href="/hub/">Qube Hub</a>
+      <a href="https://qubecloud.org/" target="_blank" rel="noreferrer">Demo</a>
+    </div>
+  </footer>
+
+  <script src="./script.js"></script>
+</body>
+</html>

@@ -198,7 +198,7 @@
     async function loadReports() {
       const token = localStorage.getItem('token');
       if (!token) {
-        window.location.href = '/login';
+        window.location.href = '/hub/login';
         return;
       }
 
@@ -252,7 +252,7 @@
             <div class="reportHeader">
               <div class="reportImageInfo">
                 <h3>
-                  <a href="/images/${encodeURIComponent(firstReport.image_name)}/${encodeURIComponent(firstReport.image_tag)}" 
+                  <a href="/hub/images/${encodeURIComponent(firstReport.image_name)}/${encodeURIComponent(firstReport.image_tag)}" 
                      style="color: var(--text-primary); text-decoration: none;">
                     ${escapeHtml(firstReport.image_owner)}/${escapeHtml(firstReport.image_name)}:${escapeHtml(firstReport.image_tag)}
                   </a>

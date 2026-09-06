@@ -233,7 +233,7 @@
           const tagsHtml = (img.tag || '').split(',').filter(Boolean).map(t => `<span class='tag'>${t.trim()}</span>`).join('');
           tr.innerHTML = `
         <td><div class='thumb sm'><img src='${img.logo_path || '/static/img/placeholder.svg'}' onerror="this.src='/static/img/placeholder.svg'" /></div></td>
-        <td><a href="/images/${img.name}/${primaryTag}" class="title">${img.name}</a></td>
+        <td><a href="/hub/images/${img.name}/${primaryTag}" class="title">${img.name}</a></td>
         <td><div class="tags">${tagsHtml}</div></td>
         <td>${new Date(img.last_updated).toLocaleString()}</td>
         <td>

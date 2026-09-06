@@ -295,7 +295,7 @@
         versionSelector.addEventListener('change', function () {
           const selectedVersion = this.value;
           const imageName = '{{ .image.Name }}';
-          window.location.href = '/images/' + encodeURIComponent(imageName) + '/' + encodeURIComponent(selectedVersion);
+          window.location.href = '/hub/images/' + encodeURIComponent(imageName) + '/' + encodeURIComponent(selectedVersion);
         });
       }
     })();
@@ -435,7 +435,7 @@
               const data = await resp.json().catch(() => ({}));
               if (resp.ok) {
                 const nextTag = createNew ? newVersionTag : (data && data.image && data.image.tag) || '{{ .image.Tag }}';
-                window.location.href = '/images/{{ .image.Name }}/' + encodeURIComponent(nextTag);
+                window.location.href = '/hub/images/{{ .image.Name }}/' + encodeURIComponent(nextTag);
               } else {
                 alert((data && data.error) || 'Failed to update image');
               }

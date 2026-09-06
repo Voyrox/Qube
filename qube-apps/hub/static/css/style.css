@@ -29,17 +29,17 @@
 }
 
 :root {
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --primary-light: rgba(99, 102, 241, 0.1);
-    --bg-primary: rgb(5, 7, 20);
-    --bg-secondary: rgb(10, 15, 31);
-    --bg-tertiary: #050610;
-    --border: rgba(255, 255, 255, 0.08);
-    --border-hover: rgba(99, 102, 241, 0.3);
+    --primary: #d7ff3f;
+    --primary-hover: #c7ef30;
+    --primary-light: rgba(215, 255, 63, 0.1);
+    --bg-primary: #050505;
+    --bg-secondary: #0a0a0a;
+    --bg-tertiary: #0e0e0e;
+    --border: #242422;
+    --border-hover: rgba(215, 255, 63, 0.3);
     --text-primary: #ffffff;
-    --text-secondary: #a1a1aa;
-    --text-tertiary: #71717a;
+    --text-secondary: #94948d;
+    --text-tertiary: #62625b;
     --success: #10b981;
     --danger: #ef4444;
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -76,7 +76,7 @@ body {
 }
 
 .navbar {
-    background: rgb(5, 6, 16);
+    background: #050505;
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
     padding: 16px 0;
@@ -330,7 +330,7 @@ body {
 }
 
 .hero {
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    background: linear-gradient(135deg, #0a0a0a 0%, #050505 100%);
     padding: 53px 0 67px;
     text-align: center;
     border-bottom: 1px solid var(--border);
@@ -346,7 +346,7 @@ body {
     transform: translateX(-50%);
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at 50% 0%, rgb(5, 7, 20), transparent 50%);
+    background: radial-gradient(circle at 50% 0%, #050505, transparent 50%);
     pointer-events: none;
 }
 

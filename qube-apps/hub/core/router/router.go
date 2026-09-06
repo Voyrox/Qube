@@ -1,6 +1,8 @@
 package router
 
 import (
+	"path/filepath"
+
 	"github.com/Voyrox/Qube/hub/core/cache"
 	"github.com/Voyrox/Qube/hub/core/config"
 	"github.com/Voyrox/Qube/hub/core/database"
@@ -28,6 +30,9 @@ func Setup(db *database.ScyllaDB, cfg *config.Config, cacheManager *cache.CacheM
 	})
 
 	r.Static("/static", "./static")
+	r.StaticFile("/logo.png", filepath.Join("..", "Website", "logo.png"))
+	r.StaticFile("/styles.css", filepath.Join("..", "Website", "styles.css"))
+	r.StaticFile("/script.js", filepath.Join("..", "Website", "script.js"))
 	r.LoadHTMLGlob("templates/*")
 
 	authHandler := handlers.NewAuthHandler(db, cfg, cacheManager.Users)
@@ -36,51 +41,62 @@ func Setup(db *database.ScyllaDB, cfg *config.Config, cacheManager *cache.CacheM
 	statsHandler := handlers.NewStatsHandler(db, cfg, cacheManager.General)
 
 	r.GET("/", func(c *gin.Context) {
-		c.HTML(200, "index.html", gin.H{
-			"title": "Qube Hub",
+		c.File(filepath.Join("..", "Website", "index.html"))
+	})
+
+	r.GET("/hub", func(c *gin.Context) {
+		c.Redirect(301, "/hub/")
+	})
+
+	hub := r.Group("/hub")
+	{
+		hub.GET("/", func(c *gin.Context) {
+			c.HTML(200, "index.html", gin.H{
+				"title": "Qube Hub",
+			})
 		})
-	})
 
-	r.GET("/explore", middleware.OptionalAuthMiddleware(cfg), func(c *gin.Context) {
-		c.HTML(200, "explore.html", gin.H{"title": "Explore Images"})
-	})
-
-	r.GET("/profile", middleware.OptionalAuthMiddleware(cfg), func(c *gin.Context) {
-		c.HTML(200, "profile.html", gin.H{"title": "My Profile"})
-	})
-
-	r.GET("/settings", middleware.OptionalAuthMiddleware(cfg), func(c *gin.Context) {
-		c.HTML(200, "settings.html", gin.H{"title": "Settings"})
-	})
-
-	r.GET("/images/:name", middleware.OptionalAuthMiddleware(cfg), imageHandler.DetailLatest)
-	r.GET("/images/:name/:tag", middleware.OptionalAuthMiddleware(cfg), imageHandler.Detail)
-
-	r.GET("/auth", func(c *gin.Context) {
-		c.HTML(200, "auth.html", gin.H{
-			"title": "Sign In",
+		hub.GET("/explore", middleware.OptionalAuthMiddleware(cfg), func(c *gin.Context) {
+			c.HTML(200, "explore.html", gin.H{"title": "Explore Images"})
 		})
-	})
 
-	r.GET("/login", func(c *gin.Context) {
-		c.HTML(200, "auth.html", gin.H{
-			"title": "Sign In",
+		hub.GET("/profile", middleware.OptionalAuthMiddleware(cfg), func(c *gin.Context) {
+			c.HTML(200, "profile.html", gin.H{"title": "My Profile"})
 		})
-	})
 
-	r.GET("/signup", func(c *gin.Context) {
-		c.HTML(200, "auth.html", gin.H{
-			"title": "Sign Up",
+		hub.GET("/settings", middleware.OptionalAuthMiddleware(cfg), func(c *gin.Context) {
+			c.HTML(200, "settings.html", gin.H{"title": "Settings"})
 		})
-	})
 
-	r.GET("/download/:user/:image", imageHandler.DownloadByUser)
+		hub.GET("/images/:name", middleware.OptionalAuthMiddleware(cfg), imageHandler.DetailLatest)
+		hub.GET("/images/:name/:tag", middleware.OptionalAuthMiddleware(cfg), imageHandler.Detail)
 
-	r.GET("/reports", func(c *gin.Context) {
-		c.HTML(200, "reports.html", gin.H{
-			"title": "Reports",
+		hub.GET("/auth", func(c *gin.Context) {
+			c.HTML(200, "auth.html", gin.H{
+				"title": "Sign In",
+			})
 		})
-	})
+
+		hub.GET("/login", func(c *gin.Context) {
+			c.HTML(200, "auth.html", gin.H{
+				"title": "Sign In",
+			})
+		})
+
+		hub.GET("/signup", func(c *gin.Context) {
+			c.HTML(200, "auth.html", gin.H{
+				"title": "Sign Up",
+			})
+		})
+
+		hub.GET("/download/:user/:image", imageHandler.DownloadByUser)
+
+		hub.GET("/reports", func(c *gin.Context) {
+			c.HTML(200, "reports.html", gin.H{
+				"title": "Reports",
+			})
+		})
+	}
 
 	api := r.Group("/api")
 	{
