@@ -43,7 +43,11 @@ func Setup(db *database.ScyllaDB, cfg *config.Config, cacheManager *cache.CacheM
 	statsHandler := handlers.NewStatsHandler(db, cfg, cacheManager.General)
 
 	r.GET("/", func(c *gin.Context) {
-		c.File(filepath.Join("..", "Website", "index.html"))
+		c.File(filepath.Join(websiteDir, "index.html"))
+	})
+
+	r.GET("/healthz", func(c *gin.Context) {
+		c.JSON(200, gin.H{"ok": true})
 	})
 
 	r.GET("/hub", func(c *gin.Context) {
