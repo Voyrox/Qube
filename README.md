@@ -13,7 +13,7 @@
 <a href="https://github.com/Voyrox/Qube/blob/main/go.mod"><img src="https://img.shields.io/github/go-mod/go-version/Voyrox/Qube" alt="Go Version"></a>
 
 <a href="https://qubecloud.org/"><strong>Live Demo</strong></a> ·
-<a href="https://hub.qubecloud.org/"><strong>Qube Hub</strong></a> ·
+<a href="https://qubecloud.org/hub/"><strong>Qube Hub</strong></a> ·
 <a href="./docs/"><strong>Documentation</strong></a>
 
 </div>

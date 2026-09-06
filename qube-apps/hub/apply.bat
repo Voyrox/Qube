@@ -4,7 +4,7 @@ setlocal
 git pull
 if errorlevel 1 goto :error
 
-docker build -t harbor.ewenmacculloch.com/core/qubehub:latest .
+docker build -t harbor.ewenmacculloch.com/core/qubehub:latest -f hub/Dockerfile ..
 if errorlevel 1 goto :error
 
 docker push harbor.ewenmacculloch.com/core/qubehub:latest

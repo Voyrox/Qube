@@ -1,6 +1,7 @@
 package router
 
 import (
+	"os"
 	"path/filepath"
 
 	"github.com/Voyrox/Qube/hub/core/cache"
@@ -29,10 +30,11 @@ func Setup(db *database.ScyllaDB, cfg *config.Config, cacheManager *cache.CacheM
 		c.Next()
 	})
 
+	websiteDir := resolveWebsiteDir()
 	r.Static("/static", "./static")
-	r.StaticFile("/logo.png", filepath.Join("..", "Website", "logo.png"))
-	r.StaticFile("/styles.css", filepath.Join("..", "Website", "styles.css"))
-	r.StaticFile("/script.js", filepath.Join("..", "Website", "script.js"))
+	r.StaticFile("/logo.png", filepath.Join(websiteDir, "logo.png"))
+	r.StaticFile("/styles.css", filepath.Join(websiteDir, "styles.css"))
+	r.StaticFile("/script.js", filepath.Join(websiteDir, "script.js"))
 	r.LoadHTMLGlob("templates/*")
 
 	authHandler := handlers.NewAuthHandler(db, cfg, cacheManager.Users)
@@ -138,4 +140,14 @@ func Setup(db *database.ScyllaDB, cfg *config.Config, cacheManager *cache.CacheM
 	r.GET("/files/:filename", imageHandler.DownloadFile)
 
 	return r
+}
+
+func resolveWebsiteDir() string {
+	candidates := []string{"Website", filepath.Join("..", "Website"), filepath.Join("..", "qube-apps", "Website")}
+	for _, candidate := range candidates {
+		if info, err := os.Stat(candidate); err == nil && info.IsDir() {
+			return candidate
+		}
+	}
+	return "Website"
 }

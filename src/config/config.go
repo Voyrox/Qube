@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	BaseURL = "https://hub.qubecloud.org"
+    BaseURL = "https://qubecloud.org"
 
 	MemoryMaxMB     = 2048
 	MemorySwapMaxMB = 1024
