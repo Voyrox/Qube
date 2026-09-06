@@ -65,7 +65,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: qubehub
-          image: harbor.ewenmacculloch.com/core/qubehub:1.0.8
+          image: harbor.ewenmacculloch.com/core/qubehub:1.0.9
           imagePullPolicy: Always
           envFrom:
             - secretRef:
