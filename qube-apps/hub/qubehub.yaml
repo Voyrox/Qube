@@ -78,6 +78,15 @@ spec:
               mountPath: /app/storage
             - name: qubehub-data
               mountPath: /app/static/avatars
+            - name: qubehub-website
+              mountPath: /app/index.html
+              subPath: index.html
+            - name: qubehub-website
+              mountPath: /app/styles.css
+              subPath: styles.css
+            - name: qubehub-website
+              mountPath: /app/script.js
+              subPath: script.js
             - name: scylla-tls
               mountPath: /etc/scylla-tls
               readOnly: true
@@ -88,6 +97,13 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
             failureThreshold: 6
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 30
           livenessProbe:
             httpGet:
               path: /
@@ -113,6 +129,9 @@ spec:
         - name: qubehub-data
           persistentVolumeClaim:
             claimName: qubehub-data
+        - name: qubehub-website
+          configMap:
+            name: qubehub-website
         - name: scylla-tls
           secret:
             secretName: scylla-tls
